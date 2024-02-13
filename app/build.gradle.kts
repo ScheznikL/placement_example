@@ -1,7 +1,19 @@
+/*buildscript {
+    ext {
+        var kotlin_version = "1.9.20"
+        var koin_version = "3.5.0"
+        var ksp_version = "1.9.10-1.0.13"
+        var koin_ksp_version = "1.3.0"
+    }
+}*/
+
 plugins {
+    val ksp_version = "1.9.10-1.0.13"
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-   // id("com.google.devtools.ksp") version "1.9.21-1.0.15"
+   // id("com.google.devtools.ksp") version ksp_version apply false
+   // kotlin("ksp") version "1.9.10-1.0.13"
+   // kotlin("ksp") version "1.9.10-1.0.13"
 }
 
 android {
@@ -49,6 +61,7 @@ android {
         }
     }
 }
+// Compile time check
 
 dependencies {
 
@@ -84,11 +97,32 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.2.0")
 
     //Dagger - Hilt
-    implementation ("com.google.dagger:hilt-android:2.33-beta")
+    //implementation ("com.google.dagger:hilt-android:2.33-beta")
+
+    //Koin
+
+    val koin_version = "3.5.0"
+    val koin_ksp_version = "1.3.0"
+
+    implementation("io.insert-koin:koin-core:$koin_version")
+    implementation( "io.insert-koin:koin-androidx-compose:$koin_version")
+    implementation ("io.insert-koin:koin-android:$koin_version")
+    implementation ("io.insert-koin:koin-androidx-navigation:$koin_version")
+
+
+    // Coil
+    implementation ("io.coil-kt:coil:1.1.1")
+    implementation ("com.google.accompanist:accompanist-coil:0.7.0")
+
+  //  implementation("io.insert-koin:koin-annotations:$koin_ksp_version")
+   // com.google.devtools.ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version")
+
   //  ksp("com.google.dagger:hilt-android-compiler:2.33-beta")
-    implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
+  //  implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
 //    ksp("androidx.hilt:hilt-compiler:1.0.0-beta01")
-    implementation ("androidx.hilt:hilt-navigation-compose:1.0.0-alpha01")
+    val nav_version = "2.7.6"
+
+    implementation("androidx.navigation:navigation-compose:$nav_version")
 
   //  implementation ('com.android.support:palette-v7:28.0.0')
 }

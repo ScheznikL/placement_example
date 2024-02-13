@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.data.remote.responses
+package com.endofjanuary.placement_example.data.remote.responses.oldver
 
 data class RedusedAPIResp(
     val modelURLs : Map<String, String>,
