@@ -10,7 +10,7 @@ import com.endofjanuary.placement_example.MainActivity
 import com.endofjanuary.placement_example.data.converters.ResponseToModelEntryConverter
 import com.endofjanuary.placement_example.data.models.ModelEntry
 import com.endofjanuary.placement_example.data.remote.request.Post
-import com.endofjanuary.placement_example.data.remote.responses.PostRes
+import com.endofjanuary.placement_example.data.remote.responses.PostId
 import com.endofjanuary.placement_example.data.remote.responses.TextTo3DModel
 import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.utils.Resource
@@ -28,11 +28,12 @@ class ARScreenViewModel(
     // private val prompt: String,
     private val meshyRepository: MeshyRepo,
     //private val localStoreRepository: LocalStorageRepo,
-) : ViewModel() {
+) : ViewModel()
+{
 
 
     var model = mutableStateOf(ModelEntry())
-    var postRes = mutableStateOf(PostRes(""))
+    var postId = mutableStateOf(PostId(""))
 
     //var loadedInstances : MutableList<ModelInstance>? = mutableListOf<ModelInstance>()
 //    var loadedInstances: MutableList<ModelInstance>? = null
@@ -59,7 +60,7 @@ class ARScreenViewModel(
             is Resource.Success -> {
                 /* loadError.value = ""
                  isLoading.value = false*/
-                postRes.value = result.data ?: PostRes("")
+                postId.value = result.data ?: PostId("")
                 if (result.data != null) {
                     Log.d("loadModelEntry_result Success id:", result.data.result)
                     var eventualApiRes = getTextTo3D(result.data.result)
@@ -135,9 +136,9 @@ class ARScreenViewModel(
     suspend fun loadGlbModel(
         modelLoader: ModelLoader,
         modelPath: String
-    ) { //unit
+    ) {
         try {
-            val result = modelLoader.loadInstancedModel( // loadModelInstanceAsync
+            val result = modelLoader.loadInstancedModel(
                 modelPath,
                 MainActivity.kMaxModelInstances
             )
@@ -155,41 +156,52 @@ class ARScreenViewModel(
         materialLoader: MaterialLoader,
         anchor: Anchor,
         modelPath: String,
-        modelInstances: MutableList<ModelInstance>,
+       // modelInstances: MutableList<ModelInstance>,
     ): AnchorNode {
 
         Log.d("createAnchorNode", modelPath) // todo
 
         val anchorNode = AnchorNode(engine = engine, anchor = anchor)
         val modelNode = ModelNode(
-            modelInstance = modelInstances.apply {
-                //if (isEmpty()) {
-                if (isNotEmpty()) {
-                    this.removeAt(0)
-                }
-                //this += loadedInstances!!
-
-                this += _loadedInstancesState.value.data!!
-                Log.d("createAnchorNode _loadedInstancesState added", _loadedInstancesState.value.data.toString())
-                /* this += modelLoader.createInstancedModel(
-                     "models/model_v2_chair.glb",
-                     MainActivity.kMaxModelInstances
-                 )*/
-                // var i = loadedInstances!!
-
-                Log.d("createAnchorNode createInstancedModel", this[0].toString())
-                // MainActivity.Companion.kMaxModelInstances
-//                this += modelLoader.createInstancedModel(kModelFile, kMaxModelInstances)
-                //  }
-            }.removeLast(),
-            //modelInstance = modelLoader.createInstancedModel(modelFile, 1)[0],
+            modelInstance = _loadedInstancesState.value.data!![0],
             // Scale to fit in a 0.5 meters cube
             scaleToUnits = 0.5f
+        ).apply {
+            // Model Node needs to be editable for independent rotation from the anchor rotation
+            isEditable = true
+            //todo true init
+        }
+/*
+        modelInstance = modelInstances.apply {
+            //if (isEmpty()) {
+            if (isNotEmpty()) {
+                this.removeAt(0)
+            }
+            //this += loadedInstances!!
+
+            this += _loadedInstancesState.value.data!!
+            Log.d("createAnchorNode _loadedInstancesState added", _loadedInstancesState.value.data.toString())
+            /* this += modelLoader.createInstancedModel(
+                 "models/model_v2_chair.glb",
+                 MainActivity.kMaxModelInstances
+             )*/
+            // var i = loadedInstances!!
+
+            Log.d("createAnchorNode createInstancedModel", this[0].toString())
+            // MainActivity.Companion.kMaxModelInstances
+//                this += modelLoader.createInstancedModel(kModelFile, kMaxModelInstances)
+            //  }
+        }.removeLast(),
+        //modelInstance = modelLoader.createInstancedModel(modelFile, 1)[0],
+        // Scale to fit in a 0.5 meters cube
+        scaleToUnits = 0.5f
         ).apply {
             // Model Node needs to be editable for independent rotation from the anchor rotation
             isEditable = false
             //todo true init
         }
+*/
+
         val boundingBoxNode = CubeNode(
             engine,
             size = modelNode.extents,

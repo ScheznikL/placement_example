@@ -2,7 +2,7 @@ package com.endofjanuary.placement_example.repo
 
 import com.endofjanuary.placement_example.data.remote.MeshyApi
 import com.endofjanuary.placement_example.data.remote.request.Post
-import com.endofjanuary.placement_example.data.remote.responses.PostRes
+import com.endofjanuary.placement_example.data.remote.responses.PostId
 import com.endofjanuary.placement_example.data.remote.responses.TextTo3DModel
 import com.endofjanuary.placement_example.utils.Resource
 
@@ -18,7 +18,7 @@ class MeshyRepoImpl (
         return Resource.Success(response)
     }
 
-    override suspend fun postTextTo3D(body: Post): Resource<PostRes> {
+    override suspend fun postTextTo3D(body: Post): Resource<PostId> {
         val response = try {
             api.postTextTo3D(body)
         } catch(e: Exception) {

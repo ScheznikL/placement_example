@@ -1,10 +1,10 @@
 package com.endofjanuary.placement_example.di
 
-import com.endofjanuary.placement_example.ar_screen.ARScreenViewModel
 import com.endofjanuary.placement_example.data.remote.AuthTokenInterceptor
 import com.endofjanuary.placement_example.data.remote.MeshyApi
 import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.repo.MeshyRepoImpl
+import com.endofjanuary.placement_example.user_models.ThreeDScreenViewModel
 import okhttp3.OkHttpClient
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -17,7 +17,9 @@ val appModule = module {
     single {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create()).client(
-                OkHttpClient.Builder().addInterceptor(
+                OkHttpClient.Builder()
+                   // .connectTimeout(100, TimeUnit.SECONDS)
+                    .addInterceptor(
                     AuthTokenInterceptor()
                 ).build()
             )
@@ -34,9 +36,12 @@ val appModule = module {
     /* viewModel{
          ARScreenViewModel(get(),get())
      }*/
-    viewModel { parameters ->
+   /* viewModel { parameters ->
         //ARScreenViewModel(prompt = parameters.get(), get())
         ARScreenViewModel(get())
+    }*/
+    viewModel{
+        ThreeDScreenViewModel(get())
     }
     //   viewModel { (prompt: String) -> ARScreenViewModel(prompt, get()) }
 //    viewModelOf(::ChatScreenViewModel)

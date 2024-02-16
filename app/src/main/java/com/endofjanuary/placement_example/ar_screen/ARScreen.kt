@@ -99,7 +99,7 @@ fun ARScreen(
 
                 is Resource.Loading -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 is Resource.Success -> ARMain(modelEntry = modelEntry.data!!, viewModel = viewModel)
-                is Resource.None -> TODO()
+                is Resource.None -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -170,7 +170,7 @@ fun DecoratedImage(
     }
 }
 
-
+var tempI = 0
 @Composable
 fun ARSceneDisplay(
     viewModel: ARScreenViewModel,
@@ -207,6 +207,8 @@ fun ARSceneDisplay(
         }.value*/
 
     LaunchedEffect(key1 = viewModel){
+        Log.d("Enter LaunchedEffect", tempI.toString())
+        tempI++
         viewModel.loadGlbModel(modelLoader = modelLoader, modelPath = modelEntry.modelPath)
     }
 
@@ -252,7 +254,7 @@ fun ARSceneDisplay(
                                     engine = engine,
                                     modelLoader = modelLoader,
                                     materialLoader = materialLoader,
-                                    modelInstances = modelInstances,
+                                 //   modelInstances = modelInstances,
                                     anchor = anchor,
                                     modelPath = modelEntry.modelPath
                                 )
@@ -275,7 +277,7 @@ fun ARSceneDisplay(
                                     engine = engine,
                                     modelLoader = modelLoader,
                                     materialLoader = materialLoader,
-                                    modelInstances = modelInstances,
+                                   // modelInstances = modelInstances,
                                     anchor = anchor,
                                     modelPath = modelEntry.modelPath
                                 )

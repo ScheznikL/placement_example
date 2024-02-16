@@ -28,6 +28,10 @@ import androidx.navigation.navArgument
 import com.endofjanuary.placement_example.ar_screen.ARScreen
 import com.endofjanuary.placement_example.chat.ChatScreen
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
+import com.endofjanuary.placement_example.user_models.ThreeDScreen
+import com.example.jetcaster.ui.ARExampleAppState
+import com.example.jetcaster.ui.rememberARExampleAppState
+import home.HomeScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -39,17 +43,34 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Placement_exampleTheme {
+                var appState: ARExampleAppState = rememberARExampleAppState()
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "chat_screen"
+                    startDestination = "home_screen"
                 ) {
                     composable("chat_screen") {
                         ChatScreen(navController)
                     }
-                    composable("home_screen") { }
+                    composable("home_screen") {
+                        HomeScreen(navController = navController)
+                    }
                     composable(
-                        "ar_screen/{prompt}",
+                        "ar_screen",
+                        //"ar_screen/{prompt}",
+//                        arguments = listOf(
+//                            navArgument("prompt") {
+//                                type = NavType.StringType
+//                            }
+//                        )
+                    ) {
+//                        val modelName = remember {
+//                            it.arguments?.getString("prompt")
+//                        }
+                        ARScreen(prompt = "chair", navController = navController)
+                    }
+                    composable(
+                        "threed_screen/{prompt}",
                         arguments = listOf(
                             navArgument("prompt") {
                                 type = NavType.StringType
@@ -59,7 +80,7 @@ class MainActivity : ComponentActivity() {
                         val modelName = remember {
                             it.arguments?.getString("prompt")
                         }
-                        ARScreen(prompt = modelName ?: "chair", navController = navController)
+                        ThreeDScreen(prompt = modelName ?: "none", navController = navController)
                     }
                 }
             }
