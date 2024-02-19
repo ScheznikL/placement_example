@@ -30,6 +30,7 @@ class ThreeDScreenViewModel(
     val loadedInstancesState: State<Resource<ModelInstance>>
         get() = _loadedInstancesState
 
+    var modelImgUrl = mutableStateOf("")
     var model = mutableStateOf(ModelEntry())
 //       private val _loadedInstancesBufferState: MutableState<Resource<ModelInstance>> =
 //        mutableStateOf(Resource.None())
@@ -64,8 +65,9 @@ class ThreeDScreenViewModel(
                 val model = modelRoom.getModelById(localId)
                 when (model) {
                     is Resource.Success -> {
+                        modelImgUrl.value = model.data!!.modelImageUrl
                         val result = modelLoader.loadModelInstance(
-                            model.data!!.modelPath
+                            model.data.modelPath
                         )
                         if (result != null) {
                             _loadedInstancesState.value = Resource.Success(result)

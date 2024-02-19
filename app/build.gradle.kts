@@ -78,6 +78,7 @@ dependencies {
     implementation("io.github.sceneview:sceneview:2.0.3")
     implementation ("io.github.sceneview:arsceneview:2.0.3")
     implementation("com.google.ar:core:1.41.0")
+    implementation("androidx.palette:palette-ktx:1.0.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -116,6 +117,7 @@ dependencies {
 
 
     // Coil
+    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation ("io.coil-kt:coil:2.5.0")
     implementation ("com.google.accompanist:accompanist-coil:0.15.0")
 

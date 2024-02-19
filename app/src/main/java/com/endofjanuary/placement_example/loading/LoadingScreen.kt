@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.utils.screens.loading
+package com.endofjanuary.placement_example.loading
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

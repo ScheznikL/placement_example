@@ -5,18 +5,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material.icons.sharp.PlayArrow
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.endofjanuary.placement_example.R
 
 @Composable
 fun BottomBar(navController: NavController) {
@@ -38,21 +37,21 @@ fun BottomBar(navController: NavController) {
                 IconButton(onClick = { /* do something */ }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
-                        imageVector = Icons.Outlined.AccountCircle,
+                        painter = painterResource(id = R.drawable.ic_message),
                         contentDescription = "Chat"
                     )
                 }
-                IconButton(onClick = { navController.navigate("threed_screen") }) {
+                IconButton(onClick = { navController.navigate("models_list") }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
-                        imageVector = Icons.Outlined.Place,
+                        painter = painterResource(id = R.drawable.ic_token),
                         contentDescription = "3D display"
                     )
                 }
                 IconButton(onClick = { /* do something */ }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
-                        imageVector = Icons.Sharp.PlayArrow,
+                        painter = painterResource(R.drawable.ic_center_focus),
                         contentDescription = "AR display"
                     )
                 }

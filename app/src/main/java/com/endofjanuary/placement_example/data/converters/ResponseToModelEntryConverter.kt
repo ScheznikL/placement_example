@@ -9,6 +9,7 @@ class ResponseToModelEntryConverter {
         Log.d("toModelEntry",model?.model_urls?.glb ?: "none or error")
         return if (model != null)
             ModelEntry(
+                id = 0, // to Int Id that 018dc381-7336-7595-9d01-61ecaaa0ccde
                 modelDescription = model.prompt,
                 modelPath = model.model_urls.glb,
                 modelImageUrl = model.thumbnail_url

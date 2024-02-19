@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.utils.screens.loading
+package com.endofjanuary.placement_example.loading
 
 import android.content.Context
 import android.util.Log
@@ -174,7 +174,7 @@ class LoadingScreenViewModel(
                         val byteArr = output.toByteArray()
                         modelRoom.saveModel(
                             ModelEntity(
-                                // modelInstance = result[0],
+                                // modelInstance = result[0], // TODO another ID
                                 modelInstance = byteArr,
                                 modelPath = model.value.modelPath,
                                 modelDescription = model.value.modelDescription,
