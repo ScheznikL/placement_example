@@ -53,11 +53,9 @@ import org.koin.androidx.compose.getViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ARScreen(
-    //modelEntry: ModelEntry = ModelEntry("", "", ""),
-    //modelName: String,
-    prompt: String = "chair",
-    navController: NavController,
     modifier: Modifier = Modifier,
+    prompt: String = "none",
+    navController: NavController,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     //val viewModel = getViewModel<ARScreenViewModel>(parameters = { parametersOf(prompt) })
@@ -170,7 +168,7 @@ fun DecoratedImage(
     }
 }
 
-var tempI = 0
+
 @Composable
 fun ARSceneDisplay(
     viewModel: ARScreenViewModel,
@@ -207,8 +205,6 @@ fun ARSceneDisplay(
         }.value*/
 
     LaunchedEffect(key1 = viewModel){
-        Log.d("Enter LaunchedEffect", tempI.toString())
-        tempI++
         viewModel.loadGlbModel(modelLoader = modelLoader, modelPath = modelEntry.modelPath)
     }
 

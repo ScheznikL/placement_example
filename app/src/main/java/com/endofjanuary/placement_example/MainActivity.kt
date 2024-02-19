@@ -27,23 +27,20 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.endofjanuary.placement_example.ar_screen.ARScreen
 import com.endofjanuary.placement_example.chat.ChatScreen
+import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
-import com.endofjanuary.placement_example.user_models.ThreeDScreen
-import com.example.jetcaster.ui.ARExampleAppState
-import com.example.jetcaster.ui.rememberARExampleAppState
+import com.endofjanuary.placement_example.utils.screens.loading.LoadingScreen
 import home.HomeScreen
 
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        val currentModel = mutableStateOf("model_v2_chair")
-//        val currentModelModule =
-//            mutableStateOf("model_v2_chair") //model_v2_chair"
 
         setContent {
             Placement_exampleTheme {
-                var appState: ARExampleAppState = rememberARExampleAppState()
+                //  var appState: ARExampleAppState = rememberARExampleAppState()
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
@@ -53,7 +50,7 @@ class MainActivity : ComponentActivity() {
                         ChatScreen(navController)
                     }
                     composable("home_screen") {
-                        HomeScreen(navController = navController)
+                        HomeScreen(navController)
                     }
                     composable(
                         "ar_screen",
@@ -67,20 +64,33 @@ class MainActivity : ComponentActivity() {
 //                        val modelName = remember {
 //                            it.arguments?.getString("prompt")
 //                        }
-                        ARScreen(prompt = "chair", navController = navController)
+                        ARScreen(navController = navController)
                     }
                     composable(
-                        "threed_screen/{prompt}",
+                        "threed_screen",
+//                        arguments = listOf(
+//                            navArgument("prompt") {
+//                                type = NavType.StringType
+//                            }
+//                        )
+                    ) {
+//                        val modelName = remember {
+//                            it.arguments?.getString("prompt")
+//                        }
+                        ThreeDScreen(navController = navController)
+                    }
+                    composable(
+                        "loading_screen/{prompt}",
                         arguments = listOf(
                             navArgument("prompt") {
                                 type = NavType.StringType
                             }
                         )
                     ) {
-                        val modelName = remember {
+                        val model = remember {
                             it.arguments?.getString("prompt")
                         }
-                        ThreeDScreen(prompt = modelName ?: "none", navController = navController)
+                        LoadingScreen(prompt = model ?: "none", navController = navController)
                     }
                 }
             }
@@ -92,83 +102,6 @@ class MainActivity : ComponentActivity() {
         const val kMaxModelInstances = 5
     }
 }
-
-
-/*
-@Composable
-fun ARScreen(dsiplModel: String) {
-    /* val nodes = remember {
-        mutableListOf<Node>() // ArNode
-    }*/
-
-    val engine = rememberEngine()
-    val modelLoader = rememberModelLoader(engine)
-    val model = modelLoader.createModel("models/${dsiplModel}.glb")
-    var frame by remember { mutableStateOf<Frame?>(null) }
-    val childNodes = rememberNodes()
-
-
-    /*val modelNode = remember {
-        mutableStateOf<ArModelNode?>(null)
-    }*/
-
-    val placeModelButton by remember {
-        mutableStateOf(false)
-    }
-    Box(modifier = Modifier.fillMaxSize()) {
-        ARScene(
-            modifier = Modifier.fillMaxSize(),
-            //nodes = nodes,
-            planeRenderer = true,// ?
-            sessionConfiguration = { session, config ->
-                config.depthMode =
-                    when (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
-                        true -> Config.DepthMode.AUTOMATIC
-                        else -> Config.DepthMode.DISABLED
-                    }
-                config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
-                config.lightEstimationMode =
-                    Config.LightEstimationMode.DISABLED
-            },
-            onViewCreated = {
-                //arSceneView.lightEstimationMode = Config.LightEstimationMode.DISABLED
-                this.planeRenderer.isShadowReceiver = false
-                val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
-                val anchor = hitResults?.firstOrNull {
-                    it.isValid(depthPoint = false, point = false)
-                }?.createAnchorOrNull()
-                modelNode.value = ModelNode(this.engine, PlacementMode.INSTANT).apply {
-                    loadModelGlbAsync(
-                        glbFileLocation = "models/${model}.glb",
-                        scaleToUnits = 0.8f
-                    ) {
-
-                    }
-                    onAnchorChanged = {
-                        placeModelButton = !isAnchored
-                    }
-                    onHitResult = { node, hitResult ->
-                        placeModelButton = node.isTracking
-                    }
-
-                }
-                nodes.add(modelNode.value!!)
-            },
-            onSessionCreate = {
-                planeRenderer.isVisible = false
-            }
-        )
-        if (placeModelButton) {
-            Button(onClick = {
-                modelNode.value?.anchor()
-            }, modifier = Modifier.align(Alignment.Center)) {
-                Text(text = "Place It")
-            }
-        }
-    }
-}
-*/
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -205,8 +138,5 @@ fun ARSceneWithComposeDialog() {
         }
     }
 }
-
-
-data class ModelObject(var name: String, var thumbnailId: Int)
     
     

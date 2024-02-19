@@ -1,21 +1,5 @@
 package home
 
-/*
- * Copyright 2020 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -39,6 +23,9 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabPosition
@@ -50,12 +37,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.endofjanuary.placement_example.R
-import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
+import com.endofjanuary.placement_example.chat.ChatScreen
+import com.endofjanuary.placement_example.utils.BottomBar
 import com.example.jetcaster.ui.home.HomeCategory
 import com.example.jetcaster.ui.home.HomeViewModel
 import com.example.jetcaster.util.verticalGradientScrim
@@ -65,16 +51,26 @@ import org.koin.androidx.compose.getViewModel
 fun HomeScreen(
     navController: NavController
 ) {
-
     val viewModel = getViewModel<HomeViewModel>()
+    val snackbarHostState = remember { SnackbarHostState() }
     Surface(Modifier.fillMaxSize()) {
-        HomeContent(
-            homeCategories = viewModel.state.value.homeCategories,
-            selectedHomeCategory = viewModel.state.value.selectedHomeCategory,
-            onCategorySelected = viewModel::onHomeCategorySelected,
-            modifier = Modifier.fillMaxSize(),
-            navController = rememberNavController()
-        )
+        Scaffold(
+            bottomBar = {
+                BottomBar(navController)
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { innerPadding ->
+            HomeContent(
+                homeCategories = viewModel.state.value.homeCategories,
+                selectedHomeCategory = viewModel.state.value.selectedHomeCategory,
+                onCategorySelected = viewModel::onHomeCategorySelected,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                navController = navController
+            )
+
+        }
     }
 }
 
@@ -178,12 +174,15 @@ fun HomeContent(
         }
 
         when (selectedHomeCategory) {
-            HomeCategory.Chat -> navController.navigate("chat_screen")
+            HomeCategory.Chat -> /*navController.navigate("chat_screen")*/ChatScreen(navController)
             HomeCategory.ARScreen -> navController.navigate("chat_screen")
             HomeCategory.ThreeDScreen -> navController.navigate("chat_screen")
         }
+
+
     }
 }
+
 
 @Composable
 private fun HomeCategoryTabs(
@@ -236,8 +235,23 @@ fun HomeCategoryTabIndicator(
     )
 }
 
-@Composable
-@Preview
-fun PreviewPodcastCard() {
-    Placement_exampleTheme {}
-}
+
+//@Composable
+//@Preview
+//fun PreviewHomeContent() {
+//    val viewModel = getViewModel<HomeViewModel>()
+//    Placement_exampleTheme {
+//        HomeContent(
+//            homeCategories = HomeCategory.values().asList(),
+//            selectedHomeCategory = HomeCategory.Chat,
+//            onCategorySelected = viewModel::onHomeCategorySelected,
+//            navController = rememberNavController()
+//        )
+//    }
+//}
+
+//@Composable
+//@Preview
+//fun PreviewPodcastCard() {
+//    Placement_exampleTheme {}
+//}

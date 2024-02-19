@@ -25,10 +25,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-
-/**
- * List of screens for [JetcasterApp]
- */
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object ThreeD : Screen("threed_screen/{prompt}") {

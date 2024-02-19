@@ -79,7 +79,7 @@ fun ChatScreen(
                         .weight(1f),
                     contentPadding = PaddingValues(0.dp),
                     onClick = {
-                        navController.navigate("ar_screen/${textInput}")
+                        navController.navigate("loading_screen/${textInput}")
                     }) {
                     Icon(
                         Icons.Default.Done,

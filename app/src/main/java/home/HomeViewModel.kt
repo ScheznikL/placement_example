@@ -23,11 +23,9 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class HomeViewModel(
-//    private val podcastsRepository: PodcastsRepository = Graph.podcastRepository,
-//    private val podcastStore: PodcastStore = Graph.podcastStore
 ) : ViewModel() {
     // Holds our currently selected home category
-    private val selectedCategory = MutableStateFlow(HomeCategory.ARScreen)
+    private val selectedCategory = MutableStateFlow(HomeCategory.Chat)
     // Holds the currently available home categories
     //private val categories = MutableStateFlow(HomeCategory.values().asList())
     private val categories = HomeCategory.values().asList()

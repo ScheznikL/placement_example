@@ -1,10 +1,13 @@
 package com.endofjanuary.placement_example.di
 
+import com.endofjanuary.placement_example.ar_screen.ARScreenViewModel
 import com.endofjanuary.placement_example.data.remote.AuthTokenInterceptor
 import com.endofjanuary.placement_example.data.remote.MeshyApi
 import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.repo.MeshyRepoImpl
-import com.endofjanuary.placement_example.user_models.ThreeDScreenViewModel
+import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
+import com.endofjanuary.placement_example.utils.screens.loading.LoadingScreenViewModel
+import com.example.jetcaster.ui.home.HomeViewModel
 import okhttp3.OkHttpClient
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -18,10 +21,10 @@ val appModule = module {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create()).client(
                 OkHttpClient.Builder()
-                   // .connectTimeout(100, TimeUnit.SECONDS)
+                    // .connectTimeout(100, TimeUnit.SECONDS)
                     .addInterceptor(
-                    AuthTokenInterceptor()
-                ).build()
+                        AuthTokenInterceptor()
+                    ).build()
             )
             .baseUrl(BASE_URL)
             .build()
@@ -30,36 +33,24 @@ val appModule = module {
     single<MeshyRepo> {
         MeshyRepoImpl(get())
     }
-    /*single<LocalStorageRepo> {
-        LocalStorageRepoImpl()
-    }*/
-    /* viewModel{
-         ARScreenViewModel(get(),get())
-     }*/
-   /* viewModel { parameters ->
-        //ARScreenViewModel(prompt = parameters.get(), get())
+
+    viewModel {
         ARScreenViewModel(get())
-    }*/
-    viewModel{
+    }
+    viewModel {
         ThreeDScreenViewModel(get())
     }
+    viewModel {
+        HomeViewModel()
+    }
+//    viewModel{
+//        ChatScreenViewModel(get())
+//    }
+
+    viewModel {
+        LoadingScreenViewModel(get(),get())
+    }
+
     //   viewModel { (prompt: String) -> ARScreenViewModel(prompt, get()) }
 //    viewModelOf(::ChatScreenViewModel)
 }
-/*
-    fun provideMeshyRepo(
-        api: MeshyApi
-    ) = MeshyRepoImpl(api)
-
-    fun provideMeshyApi(): MeshyApi {
-        return Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create()).client(
-                OkHttpClient.Builder().addInterceptor(
-                    AuthTokenInterceptor()
-                ).build()
-            )
-            .baseUrl(BASE_URL)
-            .build()
-            .create(MeshyApi::class.java)
-    }
-}*/
