@@ -1,6 +1,5 @@
 package home
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,8 +17,6 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +33,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -87,9 +85,8 @@ fun HomeAppBar(
 //                    painter = painterResource(),
 //                    contentDescription = null
 //                )
-                Icon(imageVector = Icons.Default.Face, contentDescription = null)
                 Icon(
-                    imageVector = Icons.Default.Face,
+                    painter = painterResource(id = R.drawable.ic_blur),
                     contentDescription = stringResource(R.string.app_name),
                     modifier = Modifier
                         .padding(start = 4.dp)
@@ -121,8 +118,6 @@ fun HomeAppBar(
         modifier = modifier
     )
 }
-
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeContent(
     selectedHomeCategory: HomeCategory,
@@ -182,8 +177,6 @@ fun HomeContent(
 
     }
 }
-
-
 @Composable
 private fun HomeCategoryTabs(
     categories: List<HomeCategory>,
@@ -197,7 +190,6 @@ private fun HomeCategoryTabs(
             Modifier.tabIndicatorOffset(tabPositions[selectedIndex])
         )
     }
-
     TabRow(
         selectedTabIndex = selectedIndex,
         indicator = indicator,
@@ -234,8 +226,6 @@ fun HomeCategoryTabIndicator(
             .background(color, RoundedCornerShape(topStartPercent = 100, topEndPercent = 100))
     )
 }
-
-
 //@Composable
 //@Preview
 //fun PreviewHomeContent() {
