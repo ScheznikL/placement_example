@@ -155,11 +155,11 @@ class ARScreenViewModel(
         modelLoader: ModelLoader,
         materialLoader: MaterialLoader,
         anchor: Anchor,
-        modelPath: String,
+        //modelPath: String,
        // modelInstances: MutableList<ModelInstance>,
     ): AnchorNode {
 
-        Log.d("createAnchorNode", modelPath) // todo
+        //Log.d("createAnchorNode", modelPath) // todo
 
         val anchorNode = AnchorNode(engine = engine, anchor = anchor)
         val modelNode = ModelNode(

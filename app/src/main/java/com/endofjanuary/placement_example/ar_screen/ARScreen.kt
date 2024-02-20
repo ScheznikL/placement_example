@@ -2,7 +2,6 @@ package com.endofjanuary.placement_example.ar_screen
 
 import android.graphics.BitmapFactory
 import android.os.Environment
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.endofjanuary.placement_example.data.models.ModelEntry
+import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
 import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.screens.ErrorScreen
 import com.google.ar.core.Config
@@ -53,22 +52,17 @@ import org.koin.androidx.compose.getViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ARScreen(
-    modifier: Modifier = Modifier,
-    prompt: String = "none",
+//    modifier: Modifier = Modifier,
+    //prompt: String = "none",
+    modelId: Int?,
     navController: NavController,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     //val viewModel = getViewModel<ARScreenViewModel>(parameters = { parametersOf(prompt) })
-    val viewModel = getViewModel<ARScreenViewModel>()
-
-
-    val modelEntry = produceState<Resource<ModelEntry>>(initialValue = Resource.Loading()) {
-        value = viewModel.loadModelEntry(prompt = prompt)
-    }.value
 
 
     // val viewModel: ARScreenViewModel by koinViewModel(parametersOf(prompt))
-    //val modelEntry = remember { viewModel.model }
+    val modelEntry:Resource<Boolean> = Resource.Success(true)
     /*  val loadError by remember { viewModel.loadError }
       val isLoading by remember { viewModel.isLoading }
       val loadSuccess by remember {viewModel.isSuccess }*/
@@ -96,7 +90,7 @@ fun ARScreen(
                 }
 
                 is Resource.Loading -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                is Resource.Success -> ARMain(modelEntry = modelEntry.data!!, viewModel = viewModel)
+                is Resource.Success -> ARMain(modelId)
                 is Resource.None -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
@@ -107,12 +101,18 @@ fun ARScreen(
 @Composable
 fun ARMain(
     //modelEntry: MutableState<ModelEntry>,
-    modelEntry: ModelEntry,
-    viewModel: ARScreenViewModel,
+//    modelEntry: ModelEntry,
+//    viewModel: ARScreenViewModel,
+    modelId: Int?,
     modifier: Modifier = Modifier
 ) {
+
+//    val modelEntry = produceState<Resource<ModelEntry>>(initialValue = Resource.Loading()) {
+//        value = viewModel.loadModelRemote(modelLoader = , localId = modelId)
+//    }.value
+
     Box(modifier = Modifier.fillMaxSize()) {
-        ARSceneDisplay(modelEntry = modelEntry, viewModel = viewModel)////
+        ARSceneDisplay(modelId)////
         /* Row(
              modifier = Modifier.fillMaxWidth(),
              verticalAlignment = Alignment.CenterVertically,
@@ -171,8 +171,9 @@ fun DecoratedImage(
 
 @Composable
 fun ARSceneDisplay(
-    viewModel: ARScreenViewModel,
-    modelEntry: ModelEntry,
+//    viewModel: ThreeDScreenViewModel,
+//    modelEntry: ModelEntry,
+    modelId : Int?
 ) {
 
     val engine = rememberEngine()
@@ -190,9 +191,14 @@ fun ARSceneDisplay(
     }
     var frame by remember { mutableStateOf<Frame?>(null) }
 
+    val viewModel = getViewModel<ThreeDScreenViewModel>()
+
+    LaunchedEffect(key1 = viewModel) {
+        // viewModel.loadModelLocal(modelLoader, engine, modelLoader.assetLoader, assetManager, resourceLoader)
+        viewModel.loadModelRemote(modelLoader, modelId ?: 1)
+    }
     //var loadedInstances = remember { viewModel.loadedInstances }
 
-    val instances =
        /* produceState<Resource<MutableList<ModelInstance>?>>(initialValue = Resource.Loading()) {
             value =
                 viewModel.loadGlbModel(modelLoader = modelLoader, modelPath = modelEntry.modelPath)
@@ -203,10 +209,6 @@ fun ARSceneDisplay(
 //                )
 
         }.value*/
-
-    LaunchedEffect(key1 = viewModel){
-        viewModel.loadGlbModel(modelLoader = modelLoader, modelPath = modelEntry.modelPath)
-    }
 
     val instanceState by remember {
         viewModel.loadedInstancesState
@@ -250,9 +252,8 @@ fun ARSceneDisplay(
                                     engine = engine,
                                     modelLoader = modelLoader,
                                     materialLoader = materialLoader,
-                                 //   modelInstances = modelInstances,
+                                    modelInstances = instanceState.data!!,
                                     anchor = anchor,
-                                    modelPath = modelEntry.modelPath
                                 )
                             }
                     }
@@ -267,15 +268,14 @@ fun ARSceneDisplay(
                             )
                         }?.createAnchorOrNull()
                             ?.let { anchor ->
-                                Log.d("onDoubleTap", modelEntry.modelPath)
+                                //Log.d("onDoubleTap", .modelPath)
                                 planeRenderer = false
                                 childNodes += viewModel.createAnchorNode(
                                     engine = engine,
                                     modelLoader = modelLoader,
                                     materialLoader = materialLoader,
-                                   // modelInstances = modelInstances,
+                                    modelInstances = instanceState.data!!,
                                     anchor = anchor,
-                                    modelPath = modelEntry.modelPath
                                 )
                             }
                     },

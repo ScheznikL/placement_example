@@ -38,18 +38,18 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(navController)
                     }
                     composable(
-                        "ar_screen",
-                        //"ar_screen/{prompt}",
-//                        arguments = listOf(
-//                            navArgument("prompt") {
-//                                type = NavType.StringType
-//                            }
-//                        )
+                        //"ar_screen",
+                        "ar_screen/{id}",
+                        arguments = listOf(
+                            navArgument("id") {
+                                type = NavType.IntType
+                            }
+                        )
                     ) {
-//                        val modelName = remember {
-//                            it.arguments?.getString("prompt")
-//                        }
-                        ARScreen(navController = navController)
+                        val modelId = remember {
+                            it.arguments?.getInt("id")
+                        }
+                        ARScreen(navController = navController, modelId = modelId ?: 0)
                     }
                     composable(
                         "threed_screen/{id}",

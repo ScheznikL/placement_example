@@ -220,6 +220,10 @@ fun ModelInRowEntry(
                 navController.navigate(
                     "threed_screen/${entry.id}"
                 )
+//                navController.navigate(
+//                    "ar_screen/${entry.id}"
+//                )
+
             }
     ) {
         Column {// SubcomposeAsyncImage

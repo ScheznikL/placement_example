@@ -1,7 +1,5 @@
 package com.endofjanuary.placement_example.three_d_screen
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,10 +34,9 @@ import coil.request.ImageRequest
 import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.utils.BottomBar
 import com.endofjanuary.placement_example.utils.Resource
+import com.google.android.filament.gltfio.ResourceLoader
 import io.github.sceneview.Scene
-import io.github.sceneview.animation.Transition.animateRotation
 import io.github.sceneview.math.Position
-import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
@@ -47,8 +44,6 @@ import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberNode
 import org.koin.androidx.compose.getViewModel
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.DurationUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,14 +133,16 @@ fun ThreeDMain(
     snackbarHostState: SnackbarHostState,
     modelId: Int?
 ) {
-   if(modelId != null) {
+    if (modelId != null) {
         Box(modifier = modifier.fillMaxSize()) {
             val engine = rememberEngine()
             val modelLoader = rememberModelLoader(engine)
 
+            val assetManager = LocalContext.current.assets
+            var resourceLoader = ResourceLoader(engine, true)
             LaunchedEffect(key1 = viewModel) {
-                //viewModel.loadModel(modelLoader, engine)
-                viewModel.loadModelRemote(modelLoader, modelId)
+                viewModel.loadModelLocal(modelLoader,/*engine,*/ modelLoader.assetLoader, assetManager, resourceLoader)
+               //   viewModel.loadModelRemote(modelLoader, modelId)
             }
             val instanceState by remember {
                 viewModel.loadedInstancesState
@@ -160,8 +157,8 @@ fun ThreeDMain(
                     val cameraNode = rememberCameraNode(engine).apply {
                         position = Position(z = 4.0f)
                     }
-                    val centerNode = rememberNode(engine)
-                        .addChildNode(cameraNode)
+                  //  val centerNode = rememberNode(engine)
+                   //     .addChildNode(cameraNode)
 
 
                     //TODO try to auto rotate
@@ -174,34 +171,35 @@ fun ThreeDMain(
 //            ),
 //        )
 
-                    val transitionState = remember {
-                        mutableStateOf(false)
-                    }
+//                    val transitionState = remember {
+//                        mutableStateOf(false)
+//                    }
 
                     // Define transition
-                    val transition = updateTransition(targetState = transitionState.value)
+                //    val transition = updateTransition(targetState = transitionState.value)
 
                     // Define animations
-                    val cameraRotation by transition.animateRotation(
-                        transitionSpec = {
-                            tween(durationMillis = 17.seconds.toInt(DurationUnit.MILLISECONDS))
-                        },
-//            animationSpec = repeatable(
-//                iterations = 1,
-//                repeatMode = RepeatMode.Reverse,
-//                animation = tween(durationMillis = 17.seconds.toInt(DurationUnit.MILLISECONDS))
-//            )
-                        label = "CameraTransition"
-                    ) { state ->
-                        if (state) Rotation(360f) else Rotation(0f)
-                    }
+//                    val cameraRotation by transition.animateRotation(
+//                        transitionSpec = {
+//                            tween(durationMillis = 17.seconds.toInt(DurationUnit.MILLISECONDS))
+//                        },
+////            animationSpec = repeatable(
+////                iterations = 1,
+////                repeatMode = RepeatMode.Reverse,
+////                animation = tween(durationMillis = 17.seconds.toInt(DurationUnit.MILLISECONDS))
+////            )
+//                        label = "CameraTransition"
+//                    ) { state ->
+//                        if (state) Rotation(360f) else Rotation(0f)
+//                    }
 
                     Scene(
                         modifier = Modifier.fillMaxSize(),
                         engine = engine,
                         modelLoader = modelLoader,
                         cameraNode = cameraNode,
-                        childNodes = listOf(centerNode,
+                        childNodes = listOf(
+                            //centerNode,
                             rememberNode {
                                 ModelNode(
                                     modelInstance = instanceState.data!!,
@@ -214,10 +212,10 @@ fun ThreeDMain(
                         environment = environmentLoader.createHDREnvironment(
                             assetFileLocation = "environments/sky_2k.hdr" //todo user choice ?*
                         )!!,
-                        onFrame = {
-                            centerNode.rotation = cameraRotation
-                            cameraNode.lookAt(centerNode)
-                        },
+//                        onFrame = {
+//                         //   centerNode.rotation = cameraRotation
+//                            cameraNode.lookAt(centerNode)
+//                        },
                     )
 //                    Image(
 //                        modifier = Modifier
@@ -305,7 +303,7 @@ fun ThreeDMain(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WarningDialog(
-    modelId :Int
+    modelId: Int
 ) {
     Box(
         modifier = Modifier.fillMaxSize()

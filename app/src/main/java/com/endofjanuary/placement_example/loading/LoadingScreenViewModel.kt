@@ -25,6 +25,7 @@ import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.URL
+import java.nio.ByteBuffer
 
 
 class LoadingScreenViewModel(
@@ -166,16 +167,19 @@ class LoadingScreenViewModel(
     )/*: Resource<Boolean>*/ {
         // viewModelScope.launch {
         try {
+
             viewModelScope.launch(Dispatchers.IO) {
                 URL(model.value.modelPath).openStream().use { inputStream: InputStream ->
                     val inStream = BufferedInputStream(inputStream)
                     ByteArrayOutputStream().use { output ->
                         inStream.copyTo(output)
                         val byteArr = output.toByteArray()
+                        val byteBuffer = ByteBuffer.wrap(byteArr)
+                        val rewound = byteBuffer.rewind()
                         modelRoom.saveModel(
                             ModelEntity(
                                 // modelInstance = result[0], // TODO another ID
-                                modelInstance = byteArr,
+                                modelInstance = output.toByteArray(),
                                 modelPath = model.value.modelPath,
                                 modelDescription = model.value.modelDescription,
                                 modelImageUrl = model.value.modelImageUrl

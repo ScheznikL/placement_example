@@ -48,7 +48,7 @@ fun BottomBar(navController: NavController) {
                         contentDescription = "3D display"
                     )
                 }
-                IconButton(onClick = { /* do something */ }) {
+                IconButton(onClick = {/* navController.navigate("models_list") */ }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
                         painter = painterResource(R.drawable.ic_center_focus),
