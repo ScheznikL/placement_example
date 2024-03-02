@@ -38,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.R
-import com.endofjanuary.placement_example.chat.ChatScreen
 import com.endofjanuary.placement_example.utils.BottomBar
 import com.example.jetcaster.ui.home.HomeCategory
 import com.example.jetcaster.ui.home.HomeViewModel
@@ -169,9 +168,9 @@ fun HomeContent(
         }
 
         when (selectedHomeCategory) {
-            HomeCategory.Chat -> /*navController.navigate("chat_screen")*/ChatScreen(navController)
+            HomeCategory.Chat -> navController.navigate("chat_screen")
             HomeCategory.ARScreen -> navController.navigate("chat_screen")
-            HomeCategory.ThreeDScreen -> navController.navigate("chat_screen")
+            HomeCategory.ThreeDScreen -> navController.navigate("models_list")
         }
 
 

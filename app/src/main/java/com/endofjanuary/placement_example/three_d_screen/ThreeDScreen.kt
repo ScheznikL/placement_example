@@ -140,9 +140,10 @@ fun ThreeDMain(
 
             val assetManager = LocalContext.current.assets
             var resourceLoader = ResourceLoader(engine, true)
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.loadModelLocal(modelLoader,/*engine,*/ modelLoader.assetLoader, assetManager, resourceLoader)
-               //   viewModel.loadModelRemote(modelLoader, modelId)
+            LaunchedEffect(true) {
+              //  viewModel.loadInstanceNone()
+               // viewModel.loadModelLocal(modelLoader,/*engine,*/ modelLoader.assetLoader, assetManager, resourceLoader)
+                 viewModel.loadModelRemote(modelLoader, modelId)
             }
             val instanceState by remember {
                 viewModel.loadedInstancesState

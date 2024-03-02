@@ -31,7 +31,7 @@ import java.nio.ByteBuffer
 class ThreeDScreenViewModel(
     //private val meshyRepository: MeshyRepo,
     private val modelRoom: ModelsRepo,
-    ) : ViewModel() {
+) : ViewModel() {
 
     private val _loadedInstancesState: MutableState<Resource<ModelInstance>> =
         mutableStateOf(Resource.None())
@@ -74,9 +74,13 @@ class ThreeDScreenViewModel(
                 when (model) {
                     is Resource.Success -> {
                         modelImgUrl.value = model.data!!.modelImageUrl
+                        val result1 = modelLoader.loadModel(
+                            model.data.modelPath
+                        )
                         val result = modelLoader.loadModelInstance(
                             model.data.modelPath
                         )
+                        //val temp = result1?.resourceUris
                         if (result != null) {
                             _loadedInstancesState.value = Resource.Success(result)
                         } else {
@@ -110,7 +114,7 @@ class ThreeDScreenViewModel(
 //        }
         resourceResolver: (resourceFileName: String) -> Buffer? = { null }
     ) {
-      //  val materialProvider = UbershaderProvider(engine)
+        //  val materialProvider = UbershaderProvider(engine)
 
         //val assetLoader = AssetLoader(engine, materialProvider, EntityManager.get())
 
@@ -124,13 +128,14 @@ class ThreeDScreenViewModel(
                             models += model!!
                             loadResources(
                                 model = model as Model,
-                                resourceResolver = resourceResolver,
-                                resourceLoader = resourceLoader
+                                resourceResolver = { ByteBuffer.wrap(buffer) },
+                                resourceLoader = resourceLoader,
+                                buf = ByteBuffer.wrap(buffer)
                             )
                         }
-
                     }
-                  //  val mod = assetLoader.createInstance(asset!!)
+
+                    //  val mod = assetLoader.createInstance(asset!!)
                     val mod = asset!!.instance
 
 //                    val resBuf = ByteBuffer.wrap(result.data[1].modelInstance)
@@ -187,21 +192,32 @@ class ThreeDScreenViewModel(
         }
     }
 
+    fun loadInstanceNone(){
+        _loadedInstancesState.value = Resource.None()
+    }
     private fun loadResources(
         model: Model,
         resourceLoader: ResourceLoader,
-        resourceResolver: (String) -> Buffer?
+        resourceResolver: (String) -> Buffer?,
+        buf: Buffer?
     ) {
         for (uri in model.resourceUris) {
-            resourceResolver(uri)?.let { resourceLoader.addResourceData(uri, it) }
+            buf?.let {
+                viewModelScope.launch(Dispatchers.Main) {
+                    resourceLoader.addResourceData(uri, it)
+                }
+            }
         }
-       // resourceLoader.loadResources(model)
-        resourceLoader.asyncBeginLoad(model)
+//        for (uri in model.resourceUris) {
+//            resourceResolver(uri)?.let { resourceLoader.addResourceData(uri, it) }
+//        }
+        //resourceLoader.loadResources(model)
+        viewModelScope.launch(Dispatchers.Main) { resourceLoader.loadResources(model) }
 //        resourceLoader.asyncBeginLoad(model)
 //        resourceLoader.evictResourceData()
     }
 
-//    private fun loadResource(uri: String, assetManager: AssetManager): Buffer {
+    //    private fun loadResource(uri: String, assetManager: AssetManager): Buffer {
 //        //TODO("Load your asset here (e.g. using Android's AssetManager API)")
 //        val buffer: InputStream?
 //        return try {
@@ -215,74 +231,74 @@ class ThreeDScreenViewModel(
 //            throw e
 //        }
 //    }
-fun createAnchorNode(
-    engine: Engine,
-    modelLoader: ModelLoader,
-    materialLoader: MaterialLoader,
-    anchor: Anchor,
-    modelInstances: ModelInstance,
-): AnchorNode {
+    fun createAnchorNode(
+        engine: Engine,
+        modelLoader: ModelLoader,
+        materialLoader: MaterialLoader,
+        anchor: Anchor,
+        modelInstances: ModelInstance,
+    ): AnchorNode {
 
 //    Log.d("createAnchorNode", modelPath) // todo
 
-    val anchorNode = AnchorNode(engine = engine, anchor = anchor)
-    val modelNode = ModelNode(
-        modelInstance = modelInstances,
-        // Scale to fit in a 0.5 meters cube
-        scaleToUnits = 0.5f
-    ).apply {
-        // Model Node needs to be editable for independent rotation from the anchor rotation
-        isEditable = true
-        //todo true init
-    }
-    /*
-            modelInstance = modelInstances.apply {
-                //if (isEmpty()) {
-                if (isNotEmpty()) {
-                    this.removeAt(0)
-                }
-                //this += loadedInstances!!
-
-                this += _loadedInstancesState.value.data!!
-                Log.d("createAnchorNode _loadedInstancesState added", _loadedInstancesState.value.data.toString())
-                /* this += modelLoader.createInstancedModel(
-                     "models/model_v2_chair.glb",
-                     MainActivity.kMaxModelInstances
-                 )*/
-                // var i = loadedInstances!!
-
-                Log.d("createAnchorNode createInstancedModel", this[0].toString())
-                // MainActivity.Companion.kMaxModelInstances
-    //                this += modelLoader.createInstancedModel(kModelFile, kMaxModelInstances)
-                //  }
-            }.removeLast(),
-            //modelInstance = modelLoader.createInstancedModel(modelFile, 1)[0],
+        val anchorNode = AnchorNode(engine = engine, anchor = anchor)
+        val modelNode = ModelNode(
+            modelInstance = modelInstances,
             // Scale to fit in a 0.5 meters cube
             scaleToUnits = 0.5f
-            ).apply {
-                // Model Node needs to be editable for independent rotation from the anchor rotation
-                isEditable = false
-                //todo true init
-            }
-    */
-
-    val boundingBoxNode = CubeNode(
-        engine,
-        size = modelNode.extents,
-        center = modelNode.center,
-        materialInstance = materialLoader.createColorInstance(Color.White.copy(alpha = 0.5f))
-    ).apply {
-        isVisible = false
-    }
-    modelNode.addChildNode(boundingBoxNode)
-    anchorNode.addChildNode(modelNode)
-
-    listOf(modelNode, anchorNode).forEach {
-        it.onEditingChanged = { editingTransforms ->
-            boundingBoxNode.isVisible = editingTransforms.isNotEmpty()
+        ).apply {
+            // Model Node needs to be editable for independent rotation from the anchor rotation
+            isEditable = true
+            //todo true init
         }
+        /*
+                modelInstance = modelInstances.apply {
+                    //if (isEmpty()) {
+                    if (isNotEmpty()) {
+                        this.removeAt(0)
+                    }
+                    //this += loadedInstances!!
+
+                    this += _loadedInstancesState.value.data!!
+                    Log.d("createAnchorNode _loadedInstancesState added", _loadedInstancesState.value.data.toString())
+                    /* this += modelLoader.createInstancedModel(
+                         "models/model_v2_chair.glb",
+                         MainActivity.kMaxModelInstances
+                     )*/
+                    // var i = loadedInstances!!
+
+                    Log.d("createAnchorNode createInstancedModel", this[0].toString())
+                    // MainActivity.Companion.kMaxModelInstances
+        //                this += modelLoader.createInstancedModel(kModelFile, kMaxModelInstances)
+                    //  }
+                }.removeLast(),
+                //modelInstance = modelLoader.createInstancedModel(modelFile, 1)[0],
+                // Scale to fit in a 0.5 meters cube
+                scaleToUnits = 0.5f
+                ).apply {
+                    // Model Node needs to be editable for independent rotation from the anchor rotation
+                    isEditable = false
+                    //todo true init
+                }
+        */
+
+        val boundingBoxNode = CubeNode(
+            engine,
+            size = modelNode.extents,
+            center = modelNode.center,
+            materialInstance = materialLoader.createColorInstance(Color.White.copy(alpha = 0.5f))
+        ).apply {
+            isVisible = false
+        }
+        modelNode.addChildNode(boundingBoxNode)
+        anchorNode.addChildNode(modelNode)
+
+        listOf(modelNode, anchorNode).forEach {
+            it.onEditingChanged = { editingTransforms ->
+                boundingBoxNode.isVisible = editingTransforms.isNotEmpty()
+            }
+        }
+        return anchorNode
     }
-    return anchorNode
-}
 }
 

@@ -1,8 +1,8 @@
 package com.endofjanuary.placement_example.repo
 
-import com.endofjanuary.placement_example.data.remote.request.Post
-import com.endofjanuary.placement_example.data.remote.responses.PostId
-import com.endofjanuary.placement_example.data.remote.responses.TextTo3DModel
+import com.endofjanuary.placement_example.data.remote.meshy.request.Post
+import com.endofjanuary.placement_example.data.remote.meshy.responses.PostId
+import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
 import com.endofjanuary.placement_example.utils.Resource
 
 interface MeshyRepo {

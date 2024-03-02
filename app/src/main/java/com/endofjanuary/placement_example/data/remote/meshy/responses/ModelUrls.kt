@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.data.remote.responses
+package com.endofjanuary.placement_example.data.remote.meshy.responses
 
 data class ModelUrls(
     val fbx: String,

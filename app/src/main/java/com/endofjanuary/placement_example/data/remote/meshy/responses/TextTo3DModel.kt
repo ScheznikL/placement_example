@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.data.remote.responses
+package com.endofjanuary.placement_example.data.remote.meshy.responses
 
 data class TextTo3DModel(
     val art_style: String,

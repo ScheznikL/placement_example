@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.data.remote
+package com.endofjanuary.placement_example.data.remote.meshy
 
 import okhttp3.Interceptor
 import okhttp3.Response

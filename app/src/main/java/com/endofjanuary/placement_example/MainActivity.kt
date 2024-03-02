@@ -13,6 +13,7 @@ import com.endofjanuary.placement_example.ar_screen.ARScreen
 import com.endofjanuary.placement_example.chat.ChatScreen
 import com.endofjanuary.placement_example.loading.LoadingScreen
 import com.endofjanuary.placement_example.modelsList.ModelsListScreen
+import com.endofjanuary.placement_example.register_screen.RegistrationScreen
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
 import home.HomeScreen
@@ -29,8 +30,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "home_screen"
+                    startDestination = "reg_screen"
                 ) {
+                    composable("reg_screen"){
+                        RegistrationScreen(navController = navController)
+                    }
                     composable("chat_screen") {
                         ChatScreen(navController)
                     }
