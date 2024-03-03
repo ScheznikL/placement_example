@@ -7,7 +7,7 @@ class AuthTokenGptInterseptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
         val token = OPENAI_API_KEY
-        if (!token.isNullOrBlank()) {
+        if (token.isNotBlank()) {
             request = request.newBuilder()
                 .addHeader("Authorization", "Bearer $token")
                 .build()

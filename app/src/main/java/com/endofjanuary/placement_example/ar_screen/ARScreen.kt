@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
+import com.endofjanuary.placement_example.utils.BottomBar
 import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.screens.ErrorScreen
 import com.google.ar.core.Config
@@ -70,7 +71,8 @@ fun ARScreen(
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
-        }
+        },
+        bottomBar = { BottomBar(navController = navController)}
     ) { contentPadding ->
         Box(
             contentAlignment = Center,

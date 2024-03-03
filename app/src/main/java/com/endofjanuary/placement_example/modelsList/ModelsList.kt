@@ -3,6 +3,7 @@ package com.endofjanuary.placement_example.modelsList
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,18 +16,33 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabPosition
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,7 +78,18 @@ fun ModelsListScreen(
     val viewModel = getViewModel<ModelsListViewModel>()
 
     Scaffold(
-        bottomBar = { BottomBar(navController = navController) }
+        bottomBar = { BottomBar(navController = navController) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                when (viewModel.state.value.selectedCategory) {
+                    Category.FromText -> navController.navigate("chat_screen")
+                    Category.FromImage -> TODO()
+                }
+
+            }) {
+                Icon(Icons.Default.Add, contentDescription = "Add")
+            }
+        }
     ) { padding ->
         Surface(
             color = MaterialTheme.colorScheme.background,
@@ -71,24 +98,35 @@ fun ModelsListScreen(
                 .padding(padding)
         ) {
             Column {
-                Spacer(modifier = Modifier.height(20.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "Model",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(CenterHorizontally)
+                CategoryTabs(
+                    categories = viewModel.state.value.categories,
+                    selectedCategory = viewModel.state.value.selectedCategory,
+                    onCategorySelected = viewModel::onCategorySelected,
                 )
-                SearchBar(
-                    hint = "Search...",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    // viewModel.searchPokemonList(it)
+                when (viewModel.state.value.selectedCategory) {
+                    Category.FromText -> {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            contentDescription = "Model",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(CenterHorizontally)
+                        )
+                        SearchBar(
+                            hint = "Search...",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            // viewModel.searchPokemonList(it)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        ModelsList(navController = navController, viewModel = viewModel)
+                    }
+
+                    Category.FromImage -> TODO()
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                ModelsList(navController = navController, viewModel = viewModel)
             }
         }
     }
@@ -188,7 +226,6 @@ fun ModelsList(
             }
         }
     }
-
 }
 
 @Composable
@@ -201,6 +238,12 @@ fun ModelInRowEntry(
     val defaultDominantColor = MaterialTheme.colorScheme.surface
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
+    }
+    val dialogRes: MutableState<Boolean?> = remember { mutableStateOf(null) }
+
+    val showDialog = remember { mutableStateOf(false) }
+    if (showDialog.value) {
+        ModelViewTypeDilog(dialogRes = dialogRes, openDialog = showDialog)
     }
     Box(
         contentAlignment = Center,
@@ -217,15 +260,22 @@ fun ModelInRowEntry(
                 )
             )
             .clickable {
-                navController.navigate(
-                    "threed_screen/${entry.id}"
-                )
+                showDialog.value = true
 //                navController.navigate(
 //                    "ar_screen/${entry.id}"
 //                )
-
             }
+
     ) {
+        if (dialogRes.value != null && dialogRes.value!!) {
+            navController.navigate(
+                "ar_screen/${entry.id}"
+            )
+        } else if (dialogRes.value != null) {
+            navController.navigate(
+                "threed_screen/${entry.id}"
+            )
+        }
         Column {// SubcomposeAsyncImage
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -314,6 +364,109 @@ fun NoDataSection(
             modifier = Modifier.align(CenterHorizontally)
         ) {
             Text(text = "Request model")
+        }
+    }
+}
+
+@Composable
+fun HomeCategoryTabIndicator(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Spacer(
+        modifier
+            .padding(horizontal = 24.dp)
+            .height(4.dp)
+            .background(color, RoundedCornerShape(topStartPercent = 100, topEndPercent = 100))
+    )
+}
+
+@Composable
+private fun CategoryTabs(
+    categories: List<Category>,
+    selectedCategory: Category,
+    onCategorySelected: (Category) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val selectedIndex = categories.indexOfFirst { it == selectedCategory }
+    val indicator = @Composable { tabPositions: List<TabPosition> ->
+        HomeCategoryTabIndicator(
+            Modifier.tabIndicatorOffset(tabPositions[selectedIndex])
+        )
+    }
+    TabRow(
+        selectedTabIndex = selectedIndex,
+        indicator = indicator,
+        modifier = modifier
+    ) {
+        categories.forEachIndexed { index, category ->
+            Tab(
+                selected = index == selectedIndex,
+                onClick = { onCategorySelected(category) },
+                text = {
+                    Text(
+                        text = when (category) {
+                            Category.FromText -> "Models from text"
+                            Category.FromImage -> "Models from image"
+                        },
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ModelViewTypeDilog(openDialog: MutableState<Boolean>, dialogRes: MutableState<Boolean?>) {
+    BasicAlertDialog(
+        onDismissRequest = {
+            // Dismiss the dialog when the user clicks outside the dialog or on the back
+            // button. If you want to disable that functionality, simply use an empty
+            // onDismissRequest.
+            openDialog.value = false
+        }
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentWidth()
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(modifier = Modifier.padding(26.dp)) {
+                Text(
+                    text = "Would you like to place this model in your room via camera " +
+                            "or just view in 3D viewer?",
+                    textAlign = TextAlign.Justify
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(
+                        onClick = {
+                            openDialog.value = false
+                            dialogRes.value = false
+                        },
+                        // modifier = Modifier.align(Start)
+                    ) {
+                        Text("Viewer")
+                    }
+                    TextButton(
+                        onClick = {
+                            openDialog.value = false
+                            dialogRes.value = true
+                        },
+                        // modifier = Modifier.align(Start)
+                    ) {
+                        Text("Camera")
+                    }
+                }
+            }
         }
     }
 }

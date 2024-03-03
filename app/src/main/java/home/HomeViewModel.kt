@@ -48,8 +48,8 @@ enum class HomeCategory {
 data class HomeViewState(
     //val featuredPodcasts: PersistentList<PodcastWithExtraInfo> = persistentListOf(),
   //  val refreshing: Boolean = false,
-    val selectedHomeCategory: HomeCategory = HomeCategory.ARScreen,
-    val homeCategories: List<HomeCategory> = emptyList(),
+    val selectedCategory: HomeCategory = HomeCategory.ARScreen,
+    val categories: List<HomeCategory> = emptyList(),
     val errorMessage: String? = null
 ){
     constructor():this(HomeCategory.Chat, HomeCategory.values().asList())

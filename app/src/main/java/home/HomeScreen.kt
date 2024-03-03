@@ -1,48 +1,56 @@
 package home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabPosition
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.utils.BottomBar
-import com.example.jetcaster.ui.home.HomeCategory
 import com.example.jetcaster.ui.home.HomeViewModel
-import com.example.jetcaster.util.verticalGradientScrim
 import org.koin.androidx.compose.getViewModel
+
 
 @Composable
 fun HomeScreen(
@@ -58,13 +66,13 @@ fun HomeScreen(
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
             HomeContent(
-                homeCategories = viewModel.state.value.homeCategories,
-                selectedHomeCategory = viewModel.state.value.selectedHomeCategory,
-                onCategorySelected = viewModel::onHomeCategorySelected,
+//                homeCategories = viewModel.state.value.categories,
+//                selectedHomeCategory = viewModel.state.value.selectedCategory,
+//                onCategorySelected = viewModel::onHomeCategorySelected,
                 modifier = Modifier
-                    .fillMaxSize()
+                    //     .fillMaxSize()
                     .padding(innerPadding),
-                navController = navController
+                //  navController = navController
             )
 
         }
@@ -94,36 +102,36 @@ fun HomeAppBar(
             }
         },
         // backgroundColor = backgroundColor,
-//        actions = {
-//            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-//                IconButton(
-//                    onClick = { /* TODO: Open search */ }
-//                ) {
-//                    Icon(
-//                        imageVector = Icons.Filled.Search,
-//                        contentDescription = stringResource(R.string.cd_search)
-//                    )
-//                }
+        actions = {
+            IconButton(
+                onClick = { /* TODO: Open search */ }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Notifications,
+                    contentDescription = "notification"
+                )
+            }
 //                IconButton(
 //                    onClick = { /* TODO: Open account? */ }
 //                ) {
 //                    Icon(
 //                        imageVector = Icons.Default.AccountCircle,
-//                        contentDescription = stringResource(R.string.cd_account)
+//                        contentDescription = "acc"
 //                    )
 //                }
-//            }
-//        },
+
+        },
         modifier = modifier
     )
 }
+
 @Composable
 fun HomeContent(
-    selectedHomeCategory: HomeCategory,
-    homeCategories: List<HomeCategory>,
+//    selectedHomeCategory: HomeCategory,
+//    homeCategories: List<HomeCategory>,
     modifier: Modifier = Modifier,
-    onCategorySelected: (HomeCategory) -> Unit,
-    navController: NavController,
+//    onCategorySelected: (HomeCategory) -> Unit,
+//    navController: NavController,
 ) {
     Column(
         modifier = modifier.windowInsetsPadding(
@@ -137,11 +145,11 @@ fun HomeContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalGradientScrim(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
-                    startYPercentage = 1f,
-                    endYPercentage = 0f
-                )
+//                .verticalGradientScrim(
+//                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+//                    startYPercentage = 1f,
+//                    endYPercentage = 0f
+//                )
         ) {
             // Draw a scrim over the status bar which matches the app bar
             Spacer(
@@ -158,89 +166,86 @@ fun HomeContent(
 
         }
 
-
-        if (homeCategories.isNotEmpty()) {
-            HomeCategoryTabs(
-                categories = homeCategories,
-                selectedCategory = selectedHomeCategory,
-                onCategorySelected = onCategorySelected
+//        LazyHorizontalGrid(rows = GridCells.Adaptive(minSize = 128.dp)) {
+//            items(20) { i ->
+//                PhotoItem()
+//            }
+//        }
+        Text(
+            "Last Models",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
             )
-        }
-
-        when (selectedHomeCategory) {
-            HomeCategory.Chat -> navController.navigate("chat_screen")
-            HomeCategory.ARScreen -> navController.navigate("chat_screen")
-            HomeCategory.ThreeDScreen -> navController.navigate("models_list")
-        }
-
-
-    }
-}
-@Composable
-private fun HomeCategoryTabs(
-    categories: List<HomeCategory>,
-    selectedCategory: HomeCategory,
-    onCategorySelected: (HomeCategory) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val selectedIndex = categories.indexOfFirst { it == selectedCategory }
-    val indicator = @Composable { tabPositions: List<TabPosition> ->
-        HomeCategoryTabIndicator(
-            Modifier.tabIndicatorOffset(tabPositions[selectedIndex])
         )
-    }
-    TabRow(
-        selectedTabIndex = selectedIndex,
-        indicator = indicator,
-        modifier = modifier
-    ) {
-        categories.forEachIndexed { index, category ->
-            Tab(
-                selected = index == selectedIndex,
-                onClick = { onCategorySelected(category) },
-                text = {
-                    Text(
-                        text = when (category) {
-                            HomeCategory.Chat -> "Open Chat with AI"
-                            HomeCategory.ARScreen -> "Display model on camera"
-                            HomeCategory.ThreeDScreen -> "Show model"
-                        },
-                        style = MaterialTheme.typography.bodySmall
-                    )
+        LazyRow {
+            items(10) {
+                Box(
+                    modifier = modifier
+                        .size(300.dp, 350.dp)
+                        .padding(horizontal = 5.dp, vertical = 10.dp)
+                ) {
+                    PhotoItem()
                 }
-            )
+            }
         }
+//        Button(onClick = {  }, ) {
+//            Text(text = "Create a model ")
+//        }
+
     }
 }
 
 @Composable
-fun HomeCategoryTabIndicator(
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Spacer(
-        modifier
-            .padding(horizontal = 24.dp)
-            .height(4.dp)
-            .background(color, RoundedCornerShape(topStartPercent = 100, topEndPercent = 100))
-    )
-}
-//@Composable
-//@Preview
-//fun PreviewHomeContent() {
-//    val viewModel = getViewModel<HomeViewModel>()
-//    Placement_exampleTheme {
-//        HomeContent(
-//            homeCategories = HomeCategory.values().asList(),
-//            selectedHomeCategory = HomeCategory.Chat,
-//            onCategorySelected = viewModel::onHomeCategorySelected,
-//            navController = rememberNavController()
-//        )
-//    }
-//}
+fun PhotoItem(modifier: Modifier = Modifier) {
+    val defaultDominantColor = MaterialTheme.colorScheme.surface
+    var dominantColor by remember {
+        mutableStateOf(defaultDominantColor)
+    }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .shadow(5.dp, RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(10.dp))
+            .aspectRatio(1f)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        dominantColor,
+                        defaultDominantColor
+                    )
+                )
+            )
+//                .clickable {
+//                    navController.navigate(
+//                        "threed_screen/${entry.id}"
+//                    )
+//                }
+    ) {
+        Column {// SubcomposeAsyncImage
+            //                AsyncImage(
+            //                    model = ImageRequest.Builder(LocalContext.current)
+            //                        .data(entry.modelImageUrl)
+            //                        .crossfade(true)
+            //                        .build(),
+            //                    contentDescription = entry.modelDescription,
+            //                    onSuccess = {
+            //                        viewModel.calcDominantColor(it.result.drawable) { color ->
+            //                            dominantColor = color
+            //                        }
+            //                    },
+            //                    contentScale = ContentScale.Crop,
+            //                    modifier = Modifier
+            //                        .size(120.dp)
+            //                        .align(Alignment.CenterHorizontally)
+            //                )
+            Text(
+                text = "temp description",
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
 
-//@Composable
-//@Preview
-//fun PreviewPodcastCard() {
-//    Placement_exampleTheme {}
-//}
+}

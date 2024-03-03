@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -26,7 +28,7 @@ fun BottomBar(navController: NavController) {
                 Modifier.fillMaxWidth(),
                 // verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
-            ){
+            ) {
                 IconButton(onClick = { navController.navigate("home_screen") }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
@@ -34,7 +36,7 @@ fun BottomBar(navController: NavController) {
                         contentDescription = "Home"
                     )
                 }
-                IconButton(onClick = { /* do something */ }) {
+                IconButton(onClick = { navController.navigate("chat_screen") }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
                         painter = painterResource(id = R.drawable.ic_message),
@@ -44,14 +46,14 @@ fun BottomBar(navController: NavController) {
                 IconButton(onClick = { navController.navigate("models_list") }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
-                        painter = painterResource(id = R.drawable.ic_token),
-                        contentDescription = "3D display"
+                        imageVector = Icons.AutoMirrored.Filled.List,
+                        contentDescription = "Models List"
                     )
                 }
                 IconButton(onClick = {/* navController.navigate("models_list") */ }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
-                        painter = painterResource(R.drawable.ic_center_focus),
+                        imageVector = Icons.Default.Person,
                         contentDescription = "AR display"
                     )
                 }

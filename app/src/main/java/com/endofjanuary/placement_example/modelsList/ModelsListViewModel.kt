@@ -3,6 +3,8 @@ package com.endofjanuary.placement_example.modelsList
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -20,7 +22,6 @@ class ModelsListViewModel(
     private val modelsRoom: ModelsRepo
 ) : ViewModel() {
 
-    private var curPage = 0
 
     var modelsList = mutableStateOf<List<ModelEntry>>(listOf())
     var loadError = mutableStateOf("")
@@ -28,9 +29,17 @@ class ModelsListViewModel(
 
     var isSearching = mutableStateOf(false)
 
-//    init {
-//        loadModels()
-//    }
+    private val selectedCategory = MutableStateFlow(Category.FromText)
+    private val categories = Category.values().asList()
+
+    // Holds our view state which the UI collects via [state]
+    private val _state: MutableState<ModelListViewState> = mutableStateOf(ModelListViewState())
+    val state: State<ModelListViewState>
+        get() = _state
+
+    fun onCategorySelected(category: Category) {
+        selectedCategory.value = category
+    }
 
     private val _modelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
 
@@ -92,4 +101,17 @@ class ModelsListViewModel(
             }
         }
     }
+}
+
+enum class Category {
+    FromText, FromImage
+}
+data class ModelListViewState(
+    //val featuredPodcasts: PersistentList<PodcastWithExtraInfo> = persistentListOf(),
+    //  val refreshing: Boolean = false,
+    val selectedCategory: Category = Category.FromText,
+    val categories: List<Category> = emptyList(),
+    val errorMessage: String? = null
+){
+    constructor():this(Category.FromText, Category.values().asList())
 }

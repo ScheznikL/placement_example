@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">placement_example</string>
+    <string name="OPENAI_API_KEY">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</string>
+    <string name="MESHY_API_KEY">msy_mTSwQvvjyVVw1LnJbH3vZLrPkZahSxajpC34</string>
 </resources>
