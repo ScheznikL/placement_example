@@ -92,12 +92,12 @@ fun LoadingScreen(
                         is Resource.Loading -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         is Resource.None -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         is Resource.Success -> {
-                            LaunchedEffect(snackbarHostState) {
-                                snackbarHostState.showSnackbar(
-                                    message = "Model successfully saved !",
-                                    actionLabel = "success"
-                                )
-                            }
+//                            LaunchedEffect(snackbarHostState) {
+//                                snackbarHostState.showSnackbar(
+//                                    message = "Model successfully saved !",
+//                                    actionLabel = "success"
+//                                )
+//                            }
                             navController.navigate("home_screen")
                             //HomeScreen(navController = navController)
                         } // save to DataStore and go home

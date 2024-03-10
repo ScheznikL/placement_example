@@ -6,5 +6,5 @@ data class Post(
     //val max_tokens: Int,
     val messages: List<Message>,
     val model: String = "gpt-3.5-turbo",
-    val temperature: Double = 0.6
+    val temperature: Double = 0.7
 )

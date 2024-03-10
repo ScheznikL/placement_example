@@ -98,7 +98,7 @@ class ChatScreenViewModel(
                 assistantMessage.substringAfter(delimiter = " How many ").split(' ').first()
             }"
         }
-        return null
+        return " additionally: "
     }
 
     private fun composeMessages(newMessage: String): List<Message> { //todo remove
