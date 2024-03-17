@@ -4,7 +4,9 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.endofjanuary.placement_example.repo.AWStorageRepo
+import kotlinx.coroutines.launch
 
 class UploadImageViewModel(
     private val awStorageRepo: AWStorageRepo,
@@ -15,8 +17,14 @@ class UploadImageViewModel(
 
 
     fun onPhotoPickerSelect(uri: Uri?) {
-        if(uri !=null) selectedUri.value = uri
+        if (uri != null) selectedUri.value = uri
 
         Log.d("selected", uri?.toString() ?: "null uri")
+    }
+
+    fun getPresignedUrl() {
+        viewModelScope.launch {
+            awStorageRepo.putPresignedS3Object(selectedUri.value.path!!)
+        }
     }
 }

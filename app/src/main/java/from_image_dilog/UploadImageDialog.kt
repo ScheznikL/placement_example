@@ -1,11 +1,10 @@
 package from_image_dilog
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,10 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,34 +70,38 @@ fun UploadImageDialog(
                 verticalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(modifier = Modifier
-                    .weight(1f)
-                    .border(1.dp, Color.DarkGray)) {
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .padding(end = 5.dp),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Default,
-                            capitalization = KeyboardCapitalization.Sentences
-                        ),
-                        value = textInput,
-                        onValueChange = { viewModel.inputValueState.value = it },
-                    )
-                    Button(
-                        onClick = {
-                            pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                            /*                        navController.navigate(
-                                                        "threed_screen/${modelId}"
-                                                    )*/
-                        },
-                    ) {
-                        Text("Pick an image")
-                    }
+                /* Column(
+                     //verticalArrangement = Arrangement.Center,
+                     horizontalAlignment = Alignment.CenterHorizontally,
+                     modifier = Modifier
+                     .weight(3f)
+                     //.border(1.dp, Color.DarkGray)
+                 ) {*/
+                OutlinedTextField(
+                    modifier = Modifier
+                        .padding(5.dp),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Default,
+                    ),
+                    value = textInput,
+                    onValueChange = { viewModel.inputValueState.value = it },
+                )
+                Button(
+                    onClick = {
+                        pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        /*                        navController.navigate(
+                                                    "threed_screen/${modelId}"
+                                                )*/
+                    },
+                ) {
+                    Text("Pick an image")
                 }
 
-                if (uri != null) {
-                    Card(modifier = Modifier.weight(1f)) {
+                if (uri != Uri.EMPTY) {
+                    Card(modifier = Modifier
+                       // .weight(1f)
+                        .padding(top = 10.dp, bottom = 10.dp)) {
                         AsyncImage(
                             model = uri,
                             contentDescription = null,
@@ -110,10 +111,7 @@ fun UploadImageDialog(
                     }
                     Button(
                         onClick = {
-                            pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                            /*                        navController.navigate(
-                                                        "threed_screen/${modelId}"
-                                                    )*/
+                            viewModel.getPresignedUrl()
                         },
                     ) {
                         Text("Proceed")
