@@ -1,6 +1,6 @@
 package com.endofjanuary.placement_example.data.remote.meshy
 
-import MESHY_API_KEY
+import com.endofjanuary.placement_example.MESHY_API_KEY
 import okhttp3.Interceptor
 import okhttp3.Response
 

@@ -5,6 +5,7 @@ data class ModelEntry (
     val modelPath: String,
     val modelImageUrl: String,
     val modelDescription: String,
+    val progress: Int = 0
 ){
     constructor(): this(0,"models/model_v2_chair.glb","R.drawable.preview_model","chair")
 }

@@ -1,13 +1,17 @@
 package com.endofjanuary.placement_example.chat
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -42,14 +46,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.data.remote.gpt.response.Message
 import com.endofjanuary.placement_example.utils.BottomBar
@@ -64,11 +71,12 @@ fun ChatScreen(
     navController: NavController
 ) {
     val viewModel = getViewModel<ChatScreenViewModel>()
-
+    val mainViewModel = getViewModel<MainViewModel>()
 
 //    var list by remember {
 //        mutableStateOf(listOf<String>())
 //    }
+
 
     val messagesList = remember {
         viewModel.messagesListState
@@ -83,6 +91,24 @@ fun ChatScreen(
 //
 //        }
 //    }
+    val context = LocalContext.current
+    var hasNotificationPermission by remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            mutableStateOf(
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            )
+        } else mutableStateOf(true)
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            hasNotificationPermission = isGranted
+        }
+    )
 
 
     Scaffold(
@@ -99,7 +125,11 @@ fun ChatScreen(
 //            //.weight(1f),
 //            // verticalArrangement = Arrangement.Bottom,
 //        )
-        Box(modifier = Modifier.padding(padding)) {
+
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) { // todo fro download purposes
+            launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }*/
+       /* Box(modifier = Modifier.padding(padding)) {
             MessagesList(
                 scrollState = scrollState,
                 list = messagesList,
@@ -107,9 +137,10 @@ fun ChatScreen(
                     //   .padding(padding)
                     .fillMaxSize(),
                 navController = navController,
-                viewModel = viewModel
+                viewModel = viewModel,
+                mainViewModel = mainViewModel
             )
-        }
+        }*/
 
 
     }
@@ -124,7 +155,8 @@ fun MessagesList(
     list: List<Message>,
     scrollState: LazyListState,
     viewModel: ChatScreenViewModel,
-    navController: NavController
+    navController: NavController,
+    mainViewModel: MainViewModel
 ) {
     Log.d("scrollLog", "${list.size - 1}")
 
@@ -189,7 +221,7 @@ fun MessagesList(
                                 BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                                 shape = RoundedCornerShape(100)
                             )
-                          //  .padding(8.dp)
+                        //  .padding(8.dp)
                         //   .align(Alignment.CenterEnd)
                         //.weight(1f)
                     ) {
@@ -204,7 +236,7 @@ fun MessagesList(
                     Row(
                         //horizontalArrangement = Arrangement.Start,
                         modifier = modifier
-                          //  .padding(8.dp)
+                        //  .padding(8.dp)
                         //  .align(Alignment.CenterStart)
                     ) {
                         Text(
@@ -248,7 +280,8 @@ fun MessagesList(
             viewModel = viewModel,
             navController = navController,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            mainViewModel = mainViewModel
             // .align(Alignment.BottomCenter)
             //.imePadding(),
         ) {
@@ -296,6 +329,7 @@ fun UserInputRow(
     viewModel: ChatScreenViewModel,
     navController: NavController,
     modifier: Modifier = Modifier,
+    mainViewModel: MainViewModel,
     onFocusChange: () -> Unit,
 ) {
     Row(
@@ -332,10 +366,9 @@ fun UserInputRow(
                 .weight(1f),
             contentPadding = PaddingValues(0.dp),
             onClick = {
-                navController.navigate("loading_screen/${viewModel.description}")
-
                 Log.d("description", viewModel.description ?: "null")
-
+                mainViewModel.loadModelEntryFromText(viewModel.description ?: textInput)
+               // navController.navigate("home_screen")
             }) {
             Icon(
                 Icons.Default.Done,
@@ -371,4 +404,3 @@ fun SimpleComposablePreview() {
     val navController = rememberNavController()
     ChatScreen(navController)
 }
-

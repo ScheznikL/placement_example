@@ -141,4 +141,11 @@ dependencies {
     ksp("androidx.room:room-compiler:$room_version")
     // To use Kotlin Symbol Processing (KSP)
     //ksp("androidx.room:room-compiler:$room_version")
+
+    //lottie lib
+    val version = "4.2.0"
+    implementation("com.airbnb.android:lottie-compose:$version")
+
+    //AWS
+    implementation("aws.sdk.kotlin:s3:1.0.41")
 }

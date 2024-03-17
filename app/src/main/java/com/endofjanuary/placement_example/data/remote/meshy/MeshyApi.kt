@@ -1,6 +1,8 @@
 package com.endofjanuary.placement_example.data.remote.meshy
 
-import com.endofjanuary.placement_example.data.remote.meshy.request.Post
+import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromImage
+import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromText
+import com.endofjanuary.placement_example.data.remote.meshy.responses.ImageTo3DModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.PostId
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
 import retrofit2.http.Body
@@ -10,11 +12,19 @@ import retrofit2.http.Path
 
 
 interface MeshyApi {
-    @POST("text-to-3d")
+    @POST("v2/text-to-3d")
     suspend fun postTextTo3D(
-        @Body body: Post,
+        @Body body: PostFromText,
     ): PostId
 
-    @GET("text-to-3d/{id}")
+    @GET("v2/text-to-3d/{id}")
     suspend fun getTextTo3D(@Path("id") id: String): TextTo3DModel
+
+    @POST("v1/image-to-3d")
+    suspend fun postImageTo3D(
+        @Body body: PostFromImage,
+    ): PostId
+
+    @GET("v1/image-to-3d/{id}")
+    suspend fun getImageTo3D(@Path("id") id: String): ImageTo3DModel
 }

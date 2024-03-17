@@ -1,19 +1,23 @@
 package com.endofjanuary.placement_example
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.endofjanuary.placement_example.data.converters.ResponseToModelEntryConverter
 import com.endofjanuary.placement_example.data.models.ModelEntry
-import com.endofjanuary.placement_example.data.remote.meshy.request.Post
+import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromText
 import com.endofjanuary.placement_example.data.remote.meshy.responses.PostId
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
 import com.endofjanuary.placement_example.data.room.ModelEntity
@@ -39,7 +43,12 @@ class MainViewModel(
 //        loadModelEntry()
 //    }
     companion object {
-        private const val CHANNEL_NEW_MODEL = "model_success"
+        const val CHANNEL_NEW_MODEL = "model_success"
+        const val NOTIFICATION_ID = 100
+    }
+
+    init {
+        createNotificationChannel()
     }
 
     private val _byteArrayState: MutableState<Resource<Boolean>> =
@@ -50,23 +59,15 @@ class MainViewModel(
     var model = mutableStateOf(ModelEntry())
     var postId = mutableStateOf(PostId(""))
 
-    var builder = NotificationCompat.Builder(context, CHANNEL_NEW_MODEL)
-        .setSmallIcon(R.drawable.ic_center_focus)
-        .setContentTitle("My notification")
-        .setContentText("Much longer text that cannot fit one line...")
-        .setStyle(
-            NotificationCompat.BigTextStyle()
-                .bigText("Much longer text that cannot fit one line...")
-        )
-        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
+    lateinit var modelEntry: Resource<ModelEntry>
     private fun createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is not in the Support Library.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = CHANNEL_NEW_MODEL
-            val descriptionText = "new model successfully added"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val descriptionText = "Information of new model"
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_NEW_MODEL, name, importance).apply {
                 description = descriptionText
             }
@@ -76,83 +77,92 @@ class MainViewModel(
             notificationManager.createNotificationChannel(channel)
         }
     }
-    suspend fun loadModelEntry(prompt: String): Resource<ModelEntry> {
+
+    fun loadModelEntryFromText(prompt: String) {
         // viewModelScope.launch {
         //isLoading.value = true
         Log.d("loadModel", "Enter point")
-        val result = meshyRepository.postTextTo3D(Post(prompt, "preview"))
-        when (result) {
-            is Resource.Success -> {
-                /* loadError.value = ""
-                 isLoading.value = false*/
-                postId.value = result.data ?: PostId("")
-                if (result.data != null) {
-                    Log.d("loadModelEntry_result Success id:", result.data.result)
-                    var eventualApiRes = getTextTo3D(result.data.result)
-                    when (eventualApiRes) {
-                        is Resource.Error -> {
-                            Log.d("eventualApiRes Error", eventualApiRes.toString())
-                            /* loadError.value = eventualApiRes.message!!
-                             isLoading.value = false*/
-                            return Resource.Error(eventualApiRes.message!!)
-                        }
+        viewModelScope.launch {
+            val result = meshyRepository.postTextTo3D(PostFromText(prompt, "preview"))
+            when (result) {
+                is Resource.Success -> {
+                    /* loadError.value = ""
+                     isLoading.value = false*/
+                    postId.value = result.data ?: PostId("")
+                    if (result.data != null) {
+                        Log.d("loadModelEntry_result Success id:", result.data.result)
+                        var eventualApiRes = getTextTo3D(result.data.result)
+                        when (eventualApiRes) {
+                            is Resource.Error -> {
+                                Log.d("eventualApiRes Error", eventualApiRes.toString())
+                                /* loadError.value = eventualApiRes.message!!
+                                 isLoading.value = false*/
+                                modelEntry = Resource.Error(eventualApiRes.message!!)
+                                showNotification(NotificationType.ERROR, eventualApiRes.message!!)
+                            }
 
-                        is Resource.Success -> {
-                            Log.d(
-                                "eventualApiRes Success id:",
-                                eventualApiRes.data?.id ?: "none"
-                            )
-                            while (eventualApiRes.data!!.status == "PENDING" || eventualApiRes.data!!.status == "IN_PROGRESS") {
+                            is Resource.Success -> {
                                 Log.d(
-                                    "loadModel while",
-                                    "while entered with status ${eventualApiRes.data!!.status}"
+                                    "eventualApiRes Success id:",
+                                    eventualApiRes.data?.id ?: "none"
                                 )
-                                delay(30000)
-                                eventualApiRes = getTextTo3D(result.data.result)
-                                // return Resource.Loading()
-                            }
-                            if (eventualApiRes.data!!.status == "SUCCEEDED") {
-                                /* loadError.value = ""
-                                 isLoading.value = false*/
-
-                                model.value =
-                                    ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
-                                return Resource.Success(
-                                    ResponseToModelEntryConverter().toModelEntry(
-                                        eventualApiRes.data
+                                while (eventualApiRes.data!!.status == "PENDING" || eventualApiRes.data!!.status == "IN_PROGRESS") {
+                                    Log.d(
+                                        "loadModel while",
+                                        "while entered with status ${eventualApiRes.data!!.status}"
                                     )
-                                )
-                            }
-                            if (eventualApiRes.data!!.status == "FAILED" || eventualApiRes.data!!.status == "EXPIRED") {
-                                /* loadError.value = eventualApiRes.data!!.status
-                                 isLoading.value = false*/
-                                model.value =
-                                    ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
-                                return Resource.Error(eventualApiRes.data!!.status)
-                            }
-                        }
+                                    delay(30000)
+                                    eventualApiRes = getTextTo3D(result.data.result)
+                                    // return Resource.Loading()
+                                }
+                                if (eventualApiRes.data!!.status == "SUCCEEDED") {
+                                    /* loadError.value = ""
+                                     isLoading.value = false*/
 
-                        else -> {
-                            return Resource.Loading()
+                                    model.value =
+                                        ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
+                                    modelEntry = Resource.Success(
+                                        ResponseToModelEntryConverter().toModelEntry(
+                                            eventualApiRes.data
+                                        )
+                                    )
+                                    saveByteInstancedModel(context = context, 1)
+                                    showNotification(NotificationType.SUCCESS, prompt)
+                                }
+                                if (eventualApiRes.data!!.status == "FAILED" || eventualApiRes.data!!.status == "EXPIRED") {
+                                    /* loadError.value = eventualApiRes.data!!.status
+                                     isLoading.value = false*/
+                                    model.value =
+                                        ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
+                                    showNotification(
+                                        NotificationType.ERROR,
+                                        eventualApiRes.data!!.status
+                                    )
+                                }
+                            }
+
+                            else -> {
+                                showNotification(NotificationType.LOADING)
+                            }
                         }
                     }
                 }
-            }
 
-            is Resource.Error -> {
-                return Resource.Error(result.message!!)
+                is Resource.Error -> {
+                    showNotification(NotificationType.ERROR, result.message!!)
 
-            }
+                }
 
-            is Resource.Loading -> {
-                return Resource.Loading()
-            }
+                is Resource.Loading -> {
+                    showNotification(NotificationType.LOADING)
+                }
 
-            else -> {
-                return Resource.Loading()
+                else -> {
+                    showNotification(NotificationType.LOADING)
+                }
             }
         }
-        return Resource.Loading()
+        showNotification(NotificationType.LOADING)
     }
 
     suspend fun getTextTo3D(id: String): Resource<TextTo3DModel> {
@@ -178,6 +188,7 @@ class MainViewModel(
                     )
                 )
             }
+
             Resource.Success(true)
 
         } catch (e: Exception) {
@@ -246,6 +257,7 @@ class MainViewModel(
                 }
             }
             _byteArrayState.value = Resource.Success(true)
+            showNotification(NotificationType.SUCCESS, model.value.modelDescription)
             //return Resource.Success(true)
 //                    } else
 //                    {
@@ -256,32 +268,84 @@ class MainViewModel(
             _byteArrayState.value = Resource.Error(e.message.toString())
         }
     }
+
+    private fun showNotification(type: NotificationType, description: String = "") {
+        Log.d("loadModel", "showNotification Enter point")
+        with(NotificationManagerCompat.from(context)) {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // TODO: Consider calling
+                // ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                // public fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                //                                        grantResults: IntArray)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+
+                return@with
+            }
+            when (type) {
+                NotificationType.LOADING -> {
+                    val builder = NotificationCompat.Builder(context, CHANNEL_NEW_MODEL).apply {
+                        setContentTitle("Model is loading")
+                        setContentText("Download in progress")
+                        setStyle(NotificationCompat.BigTextStyle().bigText("loading"))
+                        setSmallIcon(R.drawable.ic_blur)
+                        setPriority(NotificationCompat.PRIORITY_MAX)
+                    }
+                    val PROGRESS_MAX = 100
+                    val PROGRESS_CURRENT = 0
+                    NotificationManagerCompat.from(context).apply {
+                        // Issue the initial notification with zero progress.
+                        builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false)
+                        notify(NOTIFICATION_ID, builder.build())
+
+                        // Do the job that tracks the progress here.
+                        // Usually, this is in a worker thread.
+                        // To show progress, update PROGRESS_CURRENT and update the notification with:
+                        // builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                        // notificationManager.notify(notificationId, builder.build());
+
+                        // When done, update the notification once more to remove the progress bar.
+                        builder.setContentText("Download complete")
+                            .setProgress(0, 0, false)
+                        notify(NOTIFICATION_ID, builder.build())
+                    }
+                }
+
+                NotificationType.ERROR -> {
+
+                    val builder = NotificationCompat.Builder(context, CHANNEL_NEW_MODEL)
+                        .setSmallIcon(R.drawable.ic_token)
+                        .setContentTitle("Error!")
+                        .setContentText(description)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    // notificationId is a unique int for each notification that you must define.
+                    notify(NOTIFICATION_ID, builder.build())
+                }
+
+                NotificationType.SUCCESS -> {
+
+                    val builder = NotificationCompat.Builder(context, CHANNEL_NEW_MODEL)
+                        .setSmallIcon(R.drawable.ic_center_focus)
+                        .setContentTitle("New model!")
+                        .setContentText("New model was successfully created")
+                        .setStyle(NotificationCompat.BigTextStyle())
+                        .setPriority(NotificationCompat.PRIORITY_MAX)
+                    // notificationId is a unique int for each notification that you must define.
+                    notify(NOTIFICATION_ID, builder.build())
+                }
+            }
+
+        }
+    }
 }
 
-/*
-* to use
-*
-*  assetLoader.createInstancedAsset(buffer, this)!!.also { model ->
-                    models += model
-                    loadResourcesSuspended(model) { resourceFileName: String ->
-                        context.loadFileBuffer(resourceResolver(resourceFileName))
-                    }
-                    // Release model since it will not be re-instantiated
-//                model.releaseSourceData()
-                }
-* or
-*     fun createInstancedModel(
-        buffer: Buffer,
-        count: Int,
-        resourceResolver: (resourceFileName: String) -> Buffer? = { null }
-    ): List<ModelInstance> =
-        arrayOfNulls<ModelInstance>(count).apply {
-            assetLoader.createInstancedAsset(buffer, this)!!.also { model ->
-                models += model
-                loadResources(model, resourceResolver)
-                // Release model since it will not be re-instantiated
-//                model.releaseSourceData()
-            }
-        }.filterNotNull()
-*
-* */
+enum class NotificationType {
+    LOADING,
+    ERROR,
+    SUCCESS
+}

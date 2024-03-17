@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.endofjanuary.placement_example.MainActivity
 import com.endofjanuary.placement_example.data.converters.ResponseToModelEntryConverter
 import com.endofjanuary.placement_example.data.models.ModelEntry
-import com.endofjanuary.placement_example.data.remote.meshy.request.Post
+import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromText
 import com.endofjanuary.placement_example.data.remote.meshy.responses.PostId
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
 import com.endofjanuary.placement_example.data.room.ModelEntity
@@ -48,7 +48,7 @@ class LoadingScreenViewModel(
         // viewModelScope.launch {
         //isLoading.value = true
         Log.d("loadModel", "Enter point")
-        val result = meshyRepository.postTextTo3D(Post(prompt, "preview"))
+        val result = meshyRepository.postTextTo3D(PostFromText(prompt, "preview"))
         when (result) {
             is Resource.Success -> {
                 /* loadError.value = ""

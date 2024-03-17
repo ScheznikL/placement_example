@@ -31,8 +31,21 @@ class MainApplication : Application() {
             // Load modules
             modules(listOf(appModule,databaseModule))
         }
-
+      //  createNotificationChannel()
     }
+//    private fun createNotificationChannel() {
+//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            val channel = NotificationChannel(
+//                MainViewModel.CHANNEL_NEW_MODEL,
+//                "New Model",
+//                NotificationManager.IMPORTANCE_HIGH
+//            )
+//            channel.description = "See if new model was successfully created"
+//
+//            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//            notificationManager.createNotificationChannel(channel)
+//        }
+//    }
     private val databaseModule = module{
         single { db.modelDao()}
 

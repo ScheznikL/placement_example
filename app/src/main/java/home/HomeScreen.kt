@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,7 +73,7 @@ fun HomeScreen(
                 modifier = Modifier
                     //     .fillMaxSize()
                     .padding(innerPadding),
-                //  navController = navController
+                  navController = navController
             )
 
         }
@@ -131,7 +132,7 @@ fun HomeContent(
 //    homeCategories: List<HomeCategory>,
     modifier: Modifier = Modifier,
 //    onCategorySelected: (HomeCategory) -> Unit,
-//    navController: NavController,
+    navController: NavController,
 ) {
     Column(
         modifier = modifier.windowInsetsPadding(
@@ -189,9 +190,22 @@ fun HomeContent(
                 }
             }
         }
-//        Button(onClick = {  }, ) {
-//            Text(text = "Create a model ")
-//        }
+        Column{
+            Button(
+                onClick = {
+                    navController.navigate("chat_screen")
+                },
+            ) {
+                Text(text = "Begin chat to create unique model")
+            }
+            Button(
+                onClick = {
+                    navController.navigate("image_uploading")
+                },
+            ) {
+                Text(text = "Model from Image")
+            }
+        }
 
     }
 }

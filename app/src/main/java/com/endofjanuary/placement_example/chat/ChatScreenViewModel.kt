@@ -1,6 +1,7 @@
 package com.endofjanuary.placement_example.chat
 
 import android.util.Log
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,23 +29,29 @@ val assistantMessage: Message = Message(
 )
 
 class ChatScreenViewModel(
-    private val chatRepository: ChatRepo
+    private val chatRepository: ChatRepo,
 ) : ViewModel() {
 
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
     val isSuccess = mutableStateOf(false)
-    private val _messagesListState: MutableList<Message> = mutableListOf()
-    val messagesListState: List<Message>
-        get() = _messagesListState
+    var inputValueState = mutableStateOf("")
+
+    private val _messagesListState = mutableStateOf<List<Message>>(listOf())
+    val messagesListState: State<List<Message>> get() = _messagesListState
+
 
     var description: String? = null
+
     private var fullUserMessage = ""
 
     fun send(userMessageContext: String) {
+        description = userMessageContext
+
         isLoading.value = true
         loadError.value = ""
-        _messagesListState += Message(role = "user", content = userMessageContext)
+        _messagesListState.value =
+            _messagesListState.value.plus(Message(role = "user", content = userMessageContext))
         // if (fullUserMessage.isEmpty())
         fullUserMessage += "$userMessageContext "
 
@@ -57,7 +64,8 @@ class ChatScreenViewModel(
                 is Resource.Success -> {
                     isLoading.value = false
                     if (result.data != null) {
-                        _messagesListState += result.data.choices[0].message
+                        _messagesListState.value =
+                            _messagesListState.value.plus(result.data.choices[0].message)
                         if (!result.data.choices[0].message.content.contains("FINAL object is")) {
                             fullUserMessage += "${extractQuestionObj(result.data.choices[0].message.content)}: "
                         } else {
@@ -86,7 +94,7 @@ class ChatScreenViewModel(
     }
 
     private fun extractFullDescription(assistantMessage: String): String =
-        assistantMessage.substringAfter("FINAL object is")
+        if(!assistantMessage.contains(" is : ")) assistantMessage.substringAfter("FINAL object is") else assistantMessage.substringAfter("FINAL object is : ")
 
 
     private fun extractQuestionObj(assistantMessage: String): String? {
