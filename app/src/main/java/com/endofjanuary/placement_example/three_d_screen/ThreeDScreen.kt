@@ -18,22 +18,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.utils.BottomBar
 import com.endofjanuary.placement_example.utils.Resource
+import com.endofjanuary.placement_example.utils.ThreeDScreenTopBar
 import com.google.android.filament.gltfio.ResourceLoader
 import io.github.sceneview.Scene
 import io.github.sceneview.math.Position
@@ -51,78 +48,16 @@ fun ThreeDScreen(
     navController: NavController,
     modelId: Int?
 ) {
-    val engine = rememberEngine()
-    val modelLoader = rememberModelLoader(engine)
     val viewModel = getViewModel<ThreeDScreenViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val temp: Resource<Boolean> = Resource.Success(true)
-
-    when (temp) {
-        is Resource.Success -> Scaffold(
-            bottomBar = { BottomBar(navController = navController) },
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
-            },
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(id = R.string.app_name)
-                        )
-                    },
-                    colors = TopAppBarDefaults.mediumTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary
-
-                    ),
-                )
-            }
-        ) { padding ->
-            ThreeDMain(
-                modifier = Modifier.padding(padding),
-                viewModel = viewModel,
-                snackbarHostState = snackbarHostState,
-                modelId = modelId
-                // modelInstance = viewModel.loadedInstancesState.value.data!!
-            )
-        }
-
-        is Resource.Error -> LaunchedEffect(snackbarHostState) {
-            snackbarHostState.showSnackbar(
-                message = "Error: {instanceState.message}",
-                actionLabel = "message"
-            )
-        }
-
-        is Resource.Loading -> Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                style = MaterialTheme.typography.bodySmall,
-                text = "loading model...",
-            )
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-
-        is Resource.None -> Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                style = MaterialTheme.typography.bodySmall,
-                text = "loading...",
-            )
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-    }
+    ThreeDMain(
+        viewModel = viewModel,
+        snackbarHostState = snackbarHostState,
+        modelId = modelId!!,
+        navController = navController
+        // modelInstance = viewModel.loadedInstancesState.value.data!!
+    )
 }
 
 @Composable
@@ -131,35 +66,50 @@ fun ThreeDMain(
 //    modelInstance: ModelInstance,
     viewModel: ThreeDScreenViewModel,
     snackbarHostState: SnackbarHostState,
-    modelId: Int?
+    modelId: Int,
+    navController: NavController,
 ) {
-    if (modelId != null) {
-        Box(modifier = modifier.fillMaxSize()) {
-            val engine = rememberEngine()
-            val modelLoader = rememberModelLoader(engine)
+    val engine = rememberEngine()
+    val modelLoader = rememberModelLoader(engine)
+    val assetManager = LocalContext.current.assets
+    var resourceLoader = ResourceLoader(engine, true)
 
-            val assetManager = LocalContext.current.assets
-            var resourceLoader = ResourceLoader(engine, true)
-            LaunchedEffect(true) {
-              //  viewModel.loadInstanceNone()
-               // viewModel.loadModelLocal(modelLoader,/*engine,*/ modelLoader.assetLoader, assetManager, resourceLoader)
-                 viewModel.loadModelRemote(modelLoader, modelId)
-            }
-            val instanceState by remember {
-                viewModel.loadedInstancesState
-            }
+    val instanceState by remember {
+        viewModel.loadedInstancesState
+    }
+    val modelUrl by remember {
+        viewModel.modelImgUrl
+    }
+    val modelDescription = mutableStateOf(viewModel.model.value.modelDescription )
 
-            val modelUrl by remember {
-                viewModel.modelImgUrl
-            }
+    LaunchedEffect(true) {
+        //  viewModel.loadInstanceNone()
+       //  viewModel.loadModelLocal(modelLoader,/*engine,*/ modelLoader.assetLoader, assetManager, resourceLoader)
+        viewModel.loadModelRemote(modelLoader, modelId)
+    }
+
+    Scaffold(
+        bottomBar = { BottomBar(navController = navController) },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
+        topBar = {
+            ThreeDScreenTopBar(
+                modelId = modelId,
+                modelDescription = modelDescription,
+                navController = navController
+            )
+        }
+    ) { padding ->
+        Box(modifier = modifier.fillMaxSize().padding(padding)) {
             when (instanceState) {
                 is Resource.Success -> {
                     val environmentLoader = rememberEnvironmentLoader(engine)
                     val cameraNode = rememberCameraNode(engine).apply {
                         position = Position(z = 4.0f)
                     }
-                  //  val centerNode = rememberNode(engine)
-                   //     .addChildNode(cameraNode)
+                    //  val centerNode = rememberNode(engine)
+                    //     .addChildNode(cameraNode)
 
 
                     //TODO try to auto rotate
@@ -177,7 +127,7 @@ fun ThreeDMain(
 //                    }
 
                     // Define transition
-                //    val transition = updateTransition(targetState = transitionState.value)
+                    //    val transition = updateTransition(targetState = transitionState.value)
 
                     // Define animations
 //                    val cameraRotation by transition.animateRotation(
@@ -218,22 +168,6 @@ fun ThreeDMain(
 //                            cameraNode.lookAt(centerNode)
 //                        },
                     )
-//                    Image(
-//                        modifier = Modifier
-//                            .width(192.dp)
-//                            .align(Alignment.BottomEnd)
-//                            .navigationBarsPadding()
-//                            .padding(16.dp)
-//                            .background(
-//                                color = MaterialTheme.colorScheme.primaryContainer.copy(
-//                                    alpha = 0.5f
-//                                ),
-//                                shape = MaterialTheme.shapes.small
-//                            )
-//                            .padding(8.dp),
-//                        painter = painterResource(id = R.drawable.ic_launcher_background), //todo load image
-//                        contentDescription = null
-//                    )
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(modelUrl)

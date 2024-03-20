@@ -1,4 +1,4 @@
-package from_image_dilog
+package upload_image
 
 import android.net.Uri
 import android.util.Log

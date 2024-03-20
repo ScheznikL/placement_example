@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.modelsList
+package com.endofjanuary.placement_example.models_list_screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

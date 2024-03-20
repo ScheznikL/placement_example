@@ -39,4 +39,17 @@ class ModelsRepoImpl(
             Resource.Error(e.message.toString())
         }
     }
+
+    override suspend fun getLastModel(): Resource<ModelEntity> {
+        return try {
+            val result = modelEntityDao.getLastModel()
+            if (result != null) {
+                Resource.Success(result)
+            } else {
+                Resource.Error("Error")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message.toString())
+        }
+    }
 }

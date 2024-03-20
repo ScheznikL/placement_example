@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.modelsList
+package com.endofjanuary.placement_example.models_list_screen
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable

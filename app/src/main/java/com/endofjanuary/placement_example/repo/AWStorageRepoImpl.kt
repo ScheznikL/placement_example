@@ -53,12 +53,12 @@ class AWStorageRepoImpl:AWStorageRepo {
     private val objectKey: String = "key${++i}"
     override suspend  fun putPresignedS3Object(objectPath: String) {
         val metadataVal = mutableMapOf<String, String>()
-        metadataVal["myVal"] = "test"
+        //metadataVal["myVal"] = "test"
 
         val request = PutObjectRequest {
             bucket = _bucketName
             key = objectKey
-            metadata = metadataVal
+         //   metadata = metadataVal
             body = File(objectPath).asByteStream()
         }
 

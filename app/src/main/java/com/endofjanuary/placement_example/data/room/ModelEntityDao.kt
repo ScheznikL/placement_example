@@ -11,6 +11,8 @@ interface ModelEntityDao {
     fun getAll(): List<ModelEntity>
     @Query("SELECT * FROM models WHERE id = :modelId")
     fun getModelById(modelId: Int): ModelEntity?
+    @Query("SELECT * FROM models ORDER BY id DESC LIMIT 1")
+    fun getLastModel():ModelEntity?
     @Insert
     fun insertAll(vararg models: ModelEntity)
     @Delete

@@ -13,13 +13,13 @@ import androidx.navigation.navArgument
 import com.endofjanuary.placement_example.ar_screen.ARScreen
 import com.endofjanuary.placement_example.chat.ChatScreenNew
 import com.endofjanuary.placement_example.loading.LoadingScreen
-import com.endofjanuary.placement_example.modelsList.ModelsListScreen
+import com.endofjanuary.placement_example.models_list_screen.ModelsListScreen
 import com.endofjanuary.placement_example.register_screen.RegistrationScreen
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
-import from_image_dilog.UploadImageDialog
 import home.HomeScreen
+import upload_image.UploadImageDialog
 
 
 class MainActivity : ComponentActivity() {
@@ -46,7 +46,6 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(navController)
                     }
                     composable(
-                        //"ar_screen",
                         "ar_screen/{id}",
                         arguments = listOf(
                             navArgument("id") {

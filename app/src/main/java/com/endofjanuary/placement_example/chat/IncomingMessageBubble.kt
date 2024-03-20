@@ -44,7 +44,7 @@ fun IncomingMessageBubble(
                 .clip(CircleShape),
                 contentScale = ContentScale.Crop,
                 painter = painterResource(com.endofjanuary.placement_example.R.drawable.chatgptlogo),
-                contentDescription = "user image")
+                contentDescription = "chat image")
             Box(modifier = Modifier.weight(1.0f)) {
                 Column(horizontalAlignment = Alignment.Start) {
                     Column(

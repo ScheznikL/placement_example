@@ -7,4 +7,5 @@ abstract class ModelsRepo {
     abstract suspend fun getAllModels(): Resource<List<ModelEntity>>
     abstract suspend fun saveModel(modelEntity: ModelEntity): Resource<Boolean>
     abstract suspend fun getModelById(modelId: Int): Resource<ModelEntity>
+    abstract suspend fun getLastModel(): Resource<ModelEntity>
 }

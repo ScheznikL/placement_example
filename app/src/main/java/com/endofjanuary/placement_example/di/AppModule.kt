@@ -8,7 +8,7 @@ import com.endofjanuary.placement_example.data.remote.gpt.ChatComplitionApi
 import com.endofjanuary.placement_example.data.remote.meshy.AuthTokenInterceptor
 import com.endofjanuary.placement_example.data.remote.meshy.MeshyApi
 import com.endofjanuary.placement_example.loading.LoadingScreenViewModel
-import com.endofjanuary.placement_example.modelsList.ModelsListViewModel
+import com.endofjanuary.placement_example.models_list_screen.ModelsListViewModel
 import com.endofjanuary.placement_example.repo.AWStorageRepo
 import com.endofjanuary.placement_example.repo.AWStorageRepoImpl
 import com.endofjanuary.placement_example.repo.ChatRepo
@@ -17,13 +17,13 @@ import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.repo.MeshyRepoImpl
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
 import com.example.jetcaster.ui.home.HomeViewModel
-import from_image_dilog.UploadImageViewModel
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import upload_image.UploadImageViewModel
 
 private const val BASE_MESHY_URL = "https://api.meshy.ai/"
 private const val BASE_GPT_URL = "https://api.openai.com/v1/"
@@ -74,7 +74,7 @@ val appModule = module {
         HomeViewModel()
     }
     viewModel {
-        ChatScreenViewModel(get())
+        ChatScreenViewModel(get(), get())
     }
 
     viewModel {

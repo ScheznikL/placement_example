@@ -51,6 +51,7 @@ class MainViewModel(
         createNotificationChannel()
     }
 
+
     private val _byteArrayState: MutableState<Resource<Boolean>> =
         mutableStateOf(Resource.None())
     val byteArrayState: State<Resource<Boolean>>
@@ -59,8 +60,9 @@ class MainViewModel(
     var model = mutableStateOf(ModelEntry())
     var postId = mutableStateOf(PostId(""))
 
-
-    lateinit var modelEntry: Resource<ModelEntry>
+    val isLoading = mutableStateOf(false)
+    val isSuccess = mutableStateOf(false)
+    val loadError = mutableStateOf("")
     private fun createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is not in the Support Library.
@@ -97,7 +99,6 @@ class MainViewModel(
                                 Log.d("eventualApiRes Error", eventualApiRes.toString())
                                 /* loadError.value = eventualApiRes.message!!
                                  isLoading.value = false*/
-                                modelEntry = Resource.Error(eventualApiRes.message!!)
                                 showNotification(NotificationType.ERROR, eventualApiRes.message!!)
                             }
 
@@ -116,22 +117,18 @@ class MainViewModel(
                                     // return Resource.Loading()
                                 }
                                 if (eventualApiRes.data!!.status == "SUCCEEDED") {
-                                    /* loadError.value = ""
-                                     isLoading.value = false*/
+                                    loadError.value = ""
+                                    isLoading.value = false
+                                    isSuccess.value = true
 
                                     model.value =
                                         ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
-                                    modelEntry = Resource.Success(
-                                        ResponseToModelEntryConverter().toModelEntry(
-                                            eventualApiRes.data
-                                        )
-                                    )
                                     saveByteInstancedModel(context = context, 1)
                                     showNotification(NotificationType.SUCCESS, prompt)
                                 }
                                 if (eventualApiRes.data!!.status == "FAILED" || eventualApiRes.data!!.status == "EXPIRED") {
-                                    /* loadError.value = eventualApiRes.data!!.status
-                                     isLoading.value = false*/
+                                    loadError.value = eventualApiRes.data!!.status
+                                    isLoading.value = false
                                     model.value =
                                         ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
                                     showNotification(
@@ -154,10 +151,12 @@ class MainViewModel(
                 }
 
                 is Resource.Loading -> {
+                    isLoading.value = true
                     showNotification(NotificationType.LOADING)
                 }
 
                 else -> {
+                    isLoading.value = true
                     showNotification(NotificationType.LOADING)
                 }
             }
