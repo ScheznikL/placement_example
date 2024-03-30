@@ -148,4 +148,7 @@ dependencies {
 
     //AWS
     implementation("aws.sdk.kotlin:s3:1.0.41")
+
+    //flows
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 }

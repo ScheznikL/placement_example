@@ -142,7 +142,9 @@ class LoadingScreenViewModel(
                         modelInstance = ByteArray(1), // TEMP
                         modelPath = model.value.modelPath,
                         modelDescription = model.value.modelDescription,
-                        modelImageUrl = model.value.modelImageUrl
+                        modelImageUrl = model.value.modelImageUrl,
+                        isRefine = false,
+                        isFromText = true
                     )
                 )
             }
@@ -182,7 +184,9 @@ class LoadingScreenViewModel(
                                 modelInstance = output.toByteArray(),
                                 modelPath = model.value.modelPath,
                                 modelDescription = model.value.modelDescription,
-                                modelImageUrl = model.value.modelImageUrl
+                                modelImageUrl = model.value.modelImageUrl,
+                                isRefine = false,
+                                isFromText = true
                             )
                         )
                         output.close()

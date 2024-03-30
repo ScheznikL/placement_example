@@ -17,7 +17,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.endofjanuary.placement_example.data.converters.ResponseToModelEntryConverter
 import com.endofjanuary.placement_example.data.models.ModelEntry
+import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromImage
 import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromText
+import com.endofjanuary.placement_example.data.remote.meshy.responses.ImageTo3DModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.PostId
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
 import com.endofjanuary.placement_example.data.room.ModelEntity
@@ -61,7 +63,7 @@ class MainViewModel(
     var postId = mutableStateOf(PostId(""))
 
     val isLoading = mutableStateOf(false)
-    val isSuccess = mutableStateOf(false)
+    var isSuccess = mutableStateOf(false)
     val loadError = mutableStateOf("")
     private fun createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
@@ -77,6 +79,92 @@ class MainViewModel(
             val notificationManager: NotificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    fun loadModelEntryFromImage(url: String, name: String = "") {
+        Log.d("loadModel img", "Enter point")
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = meshyRepository.postImageTo3D(PostFromImage(url))
+            isLoading.value = true
+
+            when (result) {
+                is Resource.Success -> {
+                    postId.value = result.data ?: PostId("")
+                    if (result.data != null) {
+                        Log.d("loadModelEntry_result Success id:", result.data.result)
+
+                        var image3d = getImageTo3D(result.data.result)
+
+                        when (image3d) {
+                            is Resource.Error -> {
+                                isSuccess.value = false
+                                Log.d("eventualApiRes Error", image3d.toString())
+                                showNotification(NotificationType.ERROR, image3d.message!!)
+                            }
+
+                            is Resource.Success -> {
+                                Log.d(
+                                    "eventualApiRes Success id:",
+                                    image3d.data?.id ?: "none"
+                                )
+                                while (image3d.data!!.status == "PENDING" || image3d.data!!.status == "IN_PROGRESS") {
+                                    Log.d(
+                                        "loadModel while",
+                                        "while entered with status ${image3d.data!!.status}"
+                                    )
+                                    delay(60000)
+                                    image3d = getImageTo3D(result.data.result)
+
+                                    if (image3d is Resource.Error) {
+                                        throw Exception(image3d.message)
+                                    }
+
+                                }
+                                if (image3d.data!!.status == "SUCCEEDED") {
+                                    loadError.value = ""
+                                    isLoading.value = false
+
+                                    model.value =
+                                        ResponseToModelEntryConverter().toModelEntry(modelfromimage = image3d.data)
+                                    saveByteInstancedModel(context = context, 1)
+
+                                    isSuccess.value = true
+                                }
+                                if (image3d.data!!.status == "FAILED" || image3d.data!!.status == "EXPIRED") {
+                                    loadError.value = image3d.data!!.status
+                                    isLoading.value = false
+                                    model.value =
+                                        ResponseToModelEntryConverter().toModelEntry(image3d.data)
+                                }
+                            }
+
+                            else -> {
+                                isLoading.value = true
+                                isSuccess.value = false
+                            }
+                        }
+                    }
+                }
+
+                is Resource.Error -> {
+                    loadError.value = result.message.toString()
+                    isLoading.value = false
+                    isSuccess.value = false
+                }
+
+                is Resource.Loading -> {
+                    loadError.value = ""
+                    isLoading.value = true
+                    isSuccess.value = false
+                }
+
+                else -> {
+                    isLoading.value = true
+                    loadError.value = ""
+                    isSuccess.value = false
+                }
+            }
         }
     }
 
@@ -168,6 +256,10 @@ class MainViewModel(
         return meshyRepository.getTextTo3D(id)
     }
 
+    suspend fun getImageTo3D(id: String): Resource<ImageTo3DModel> {
+        return meshyRepository.getImageTo3D(id)
+    }
+
     suspend fun loadSaveGlbModel(
         modelLoader: ModelLoader
     ): Resource<Boolean> {
@@ -183,7 +275,9 @@ class MainViewModel(
                         modelInstance = ByteArray(1), // TEMP
                         modelPath = model.value.modelPath,
                         modelDescription = model.value.modelDescription,
-                        modelImageUrl = model.value.modelImageUrl
+                        modelImageUrl = model.value.modelImageUrl,
+                        isFromText = true,
+                        isRefine = false
                     )
                 )
             }
@@ -224,7 +318,9 @@ class MainViewModel(
                                 modelInstance = output.toByteArray(),
                                 modelPath = model.value.modelPath,
                                 modelDescription = model.value.modelDescription,
-                                modelImageUrl = model.value.modelImageUrl
+                                modelImageUrl = model.value.modelImageUrl,
+                                isFromText = true,
+                                isRefine = false
                             )
                         )
                         output.close()

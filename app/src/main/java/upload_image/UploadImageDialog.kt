@@ -1,10 +1,12 @@
 package upload_image
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,19 +15,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -50,16 +60,33 @@ fun UploadImageDialog(
         ActivityResultContracts.PickVisualMedia(),
         viewModel::onPhotoPickerSelect
     )
+    val isUploading by remember { viewModel.isUploading }
+    val isUploadingError by remember { viewModel.isUploadingError }
+    var presignedUrl by remember { viewModel.presignedUrl }
 
-    Surface(
+    val isLoading by remember { mainViewModel.isLoading }
+    var isSuccess by remember { mainViewModel.isSuccess }
+
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    /*    Surface(
+            modifier = Modifier
+                .wrapContentWidth()
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {*/
+    Scaffold(
         modifier = Modifier
             .wrapContentWidth()
             .wrapContentHeight(),
-        shape = MaterialTheme.shapes.large,
-        tonalElevation = AlertDialogDefaults.TonalElevation
-    ) {
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        }
 
-        Column(modifier = Modifier.padding(26.dp)) {
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
             Text(
                 text = "Name the model *optional",
                 textAlign = TextAlign.Justify
@@ -84,6 +111,7 @@ fun UploadImageDialog(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Default,
                     ),
+
                     value = textInput,
                     onValueChange = { viewModel.inputValueState.value = it },
                 )
@@ -99,26 +127,95 @@ fun UploadImageDialog(
                 }
 
                 if (uri != Uri.EMPTY) {
-                    Card(modifier = Modifier
-                       // .weight(1f)
-                        .padding(top = 10.dp, bottom = 10.dp)) {
-                        AsyncImage(
-                            model = uri,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxWidth(),
-                            contentScale = ContentScale.Fit
-                        )
+                    if (isUploading) {
+                        Box() {
+                            AsyncImage(
+                                alpha = 0.5f,
+                                model = uri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxWidth(),
+                                contentScale = ContentScale.Fit
+                            )
+                            CircularProgressIndicator()
+                        }
+                    } else if (isLoading) {
+                        Box() {
+                            Log.d(
+                                "loadModel UI",
+                                "is Loading"
+                            )
+                            AsyncImage(
+                                alpha = 0.5f,
+                                model = uri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxWidth(),
+                                contentScale = ContentScale.Fit
+                            )
+                            LinearProgressIndicator()
+                        }
+                    } else if (isUploadingError.isNotBlank()) {
+                        Card(
+                            colors = CardDefaults
+                                .cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                        ) {
+                            Text(text = isUploadingError)
+                        }
+                    } else {
+                        Card(
+                            modifier = Modifier
+                                // .weight(1f)
+                                .padding(top = 10.dp, bottom = 10.dp)
+                        ) {
+                            AsyncImage(
+                                model = uri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxWidth(),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
                     }
+
+                    val context = LocalContext.current
                     Button(
                         onClick = {
-                            viewModel.getPresignedUrl()
+                            viewModel.getPresignedUrl(context)
                         },
                     ) {
                         Text("Proceed")
+                    }
+
+                    LaunchedEffect(presignedUrl) {
+                        if (presignedUrl.isNotBlank()) {
+                            if (!isLoading || !isSuccess) {
+                                mainViewModel.loadModelEntryFromImage(
+                                    url = presignedUrl,
+                                    name = textInput
+                                )
+                                viewModel.presignedUrl.value = ""
+                            }
+                        }
+                    }
+                    LaunchedEffect(isSuccess) {
+                        if (isSuccess) {
+                            //mainViewModel.isSuccess.value = false
+                            Log.d("loadModel UI", "enter UI")
+                            snackbarHostState.showSnackbar(
+                                message = "Loading successfull!",
+                                actionLabel = "Succsess",
+                                duration = SnackbarDuration.Long
+                            )
+                            mainViewModel.isSuccess.value = false
+                        }
+                    }
+                    Button(
+                        enabled = isSuccess,
+                        onClick = { navController.popBackStack() }) {
+                        Text(text = "Done")
                     }
                 }
             }
         }
     }
+    //}
 
 }

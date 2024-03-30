@@ -2,6 +2,8 @@ package com.endofjanuary.placement_example
 
 import android.app.Application
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.endofjanuary.placement_example.data.room.ARAppDatabase
 import com.endofjanuary.placement_example.di.appModule
 import com.endofjanuary.placement_example.repo.ModelsRepo
@@ -18,7 +20,7 @@ class MainApplication : Application() {
             applicationContext,
             ARAppDatabase::class.java,
             "models.db"
-        ).build()
+        ).addMigrations(MIGRATION_1_2).build()
     }
     override fun onCreate() {
         super.onCreate()
@@ -52,6 +54,13 @@ class MainApplication : Application() {
         single<ModelsRepo> {
             ModelsRepoImpl(get())
         }
+    }
+}
+
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE models ADD COLUMN isFromText INTEGER DEFAULT 0 NOT NULL")
+        db.execSQL("ALTER TABLE models ADD COLUMN isRefine INTEGER DEFAULT 0 NOT NULL")
     }
 }
 

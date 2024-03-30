@@ -3,6 +3,7 @@ package com.endofjanuary.placement_example.models_list_screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -55,6 +56,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -68,16 +70,20 @@ fun ModelsListScreen(
     navController: NavController
 ) {
     val viewModel = getViewModel<ModelsListViewModel>()
+    val viewState by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(true) {
+        viewModel.loadModels()
+    }
 
     Scaffold(
         bottomBar = { BottomBar(navController = navController) },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                when (viewModel.state.value.selectedCategory) {
+                when (viewState.selectedCategory) {
                     Category.FromText -> navController.navigate("chat_screen")
-                    Category.FromImage -> TODO()
+                    Category.FromImage -> navController.navigate("image_uploading")
                 }
-
             }) {
                 Icon(Icons.Default.Add, contentDescription = "Add")
             }
@@ -91,11 +97,11 @@ fun ModelsListScreen(
         ) {
             Column {
                 CategoryTabs(
-                    categories = viewModel.state.value.categories,
-                    selectedCategory = viewModel.state.value.selectedCategory,
+                    categories = viewState.categories,
+                    selectedCategory = viewState.selectedCategory,
                     onCategorySelected = viewModel::onCategorySelected,
                 )
-                when (viewModel.state.value.selectedCategory) {
+                when (viewState.selectedCategory) {
                     Category.FromText -> {
                         Spacer(modifier = Modifier.height(20.dp))
                         Image(
@@ -114,15 +120,130 @@ fun ModelsListScreen(
                             // viewModel.searchPokemonList(it)
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-                        ModelsList(navController = navController, viewModel = viewModel)
+                        ModelsFromTextList(navController = navController, viewModel = viewModel)
                     }
 
-                    Category.FromImage -> TODO()
+                    Category.FromImage -> {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_blur),
+                            contentDescription = "Model",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(CenterHorizontally)
+                        )
+                        SearchBar(
+                            hint = "Search in models from image...",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            // viewModel.searchPokemonList(it)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        ModelsFromImageList(navController = navController, viewModel = viewModel)
+                    }
                 }
             }
         }
     }
 }
+
+@Composable
+fun ModelsFromTextList(
+    navController: NavController,
+    viewModel: ModelsListViewModel
+) {
+    val modelListState by viewModel.textModelsListState.collectAsState()
+    val loadError by remember { viewModel.loadError }
+    val isLoading by remember { viewModel.isLoading }
+    val isSearching by remember { viewModel.isSearching }
+
+    if (modelListState.isNotEmpty()) {
+        LazyColumn(contentPadding = PaddingValues(16.dp)) {
+            val itemCount = //modelListState.size - 1
+                if (modelListState.size % 2 == 0) {
+                    modelListState.size / 2
+                } else {
+                    modelListState.size / 2 + 1
+                }
+            items(itemCount) {
+//            if(it >= itemCount - 1 && !endReached && !isLoading && !isSearching) {
+//                LaunchedEffect(key1 = true) {
+//                    viewModel.loadPokemonPaginated()
+//                }
+//            }
+                ModelsInRow(
+                    rowIndex = it,
+                    entries = modelListState,
+                    navController = navController,
+                    viewModel = viewModel
+                )
+            }
+        }
+    } else {
+        NoDataSection("It appears you have no model...") { navController.navigate("home_screen") }
+    }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+        if (loadError.isNotEmpty()) {
+            RetrySection(error = loadError) {
+                viewModel.loadModels()
+            }
+        }
+    }
+}
+
+@Composable
+fun ModelsFromImageList(
+    navController: NavController, viewModel: ModelsListViewModel
+) {
+    //val modelsList by remember { viewModel.modelsList }
+    val modelListState by viewModel.imageModelsListState.collectAsState()
+    val loadError by remember { viewModel.loadError }
+    val isLoading by remember { viewModel.isLoading }
+    val isSearching by remember { viewModel.isSearching }
+
+    if (modelListState.isNotEmpty()) {
+        LazyColumn(contentPadding = PaddingValues(16.dp)) {
+            val itemCount = //modelListState.size - 1
+                if (modelListState.size % 2 == 0) {
+                    modelListState.size / 2
+                } else {
+                    modelListState.size / 2 + 1
+                }
+            items(itemCount) {
+                ModelsInRow(
+                    rowIndex = it,
+                    entries = modelListState,
+                    navController = navController,
+                    viewModel = viewModel
+                )
+            }
+        }
+    } else {
+        NoDataSection("It appears you have no image model...") { navController.navigate("home_screen") }
+    }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+        if (loadError.isNotEmpty()) {
+            RetrySection(error = loadError) {
+                viewModel.loadModels()
+            }
+        }
+    }
+}
+
 
 @Composable
 fun SearchBar(
@@ -162,60 +283,6 @@ fun SearchBar(
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 12.dp)
             )
-        }
-    }
-}
-
-@Composable
-fun ModelsList(
-    navController: NavController,
-    viewModel: ModelsListViewModel
-) {
-    //val modelsList by remember { viewModel.modelsList }
-    val modelListState by viewModel.modelsListState.collectAsState()
-    val loadError by remember { viewModel.loadError }
-    val isLoading by remember { viewModel.isLoading }
-    val isSearching by remember { viewModel.isSearching }
-
-    LaunchedEffect(true) {
-        viewModel.loadModels()
-    }
-    if (modelListState.isNotEmpty()) {
-        LazyColumn(contentPadding = PaddingValues(16.dp)) {
-            val itemCount = //modelListState.size - 1
-                if (modelListState.size % 2 == 0) {
-                    modelListState.size / 2
-                } else {
-                    modelListState.size / 2 + 1
-                }
-            items(itemCount) {
-//            if(it >= itemCount - 1 && !endReached && !isLoading && !isSearching) {
-//                LaunchedEffect(key1 = true) {
-//                    viewModel.loadPokemonPaginated()
-//                }
-//            }
-                ModelsInRow(
-                    rowIndex = it,
-                    entries = modelListState,
-                    navController = navController,
-                    viewModel = viewModel
-                )
-            }
-        }
-    } else {
-        NoDataSection("It appears you have no model...") { navController.navigate("home_screen") }
-    }
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        }
-        if (loadError.isNotEmpty()) {
-            RetrySection(error = loadError) {
-                viewModel.loadModels()
-            }
         }
     }
 }
@@ -351,7 +418,10 @@ fun NoDataSection(
     error: String,
     onGoHome: () -> Unit
 ) {
-    Column {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = CenterHorizontally
+    ) {
         Text(error, color = Color.Red, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Button(

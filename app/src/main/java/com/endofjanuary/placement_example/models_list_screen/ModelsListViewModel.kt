@@ -3,8 +3,6 @@ package com.endofjanuary.placement_example.models_list_screen
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -16,6 +14,8 @@ import com.endofjanuary.placement_example.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class ModelsListViewModel(
@@ -29,23 +29,54 @@ class ModelsListViewModel(
 
     var isSearching = mutableStateOf(false)
 
-    private val selectedCategory = MutableStateFlow(Category.FromText)
-    private val categories = Category.values().asList()
+    // private val selectedCategory = MutableStateFlow(Category.FromText)
+    private val selectedCategory = MutableStateFlow<Category>(Category.FromText)
+   // private val selectedCategory = MutableStateFlow(Category.FromText)
+
+    private val categories = MutableStateFlow(Category.entries.toList())
 
     // Holds our view state which the UI collects via [state]
-    private val _state: MutableState<ModelListViewState> = mutableStateOf(ModelListViewState())
-    val state: State<ModelListViewState>
+    //private val _state: MutableState<ModelListViewState> = mutableStateOf(ModelListViewState())
+    private val _state = MutableStateFlow(ModelListViewState())
+
+    /* val state: State<ModelListViewState>
+         get() = _state*/
+    val state: StateFlow<ModelListViewState>
         get() = _state
 
     fun onCategorySelected(category: Category) {
         selectedCategory.value = category
+        // _state.value.selectedCategory = category
     }
 
-    private val _modelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
+    private val _textModelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
 
     // The UI collects from this StateFlow to get its state updates
-    val modelsListState: StateFlow<List<ModelEntry>> = _modelsListState
+    val textModelsListState: StateFlow<List<ModelEntry>> = _textModelsListState
 
+    private val _imageModelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
+    val imageModelsListState: StateFlow<List<ModelEntry>> = _imageModelsListState
+    init {
+        viewModelScope.launch {
+            // Combines the latest value from each of the flows, allowing us to generate a
+            // view state instance which only contains the latest values.
+            combine(
+                categories,
+                selectedCategory,
+            ) { categories,
+                selectedCategory ->
+                ModelListViewState(
+                    selectedCategory,
+                    categories
+                )
+            }.catch { throwable ->
+                // TODO: emit a UI error here. For now we'll just rethrow
+                throw throwable
+            }.collect {
+                _state.value = it
+            }
+        }
+    }
 
     fun loadModels() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -64,12 +95,22 @@ class ModelsListViewModel(
 //                                modelImageUrl = it.modelImageUrl,
 //                                modelDescription = it.modelDescription
 //                            )
-                            _modelsListState.value += ModelEntry(
-                                id = it.id,
-                                modelPath = it.modelPath,
-                                modelImageUrl = it.modelImageUrl,
-                                modelDescription = it.modelDescription
-                            )
+                            if(it.isFromText) {
+                                _textModelsListState.value += ModelEntry(
+                                    id = it.id,
+                                    modelPath = it.modelPath,
+                                    modelImageUrl = it.modelImageUrl,
+                                    modelDescription = it.modelDescription,
+                                )
+                            }
+                            else {
+                                _imageModelsListState.value += ModelEntry(
+                                    id = it.id,
+                                    modelPath = it.modelPath,
+                                    modelImageUrl = it.modelImageUrl,
+                                    modelDescription = it.modelDescription,
+                                )
+                            }
                         }
                     }
                 }
@@ -106,12 +147,13 @@ class ModelsListViewModel(
 enum class Category {
     FromText, FromImage
 }
+
 data class ModelListViewState(
     //val featuredPodcasts: PersistentList<PodcastWithExtraInfo> = persistentListOf(),
     //  val refreshing: Boolean = false,
     val selectedCategory: Category = Category.FromText,
     val categories: List<Category> = emptyList(),
     val errorMessage: String? = null
-){
-    constructor():this(Category.FromText, Category.values().asList())
+) {
+    constructor() : this(Category.FromText, Category.values().asList())
 }

@@ -1,3 +1,4 @@
+/*
 package com.endofjanuary.placement_example.chat
 
 import android.Manifest
@@ -126,10 +127,13 @@ fun ChatScreen(
 //            // verticalArrangement = Arrangement.Bottom,
 //        )
 
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) { // todo fro download purposes
+        */
+/*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) { // todo fro download purposes
             launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }*/
-       /* Box(modifier = Modifier.padding(padding)) {
+        }*//*
+
+       */
+/* Box(modifier = Modifier.padding(padding)) {
             MessagesList(
                 scrollState = scrollState,
                 list = messagesList,
@@ -140,7 +144,8 @@ fun ChatScreen(
                 viewModel = viewModel,
                 mainViewModel = mainViewModel
             )
-        }*/
+        }*//*
+
 
 
     }
@@ -404,3 +409,4 @@ fun SimpleComposablePreview() {
     val navController = rememberNavController()
     ChatScreen(navController)
 }
+*/

@@ -3,8 +3,8 @@ package com.endofjanuary.placement_example.data.remote.meshy.responses
 data class ImageTo3DModel(
     val art_style: String,
     val created_at: Long,
-    val expires_at: Int,
-    val finished_at: Int,
+    val expires_at: Long,
+    val finished_at: Long,
     val id: String,
     val model_url: String,
     val model_urls: ModelUrlsX,

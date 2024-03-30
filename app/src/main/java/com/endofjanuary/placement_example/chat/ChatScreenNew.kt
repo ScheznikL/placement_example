@@ -81,7 +81,7 @@ fun ChatScreenNew(
 
     val messagesListState by remember { viewModel.messagesListState }
     val isLoading by remember { viewModel.isLoading }
-    val isGeneratedModel by remember { mainViewModel.isSuccess }
+    var isGeneratedModel by remember { mainViewModel.isSuccess }
     var modelId by remember { viewModel.modelId }
     val textInput by remember { viewModel.inputValueState }
     var isTextFieldEnabled = remember { true }
@@ -155,7 +155,7 @@ fun ChatScreenNew(
                                     modifier = Modifier.animateItemPlacement(),
                                     message = messagesListState[index],
                                     onEdit = {
-                                        viewModel.send("NEXT")
+                                        viewModel.send("NEXT") //todo no next in chat
                                     },
                                     onDone = {
                                         isTextFieldEnabled = false
@@ -169,26 +169,33 @@ fun ChatScreenNew(
                             })
                     })
             }
+            LaunchedEffect(modelId) {
+                Log.d("loadingModel UI", "enter $modelId")
 
-            if (isGeneratedModel) {
-                viewModel.getId()
-            }
+                when (modelId) {
+                    -1 -> {
+                        viewModel.viewModelScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Error getting modelId",
+                                actionLabel = "Error"
+                            )
+                        }
+                    }
 
-            when (modelId) {
-                -1 -> {
-                    viewModel.viewModelScope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = "Error getting modelId",
-                            actionLabel = "Error"
-                        )
+                    0 -> {}
+                    -2 -> {}
+                    else -> {
+                        navController.navigate("transit_dialog/${modelId}")
+                        //modelId = 0
                     }
                 }
+            }
 
-                0 -> {}
-                -2 -> {}
-                else -> {
-                    navController.navigate("transit_dialog/${modelId}")
-                    modelId = 0
+            LaunchedEffect(isGeneratedModel) {
+                if (isGeneratedModel) {
+
+                    viewModel.getId()
+                    viewModel.isSuccess.value = false
                 }
             }
 
@@ -218,7 +225,8 @@ fun ChatScreenNew(
                     }),
                     textStyle = TextStyle(
                         lineHeight = 1.5.em,
-                        fontSize = 16.sp),
+                        fontSize = 16.sp
+                    ),
                     value = textInput,
                     onValueChange = { viewModel.inputValueState.value = it },
                     maxLines = 7
@@ -230,7 +238,13 @@ fun ChatScreenNew(
                         .padding(16.dp)
                         .clickable {
                             if (isTextFieldEnabled)
-                                pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                pickImage
+                                    .launch(
+                                        PickVisualMediaRequest(
+                                            ActivityResultContracts
+                                                .PickVisualMedia.ImageOnly
+                                        )
+                                    )
                         },
                     // .alpha(if (textInput.isNotBlank()) 1.0f else 0.5f),
                     contentDescription = "final",

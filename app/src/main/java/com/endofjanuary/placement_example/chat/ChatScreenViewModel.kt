@@ -41,7 +41,7 @@ class ChatScreenViewModel(
 
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
-    val isSuccess = mutableStateOf(false)
+    var isSuccess = mutableStateOf(false)
     var inputValueState = mutableStateOf("")
 
     private val _messagesListState = mutableStateOf<List<MessageEntry>>(listOf())
@@ -143,15 +143,20 @@ class ChatScreenViewModel(
     }
 
     fun getId() {
+
         viewModelScope.launch(Dispatchers.IO) {
-            when (val lastModelStat = modelRoomRepo.getLastModel()) {
+            val lastModelStat = modelRoomRepo.getLastModel()
+            when (lastModelStat) {
                 is Resource.Error -> modelId.value = -1
                 is Resource.Loading -> modelId.value = -2
                 is Resource.None -> {}
                 is Resource.Success -> {
-                    Log.d("modelID", modelId.value.toString())
+
                     modelId.value = lastModelStat.data!!.id + 1
+                    Log.d("modelID", modelId.value.toString())
                 }
+
+                else -> {}
             }
         }
 
