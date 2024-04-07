@@ -1,8 +1,10 @@
 package com.endofjanuary.placement_example.three_d_screen
 
 import android.content.res.AssetManager
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -17,6 +19,7 @@ import com.google.ar.core.Anchor
 import io.github.sceneview.ar.node.AnchorNode
 import io.github.sceneview.loaders.MaterialLoader
 import io.github.sceneview.loaders.ModelLoader
+import io.github.sceneview.math.Position
 import io.github.sceneview.model.Model
 import io.github.sceneview.model.ModelInstance
 import io.github.sceneview.model.model
@@ -82,6 +85,12 @@ class ThreeDScreenViewModel(
                         )
                         //val temp = result1?.resourceUris
                         if (result != null) {
+                            currentNodes = mutableStateListOf(
+                                ModelNode(
+                                    modelInstance = result,
+                                    scaleToUnits = 1.0f
+                                )
+                            )
                             _loadedInstancesState.value = Resource.Success(result)
                         } else {
                             throw IllegalArgumentException("Empty")
@@ -97,6 +106,63 @@ class ThreeDScreenViewModel(
                 Resource.Error(e.message.toString())
         }
     }
+
+
+    val newNode = mutableStateOf<ModelNode?>(null)
+
+    var currentNodes = mutableStateListOf<ModelNode>()
+
+    fun loadModelFromPath(
+        modelLoader: ModelLoader,
+        modelPath: String,
+        modelImageUrl: String,
+        overwrite: Boolean
+    ) {
+        try {
+            viewModelScope.launch(Dispatchers.IO) {
+
+                val result = modelLoader.loadModelInstance(
+                    modelPath
+                )
+                if (result != null) {
+                    Log.d("loadModel R File", result.model.toString())
+
+                    // _loadedInstancesState.value = Resource.Success(result)
+                    //newNode.value =
+                    if (overwrite) {
+                        currentNodes.removeLast() // TODO is it fine
+                        currentNodes += mutableStateListOf(
+                            ModelNode(
+                                modelInstance = result,
+                                scaleToUnits = 1.0f
+                            )
+                        )
+                    } else {
+                        currentNodes +=
+                            ModelNode(
+                                modelInstance = result,
+//                        modelInstance = modelLoader.createModelInstance(
+//                            assetFileLocation = "models/damaged_helmet.glb"
+//                        ),
+                                centerOrigin = Position(1f, 0f, 0f),
+                                scaleToUnits = 1.0f
+                            )
+                    }
+
+                    modelImgUrl.value = modelImageUrl
+
+                } else {
+                    Log.d("loadModel R File", "null")
+                    throw IllegalArgumentException("Empty")
+                }
+            }
+
+        } catch (e: Exception) {
+            _loadedInstancesState.value =
+                Resource.Error(e.message.toString())
+        }
+    }
+
 
     private val models = mutableListOf<Model>()
 
@@ -192,9 +258,10 @@ class ThreeDScreenViewModel(
         }
     }
 
-    fun loadInstanceNone(){
+    fun loadInstanceNone() {
         _loadedInstancesState.value = Resource.None()
     }
+
     private fun loadResources(
         model: Model,
         resourceLoader: ResourceLoader,

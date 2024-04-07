@@ -101,6 +101,7 @@ class ModelsListViewModel(
                                     modelPath = it.modelPath,
                                     modelImageUrl = it.modelImageUrl,
                                     modelDescription = it.modelDescription,
+                                    meshyId = it.meshyId
                                 )
                             }
                             else {
@@ -109,6 +110,7 @@ class ModelsListViewModel(
                                     modelPath = it.modelPath,
                                     modelImageUrl = it.modelImageUrl,
                                     modelDescription = it.modelDescription,
+                                    meshyId = it.meshyId
                                 )
                             }
                         }

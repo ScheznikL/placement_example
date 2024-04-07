@@ -304,6 +304,7 @@ fun ModelInRowEntry(
 //    if (showDialog.value) {
 //        ModelViewTypeDialog(dialogRes = dialogRes, openDialog = showDialog)
 //    }
+
     Box(
         contentAlignment = Center,
         modifier = modifier
@@ -311,12 +312,13 @@ fun ModelInRowEntry(
             .clip(RoundedCornerShape(10.dp))
             .aspectRatio(1f)
             .background(
-                Brush.verticalGradient(
-                    listOf(
-                        dominantColor,
-                        defaultDominantColor
+                    Brush.verticalGradient(
+                        listOf(
+                            dominantColor,
+                            defaultDominantColor
+                        )
                     )
-                )
+
             )
             .clickable {
 //                showDialog.value = true
@@ -324,7 +326,7 @@ fun ModelInRowEntry(
 //                    "ar_screen/${entry.id}"
 //                )
                 navController.navigate(
-                    "transit_dialog/${entry.id}"
+                    "transit_dialog/${entry.id}/${entry.meshyId}"
                 )
             }
 

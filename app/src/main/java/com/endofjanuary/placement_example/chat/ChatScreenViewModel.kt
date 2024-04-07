@@ -41,7 +41,8 @@ class ChatScreenViewModel(
 
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
-    var isSuccess = mutableStateOf(false)
+
+    //var isSuccess = mutableStateOf(false)
     var inputValueState = mutableStateOf("")
 
     private val _messagesListState = mutableStateOf<List<MessageEntry>>(listOf())
@@ -54,7 +55,6 @@ class ChatScreenViewModel(
     var selectedUri = mutableStateOf(Uri.EMPTY)
 
     val modelId = mutableStateOf(0)
-
     fun send(userMessageContext: String) {
         val converter = MessageToUIConverter()
         description = userMessageContext
@@ -142,21 +142,17 @@ class ChatScreenViewModel(
         if (uri != null) selectedUri.value = uri
     }
 
-    fun getId() {
+    fun getId() { // TODO Rethink - Why 2 ID was bad - one set by primary key and we need it to navigate (?) and we don't know it till we ask
 
         viewModelScope.launch(Dispatchers.IO) {
             val lastModelStat = modelRoomRepo.getLastModel()
             when (lastModelStat) {
-                is Resource.Error -> modelId.value = -1
-                is Resource.Loading -> modelId.value = -2
-                is Resource.None -> {}
                 is Resource.Success -> {
-
-                    modelId.value = lastModelStat.data!!.id + 1
+                    modelId.value = lastModelStat.data!!.id // if use update when successfully loaded no need in +1
                     Log.d("modelID", modelId.value.toString())
                 }
-
-                else -> {}
+                else -> {
+                }
             }
         }
 

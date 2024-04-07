@@ -1,0 +1,7 @@
+package com.endofjanuary.placement_example.data.remote.meshy.request
+
+data class PostRefine(
+    val preview_task_id: String,
+    val texture_richness: String, //high medium low none
+    val mode: String = "refine",
+)

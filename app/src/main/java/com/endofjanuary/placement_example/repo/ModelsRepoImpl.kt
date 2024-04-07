@@ -19,14 +19,35 @@ class ModelsRepoImpl(
             Resource.Error(e.message.toString())
         }
     }
-    override suspend fun saveModel(modelEntity: ModelEntity): Resource<Boolean> {
+
+    override suspend fun saveModel(modelEntity: ModelEntity): Resource<Long> {
         return try {
-            modelEntityDao.insertAll(modelEntity)
-            return Resource.Success(true)
+           val resultID = modelEntityDao.insert(modelEntity)
+            Resource.Success(resultID)
         } catch (e: Exception) {
             Resource.Error(e.message.toString())
         }
     }
+
+    override suspend fun update(
+        meshyId: String?,
+        modelImageUrl: String?,
+        modelPath: String?,
+        isRefine: Boolean?
+    ): Resource<Int> {
+        return try {
+           val res = modelEntityDao.updateModel(
+                meshyId = meshyId,
+                modelImageUrl = modelImageUrl,
+                modelPath = modelPath,
+                isRefine = isRefine
+            )
+            Resource.Success(res)
+        } catch (e: Exception) {
+            Resource.Error(e.message.toString())
+        }
+    }
+
     override suspend fun getModelById(modelId: Int): Resource<ModelEntity> {
         return try {
             val result = modelEntityDao.getModelById(modelId)

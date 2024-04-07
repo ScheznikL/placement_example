@@ -21,18 +21,19 @@ data class ModelEntity(
     //val modelInstance: ModelInstance,
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
     val modelInstance: ByteArray,
-
+    val meshyId: String,
     val modelPath: String,
     val modelImageUrl: String,
     val modelDescription: String,
     val isFromText: Boolean,
     val isRefine: Boolean,
 
-) : Parcelable {
+    ) : Parcelable {
     @RequiresApi(Build.VERSION_CODES.Q)
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.createByteArray()!!,
+        parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!,
@@ -48,9 +49,11 @@ data class ModelEntity(
         parcel.writeString(modelPath)
         parcel.writeString(modelImageUrl)
         parcel.writeString(modelDescription)
+        parcel.writeString(meshyId)
         parcel.writeBoolean(isFromText)
         parcel.writeBoolean(isRefine)
     }
+
     override fun describeContents(): Int {
         return 0
     }

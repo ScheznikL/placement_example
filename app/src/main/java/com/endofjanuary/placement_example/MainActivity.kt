@@ -29,18 +29,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Placement_exampleTheme {
-
                 //  var appState: ARExampleAppState = rememberARExampleAppState()
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
                     startDestination = "reg_screen"
                 ) {
-                    composable("reg_screen"){
+                    composable("reg_screen") {
                         RegistrationScreen(navController = navController)
                     }
                     composable("chat_screen") {
-                        ChatScreenNew(navController,)
+                        ChatScreenNew(navController)
                     }
                     composable("home_screen") {
                         HomeScreen(navController)
@@ -59,17 +58,27 @@ class MainActivity : ComponentActivity() {
                         ARScreen(navController = navController, modelId = modelId ?: 0)
                     }
                     composable(
-                        "threed_screen/{id}",
+                        "threed_screen/{id}/{meshyId}",
                         arguments = listOf(
                             navArgument("id") {
                                 type = NavType.IntType
+                            },
+                            navArgument("meshyId") {
+                                type = NavType.StringType
                             }
                         )
                     ) {
                         val modelId = remember {
                             it.arguments?.getInt("id")
                         }
-                        ThreeDScreen(navController = navController, modelId = modelId)
+                        val meshyId = remember {
+                            it.arguments?.getString("meshyId")
+                        }
+                        ThreeDScreen(
+                            navController = navController,
+                            modelId = modelId,
+                            meshyId = meshyId
+                        )
                     }
                     composable(
                         "loading_screen/{prompt}",
@@ -89,18 +98,27 @@ class MainActivity : ComponentActivity() {
                     ) {
                         ModelsListScreen(navController = navController)
                     }
-                    dialog("transit_dialog/{id}",
+                    dialog(
+                        "transit_dialog/{id}/{meshyId}",
                         arguments = listOf(
                             navArgument("id") {
                                 type = NavType.IntType
-                            })
+                            },
+                            navArgument("meshyId") {
+                                type = NavType.StringType
+                            }
+                        )
                     ) {
                         val model = remember {
                             it.arguments?.getInt("id")
                         }
-                        ModelViewTypeDialog(navController, modelId = model!!)
+                        val meshyId = remember {
+                            it.arguments?.getString("meshyId")
+                        }
+                        ModelViewTypeDialog(navController, modelId = model!!, meshyId!!)
                     }
-                    dialog("image_uploading",
+                    dialog(
+                        "image_uploading",
                     ) {
                         UploadImageDialog(navController)
                     }

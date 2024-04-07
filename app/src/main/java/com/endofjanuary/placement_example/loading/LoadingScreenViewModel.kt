@@ -144,7 +144,8 @@ class LoadingScreenViewModel(
                         modelDescription = model.value.modelDescription,
                         modelImageUrl = model.value.modelImageUrl,
                         isRefine = false,
-                        isFromText = true
+                        isFromText = true,
+                        meshyId = model.value.meshyId
                     )
                 )
             }
@@ -186,7 +187,8 @@ class LoadingScreenViewModel(
                                 modelDescription = model.value.modelDescription,
                                 modelImageUrl = model.value.modelImageUrl,
                                 isRefine = false,
-                                isFromText = true
+                                isFromText = true,
+                                meshyId = model.value.meshyId
                             )
                         )
                         output.close()

@@ -38,7 +38,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -79,6 +78,7 @@ fun UploadImageDialog(
         ) {*/
     Scaffold(
         modifier = Modifier
+            .padding(top = 50.dp, bottom = 50.dp)
             .wrapContentWidth()
             .wrapContentHeight(),
         snackbarHost = {
@@ -87,10 +87,10 @@ fun UploadImageDialog(
 
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            Text(
-                text = "Name the model *optional",
-                textAlign = TextAlign.Justify
-            )
+            /*  Text(
+                  text = "Name the model *optional",
+                  textAlign = TextAlign.Justify
+              )*/
             Spacer(modifier = Modifier.height(24.dp))
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -111,13 +111,20 @@ fun UploadImageDialog(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Default,
                     ),
-
                     value = textInput,
                     onValueChange = { viewModel.inputValueState.value = it },
+                    placeholder = { Text(text = "Name the model *optional") }
                 )
                 Button(
                     onClick = {
-                        pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        pickImage
+                            .launch(
+                                PickVisualMediaRequest(
+                                    ActivityResultContracts
+                                        .PickVisualMedia
+                                        .ImageOnly
+                                )
+                            )
                         /*                        navController.navigate(
                                                     "threed_screen/${modelId}"
                                                 )*/
@@ -128,7 +135,7 @@ fun UploadImageDialog(
 
                 if (uri != Uri.EMPTY) {
                     if (isUploading) {
-                        Box() {
+                        Box(contentAlignment = Alignment.Center) {
                             AsyncImage(
                                 alpha = 0.5f,
                                 model = uri,
@@ -151,7 +158,7 @@ fun UploadImageDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 contentScale = ContentScale.Fit
                             )
-                            LinearProgressIndicator()
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
                     } else if (isUploadingError.isNotBlank()) {
                         Card(
@@ -186,7 +193,7 @@ fun UploadImageDialog(
 
                     LaunchedEffect(presignedUrl) {
                         if (presignedUrl.isNotBlank()) {
-                            if (!isLoading || !isSuccess) {
+                            if (!isLoading || isSuccess == null) { // isSuccess == null - to avoid double loading
                                 mainViewModel.loadModelEntryFromImage(
                                     url = presignedUrl,
                                     name = textInput
@@ -196,19 +203,17 @@ fun UploadImageDialog(
                         }
                     }
                     LaunchedEffect(isSuccess) {
-                        if (isSuccess) {
-                            //mainViewModel.isSuccess.value = false
+                        if (isSuccess != null) {
                             Log.d("loadModel UI", "enter UI")
                             snackbarHostState.showSnackbar(
-                                message = "Loading successfull!",
-                                actionLabel = "Succsess",
+                                message = "Loading is successful!",
+                                actionLabel = "Success",
                                 duration = SnackbarDuration.Long
                             )
-                            mainViewModel.isSuccess.value = false
                         }
                     }
                     Button(
-                        enabled = isSuccess,
+                        enabled = isSuccess != null,
                         onClick = { navController.popBackStack() }) {
                         Text(text = "Done")
                     }

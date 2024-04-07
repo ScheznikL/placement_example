@@ -39,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -55,12 +54,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.utils.ChatTopBar
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.getViewModel
 import upload_image.UploadImageViewModel
 
@@ -81,8 +78,8 @@ fun ChatScreenNew(
 
     val messagesListState by remember { viewModel.messagesListState }
     val isLoading by remember { viewModel.isLoading }
-    var isGeneratedModel by remember { mainViewModel.isSuccess }
-    var modelId by remember { viewModel.modelId }
+    //val modelId by remember { viewModel.modelId } // VIA  ChatScreenViewModel
+    val meshyId by remember { mainViewModel.isSuccess }// VIA  MainViewModel
     val textInput by remember { viewModel.inputValueState }
     var isTextFieldEnabled = remember { true }
 
@@ -146,10 +143,11 @@ fun ChatScreenNew(
                         .asPaddingValues(),
                     verticalArrangement = Arrangement.Bottom,
                     state = scrollState,
+
                     content = {
                         items(
                             count = messagesListState.size,
-                            // key = { messagesListState[it].content },
+                            // key = { messagesListState[it].content }, //TODO
                             itemContent = { index ->
                                 MessageBubble(
                                     modifier = Modifier.animateItemPlacement(),
@@ -169,41 +167,19 @@ fun ChatScreenNew(
                             })
                     })
             }
-            LaunchedEffect(modelId) {
-                Log.d("loadingModel UI", "enter $modelId")
+            LaunchedEffect(meshyId) {
 
-                when (modelId) {
-                    -1 -> {
-                        viewModel.viewModelScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = "Error getting modelId",
-                                actionLabel = "Error"
-                            )
-                        }
-                    }
-
-                    0 -> {}
-                    -2 -> {}
-                    else -> {
-                        navController.navigate("transit_dialog/${modelId}")
-                        //modelId = 0
-                    }
+                if (meshyId != null) { // means model was uploaded to room
+                    Log.d("loadingModel UI meshyId", "enter  ${meshyId?.first} - ${meshyId?.second}")
+                    //viewModel.getId()
+                    //if (modelId.data != 0)
+                        navController.navigate("transit_dialog/${meshyId?.second}/${meshyId?.first}")
                 }
             }
-
-            LaunchedEffect(isGeneratedModel) {
-                if (isGeneratedModel) {
-
-                    viewModel.getId()
-                    viewModel.isSuccess.value = false
-                }
-            }
-
             if (isLoading) LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.Green
             )
-
             Row(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.secondaryContainer)
@@ -246,7 +222,6 @@ fun ChatScreenNew(
                                         )
                                     )
                         },
-                    // .alpha(if (textInput.isNotBlank()) 1.0f else 0.5f),
                     contentDescription = "final",
                 )
                 /*                Icon(
