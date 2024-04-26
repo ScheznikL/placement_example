@@ -1,10 +1,10 @@
 package com.endofjanuary.placement_example.utils
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -15,33 +15,42 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import com.endofjanuary.placement_example.DownloaderImpl
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
+import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
+import com.endofjanuary.placement_example.utils.screens.DoDownload
 import com.endofjanuary.placement_example.utils.screens.DoRefineDialog
 import com.endofjanuary.placement_example.utils.screens.SpecifyRefineOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThreeDScreenTopBar(
-    modelDescription: MutableState<String>,
+    modelDescription: String?,
     modelId: Int,
     meshyId: String,
     mainViewModel: MainViewModel,
+    viewModel: ThreeDScreenViewModel,
     navController: NavController,
-    overwrite: MutableState<Boolean>
+    overwrite: MutableState<Boolean>,
+    downloader: DownloaderImpl,
+    modelPath: MutableState<String?>
 ) {
-    var showMore by remember { mutableStateOf(false) }
-    val text by remember { modelDescription }
-    val openDialog = remember { mutableStateOf(false) }
 
-    val confirm = remember{ mutableStateOf(false) }
+
+    val openDialog = remember { mutableStateOf(false) }
+    val openDownloadDialog = remember { mutableStateOf(false) }
+    val confirmDownload = remember { mutableStateOf(false) }
+
+    val confirm = remember { mutableStateOf(false) }
     val openDetailedDialog = remember { mutableStateOf(false) }
+
+
+    Log.d("modelPath & desc", "${modelPath.value} $modelDescription")
     TopAppBar(
         title = {
             Row {
@@ -81,15 +90,15 @@ fun ThreeDScreenTopBar(
                 }
                 Text("Refine")
             }
-            IconButton(onClick = { /* do something */ }) {
+            IconButton(onClick = { openDownloadDialog.value = true }) {
                 Icon(
-                    imageVector = Icons.Filled.Share,
+                    painterResource(id = R.drawable.ic_download),
                     contentDescription = "Localized description"
                 )
             }
             IconButton(onClick = { /* do something */ }) {
                 Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    imageVector = Icons.Filled.Delete,
                     contentDescription = "Localized description"
                 )
             }
@@ -101,7 +110,14 @@ fun ThreeDScreenTopBar(
 
     DoRefineDialog(openDialog, confirm)
     SpecifyRefineOptions(
-        mainViewModel, openDetailedDialog, meshyId,overwrite
+        mainViewModel, openDetailedDialog, meshyId, overwrite
         //TODO if time is up
+    )
+    DoDownload(
+        openDialog = openDownloadDialog,
+        confirm = confirmDownload,
+        path = modelPath.value,
+        downloader = downloader,
+        modelDescription = modelDescription?: "none description"
     )
 }

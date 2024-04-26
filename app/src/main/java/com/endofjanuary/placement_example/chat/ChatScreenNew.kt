@@ -78,6 +78,7 @@ fun ChatScreenNew(
 
     val messagesListState by remember { viewModel.messagesListState }
     val isLoading by remember { viewModel.isLoading }
+    val isError by remember { viewModel.loadError }
     //val modelId by remember { viewModel.modelId } // VIA  ChatScreenViewModel
     val meshyId by remember { mainViewModel.isSuccess }// VIA  MainViewModel
     val textInput by remember { viewModel.inputValueState }
@@ -170,16 +171,22 @@ fun ChatScreenNew(
             LaunchedEffect(meshyId) {
 
                 if (meshyId != null) { // means model was uploaded to room
-                    Log.d("loadingModel UI meshyId", "enter  ${meshyId?.first} - ${meshyId?.second}")
+                    Log.d(
+                        "loadingModel UI meshyId",
+                        "enter  ${meshyId?.first} - ${meshyId?.second}"
+                    )
                     //viewModel.getId()
                     //if (modelId.data != 0)
-                        navController.navigate("transit_dialog/${meshyId?.second}/${meshyId?.first}")
+                    navController.navigate("transit_dialog/${meshyId?.second}/${meshyId?.first}")
                 }
             }
             if (isLoading) LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.Green
             )
+            if (isError != null) {
+                ErrorMessageBubble(isError!!)
+            }
             Row(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.secondaryContainer)

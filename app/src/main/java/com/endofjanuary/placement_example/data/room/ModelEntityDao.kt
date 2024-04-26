@@ -18,7 +18,15 @@ interface ModelEntityDao {
     fun getLastModel(): ModelEntity?
 
     @Query("UPDATE models SET modelImageUrl = :modelImageUrl, isRefine = :isRefine, modelPath= :modelPath WHERE meshyId =:meshyId")
-    fun updateModel(meshyId: String?, modelImageUrl: String?, modelPath: String?, isRefine : Boolean?):Int
+    fun updateModel(
+        meshyId: String?,
+        modelImageUrl: String?,
+        modelPath: String?,
+        isRefine: Boolean?
+    ): Int
+
+    @Query("DELETE FROM models WHERE meshyId =:meshyId")
+    fun deleteModelById(meshyId: String?): Int?
 
     @Insert
     fun insert(model: ModelEntity): Long

@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.endofjanuary.placement_example.data.models.ModelEntry
+import com.endofjanuary.placement_example.data.room.ModelEntity
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import com.google.android.filament.Engine
@@ -42,12 +42,15 @@ class ThreeDScreenViewModel(
         get() = _loadedInstancesState
 
     var modelImgUrl = mutableStateOf("")
-    var model = mutableStateOf(ModelEntry())
+
+    var modelFromRoom = mutableStateOf<Resource<ModelEntity>>(Resource.None())
+
 //       private val _loadedInstancesBufferState: MutableState<Resource<ModelInstance>> =
 //        mutableStateOf(Resource.None())
 //    val loadedInstancesBufferState: State<Resource<ModelInstance>>
 //        get() = _loadedInstancesBufferState
 
+    val modelDeleted = mutableStateOf<Resource<Int>>(Resource.None())
 
     fun loadModelLocalOld() {
         try {
@@ -73,15 +76,15 @@ class ThreeDScreenViewModel(
     ) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
-                val model = modelRoom.getModelById(localId)
-                when (model) {
+                modelFromRoom.value = modelRoom.getModelById(localId)
+                when (modelFromRoom.value) {
                     is Resource.Success -> {
-                        modelImgUrl.value = model.data!!.modelImageUrl
-                        val result1 = modelLoader.loadModel(
-                            model.data.modelPath
-                        )
+                        modelImgUrl.value = modelFromRoom.value.data!!.modelImageUrl
+//                        val result1 = modelLoader.loadModel(
+//                            modelFromRoom.value.data.modelPath
+//                        )
                         val result = modelLoader.loadModelInstance(
-                            model.data.modelPath
+                            modelFromRoom.value.data!!.modelPath
                         )
                         //val temp = result1?.resourceUris
                         if (result != null) {
@@ -97,13 +100,36 @@ class ThreeDScreenViewModel(
                         }
                     }
 
-                    is Resource.Error -> throw IllegalArgumentException(model.message)
+                    is Resource.Error -> throw IllegalArgumentException(modelFromRoom.value.message)
                     else -> {} //TODO something
                 }
             }
         } catch (e: Exception) {
             _loadedInstancesState.value =
                 Resource.Error(e.message.toString())
+        }
+    }
+
+    fun deleteModel(
+        meshyId: String
+    ) {
+        try {
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = modelRoom.deleteModelById(meshyId)
+                when (result) {
+                    is Resource.Success -> {
+                        modelDeleted.value = result
+                    }
+
+                    is Resource.Error -> {
+                        modelDeleted.value = result
+                    }
+
+                    else -> {} // TODO something
+                }
+            }
+        } catch (e: Exception) { // TODO are two try bad
+            modelDeleted.value = Resource.Error(message = e.message.toString())
         }
     }
 

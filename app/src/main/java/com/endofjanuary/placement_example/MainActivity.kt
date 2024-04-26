@@ -1,9 +1,13 @@
 package com.endofjanuary.placement_example
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.remember
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,14 +23,21 @@ import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
 import home.HomeScreen
-import upload_image.UploadImageDialog
+import upload_image.UploadImage
 
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //   val downloader = DownloaderImpl(this)
+        if (!hasRequiredPermissions()) { //todo move to proper place
+            ActivityCompat.requestPermissions(
+                this, CAMERAX_PERMISSIONS, 0
+            )
+        }
 
+        val appContext = applicationContext
         setContent {
             Placement_exampleTheme {
                 //  var appState: ARExampleAppState = rememberARExampleAppState()
@@ -76,8 +87,9 @@ class MainActivity : ComponentActivity() {
                         }
                         ThreeDScreen(
                             navController = navController,
+                            // downloader = downloader,
                             modelId = modelId,
-                            meshyId = meshyId
+                            meshyId = meshyId,
                         )
                     }
                     composable(
@@ -99,6 +111,20 @@ class MainActivity : ComponentActivity() {
                         ModelsListScreen(navController = navController)
                     }
                     dialog(
+                        "upload_image/{type}",
+                        arguments = listOf(
+                            navArgument("type") {
+                                type = NavType.BoolType
+                            }
+                        )
+                    ) {
+                        val type = remember {
+                            it.arguments?.getBoolean("type")
+                        }
+                        UploadImage(navController = navController, typeGallery = type ?: true)
+                    }
+
+                    dialog(
                         "transit_dialog/{id}/{meshyId}",
                         arguments = listOf(
                             navArgument("id") {
@@ -117,11 +143,11 @@ class MainActivity : ComponentActivity() {
                         }
                         ModelViewTypeDialog(navController, modelId = model!!, meshyId!!)
                     }
-                    dialog(
-                        "image_uploading",
-                    ) {
-                        UploadImageDialog(navController)
-                    }
+//                    dialog(
+//                        "image_uploading",
+//                    ) {
+//                        UploadImageDialog(navController)
+//                    }
                 }
             }
         }
@@ -130,6 +156,18 @@ class MainActivity : ComponentActivity() {
     companion object {
         // private const val kModelFile = "models/model_v2_chair.glb"
         const val kMaxModelInstances = 5
+        private val CAMERAX_PERMISSIONS = arrayOf(
+            Manifest.permission.CAMERA,
+        )
+    }
+
+    private fun hasRequiredPermissions(): Boolean {
+        return CAMERAX_PERMISSIONS.all {
+            ContextCompat.checkSelfPermission(
+                applicationContext,
+                it
+            ) == PackageManager.PERMISSION_GRANTED
+        }
     }
 }
     

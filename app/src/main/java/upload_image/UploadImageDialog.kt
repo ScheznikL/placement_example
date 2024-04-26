@@ -125,9 +125,6 @@ fun UploadImageDialog(
                                         .ImageOnly
                                 )
                             )
-                        /*                        navController.navigate(
-                                                    "threed_screen/${modelId}"
-                                                )*/
                     },
                 ) {
                     Text("Pick an image")

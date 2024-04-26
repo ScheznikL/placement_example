@@ -39,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.endofjanuary.placement_example.DownloaderImpl
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
 
@@ -247,4 +248,61 @@ fun SpecifyRefineOptions(
         }
     }
 
+}
+
+
+@Composable
+fun DoDownload(
+    openDialog: MutableState<Boolean>,
+    confirm: MutableState<Boolean>,
+    path: String?,
+    downloader: DownloaderImpl,
+    modelDescription: String
+) {
+    val modelName = modelDescription.split(' ')
+
+    val helpText = remember{ mutableStateOf("Save to downloads") }
+
+    if (openDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            title = {
+                Text(text = "Download")
+            },
+            text = {
+                Text(
+                    helpText.value
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if(path != null)
+                        {
+                            confirm.value = true
+                            openDialog.value = false
+                            downloader.downloadFile(path, modelName = "model")
+                        } //"${modelName[0]} ${modelName[1]}"
+                        else{
+                            helpText.value = "There is no link or it is wrong :("
+                        }
+                    }
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        confirm.value = false
+                        openDialog.value = false
+                    }
+                ) {
+                    Text("Dismiss")
+                }
+            }
+        )
+    }
 }

@@ -39,7 +39,7 @@ class ChatScreenViewModel(
     private val modelRoomRepo: ModelsRepo
 ) : ViewModel() {
 
-    var loadError = mutableStateOf("")
+    var loadError = mutableStateOf<String?>(null)
     var isLoading = mutableStateOf(false)
 
     //var isSuccess = mutableStateOf(false)
@@ -56,11 +56,12 @@ class ChatScreenViewModel(
 
     val modelId = mutableStateOf(0)
     fun send(userMessageContext: String) {
+        loadError.value = null
+
         val converter = MessageToUIConverter()
         description = userMessageContext
 
         isLoading.value = true
-        loadError.value = ""
         _messagesListState.value =
             _messagesListState.value.plus(
                 converter.toMessageEntry(

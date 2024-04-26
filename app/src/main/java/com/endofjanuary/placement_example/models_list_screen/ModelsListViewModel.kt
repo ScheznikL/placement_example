@@ -3,6 +3,7 @@ package com.endofjanuary.placement_example.models_list_screen
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -23,6 +24,7 @@ class ModelsListViewModel(
 ) : ViewModel() {
 
 
+    val deletedModel = mutableStateOf<Resource<Int>>(Resource.None())
     var modelsList = mutableStateOf<List<ModelEntry>>(listOf())
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
@@ -31,7 +33,7 @@ class ModelsListViewModel(
 
     // private val selectedCategory = MutableStateFlow(Category.FromText)
     private val selectedCategory = MutableStateFlow<Category>(Category.FromText)
-   // private val selectedCategory = MutableStateFlow(Category.FromText)
+    // private val selectedCategory = MutableStateFlow(Category.FromText)
 
     private val categories = MutableStateFlow(Category.entries.toList())
 
@@ -56,6 +58,10 @@ class ModelsListViewModel(
 
     private val _imageModelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
     val imageModelsListState: StateFlow<List<ModelEntry>> = _imageModelsListState
+
+    private val _selectedIds: MutableState<Set<String>> = mutableStateOf(emptySet())
+    val selectedIds: MutableState<Set<String>> get() = _selectedIds
+
     init {
         viewModelScope.launch {
             // Combines the latest value from each of the flows, allowing us to generate a
@@ -95,7 +101,7 @@ class ModelsListViewModel(
 //                                modelImageUrl = it.modelImageUrl,
 //                                modelDescription = it.modelDescription
 //                            )
-                            if(it.isFromText) {
+                            if (it.isFromText) {
                                 _textModelsListState.value += ModelEntry(
                                     id = it.id,
                                     modelPath = it.modelPath,
@@ -103,8 +109,7 @@ class ModelsListViewModel(
                                     modelDescription = it.modelDescription,
                                     meshyId = it.meshyId
                                 )
-                            }
-                            else {
+                            } else {
                                 _imageModelsListState.value += ModelEntry(
                                     id = it.id,
                                     modelPath = it.modelPath,
@@ -132,6 +137,36 @@ class ModelsListViewModel(
                     isLoading.value = false
                 }
             }
+        }
+    }
+
+    fun deleteModel(isFromText: Boolean) {
+        val id = selectedIds.value.first()
+        try {
+            if (isFromText) {
+                val indexToDelete = _textModelsListState.value.indexOfFirst { it.meshyId == id }
+                _textModelsListState.value -= _textModelsListState.value.elementAt(indexToDelete)
+            } else {
+                val indexToDelete = _imageModelsListState.value.indexOfFirst { it.meshyId == id }
+                _imageModelsListState.value -= _imageModelsListState.value.elementAt(indexToDelete)
+            }
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = modelsRoom.deleteModelById(id)
+                when (result) {
+                    is Resource.Success -> {
+                        deletedModel.value = result
+                    }
+
+                    is Resource.Error -> {
+                        deletedModel.value = result
+                    }
+
+                    else -> {}
+                }
+            }
+        } catch (e: Exception) { // TODO are two try bad
+            deletedModel.value = Resource.Error(message = e.message.toString())
         }
     }
 

@@ -32,6 +32,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.endofjanuary.placement_example.DownloaderImpl
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.chat.LottieDotsFlashing
 import com.endofjanuary.placement_example.utils.BottomBar
@@ -59,37 +60,34 @@ const val IMG_PATH =
 fun ThreeDScreen(
     navController: NavController,
     modelId: Int?,
-    meshyId: String?
+    meshyId: String?,
 ) {
     val viewModel = getViewModel<ThreeDScreenViewModel>()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val downloader = DownloaderImpl(LocalContext.current)
 
     ThreeDMain(
         viewModel = viewModel,
-        snackbarHostState = snackbarHostState,
         modelId = modelId!!,
         navController = navController,
-        meshyId = meshyId!!
-        // modelInstance = viewModel.loadedInstancesState.value.data!!
+        meshyId = meshyId!!,
+        downloader = downloader
     )
 }
 
 @Composable
 fun ThreeDMain(
     modifier: Modifier = Modifier,
-//    modelInstance: ModelInstance,
     viewModel: ThreeDScreenViewModel,
-    snackbarHostState: SnackbarHostState,
     modelId: Int,
     meshyId: String,
     navController: NavController,
+    downloader: DownloaderImpl
 ) {
     val mainViewModel = getViewModel<MainViewModel>()
-
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
-    val assetManager = LocalContext.current.assets
     var resourceLoader = ResourceLoader(engine, true)
 
     var blurOnRefine = remember { 0.dp }
@@ -105,14 +103,18 @@ fun ThreeDMain(
     val modelUrl by remember {
         viewModel.modelImgUrl
     }
-    val modelDescription = mutableStateOf(viewModel.model.value.modelDescription)
+    val modelPath = mutableStateOf(viewModel.modelFromRoom.value.data?.modelPath)
+
+    val modelDescription: String? =
+        remember { viewModel.modelFromRoom.value.data?.modelDescription }
+
+    val deleteSuccess = remember { viewModel.modelDeleted }
 
     LaunchedEffect(true) {
         //  viewModel.loadInstanceNone()
         //  viewModel.loadModelLocal(modelLoader,/*engine,*/ modelLoader.assetLoader, assetManager, resourceLoader)
         viewModel.loadModelRemote(modelLoader, modelId)
     }
-
 
     Scaffold(
         bottomBar = { BottomBar(navController = navController) },
@@ -126,7 +128,10 @@ fun ThreeDMain(
                 navController = navController,
                 mainViewModel = mainViewModel,
                 meshyId = meshyId,
-                overwrite = overwriteRefine
+                modelPath = modelPath,
+                overwrite = overwriteRefine,
+                viewModel = viewModel,
+                downloader = downloader
             )
         }
     ) { padding ->
@@ -156,6 +161,27 @@ fun ThreeDMain(
                 }
             }
 
+            LaunchedEffect(deleteSuccess.value) {
+                when (deleteSuccess.value) {
+                    is Resource.Error -> {
+                        snackbarHostState.showSnackbar(
+                            message = "Error when deleting model...",
+                        )
+                    }
+
+                    is Resource.Success -> {
+                        if (snackbarHostState.showSnackbar(
+                                message = "Model deleted successfully",
+                                actionLabel = "OK"
+                            ) == SnackbarResult.ActionPerformed
+                        ) {
+                            navController.popBackStack()
+                        }
+                    }
+
+                    else -> {}
+                }
+            }
 
             when (instanceState) {
                 is Resource.Success -> {
@@ -301,8 +327,6 @@ fun ThreeDMain(
                         )
                     }
                 }
-
-                else -> {}
             }
 
         }

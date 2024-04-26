@@ -8,5 +8,6 @@ abstract class ModelsRepo {
     abstract suspend fun saveModel(modelEntity: ModelEntity): Resource<Long>
     abstract suspend fun update(meshyId: String?, modelImageUrl: String?, modelPath: String?, isRefine: Boolean?): Resource<Int>
     abstract suspend fun getModelById(modelId: Int): Resource<ModelEntity>
+    abstract suspend fun deleteModelById(modelId: String):  Resource<Int>
     abstract suspend fun getLastModel(): Resource<ModelEntity>
 }

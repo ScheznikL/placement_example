@@ -51,6 +51,7 @@ import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.utils.BottomBar
 import com.example.jetcaster.ui.home.HomeViewModel
 import org.koin.androidx.compose.getViewModel
+import upload_image.UploadImageBottomSheet
 
 
 @Composable
@@ -73,7 +74,7 @@ fun HomeScreen(
                 modifier = Modifier
                     //     .fillMaxSize()
                     .padding(innerPadding),
-                  navController = navController
+                navController = navController
             )
 
         }
@@ -134,25 +135,22 @@ fun HomeContent(
 //    onCategorySelected: (HomeCategory) -> Unit,
     navController: NavController,
 ) {
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val appBarColor = surfaceColor.copy(alpha = 0.87f)
+
+    val showBottomSheet = remember {
+        mutableStateOf(false)
+    }
+
     Column(
         modifier = modifier.windowInsetsPadding(
             WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
         )
     ) {
-
-        val surfaceColor = MaterialTheme.colorScheme.surface
-        val appBarColor = surfaceColor.copy(alpha = 0.87f)
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-//                .verticalGradientScrim(
-//                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
-//                    startYPercentage = 1f,
-//                    endYPercentage = 0f
-//                )
         ) {
-            // Draw a scrim over the status bar which matches the app bar
             Spacer(
                 Modifier
                     .background(appBarColor)
@@ -166,12 +164,6 @@ fun HomeContent(
             )
 
         }
-
-//        LazyHorizontalGrid(rows = GridCells.Adaptive(minSize = 128.dp)) {
-//            items(20) { i ->
-//                PhotoItem()
-//            }
-//        }
         Text(
             "Last Models",
             style = MaterialTheme.typography.headlineMedium.copy(
@@ -190,7 +182,7 @@ fun HomeContent(
                 }
             }
         }
-        Column{
+        Column {
             Button(
                 onClick = {
                     navController.navigate("chat_screen")
@@ -200,7 +192,7 @@ fun HomeContent(
             }
             Button(
                 onClick = {
-                    navController.navigate("image_uploading")
+                    showBottomSheet.value = true
                 },
             ) {
                 Text(text = "Model from Image")
@@ -208,6 +200,10 @@ fun HomeContent(
         }
 
     }
+    UploadImageBottomSheet(
+        navController = navController,
+        showBottomSheet = showBottomSheet,
+    )
 }
 
 @Composable

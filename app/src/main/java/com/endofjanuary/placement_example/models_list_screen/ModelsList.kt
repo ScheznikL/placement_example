@@ -1,8 +1,12 @@
 package com.endofjanuary.placement_example.models_list_screen
 
+import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,21 +26,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +74,7 @@ import coil.request.ImageRequest
 import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.data.models.ModelEntry
 import com.endofjanuary.placement_example.utils.BottomBar
+import com.endofjanuary.placement_example.utils.Resource
 import org.koin.androidx.compose.getViewModel
 
 @Composable
@@ -76,16 +88,59 @@ fun ModelsListScreen(
         viewModel.loadModels()
     }
 
+    val itemToDelete = remember {
+        viewModel.selectedIds
+    }
+    val deleted = remember {
+        viewModel.deletedModel
+    }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(deleted.value) {
+        when (deleted.value) {
+            is Resource.Error -> {
+                viewModel.selectedIds.value = emptySet()
+                snackbarHostState.showSnackbar(
+                    message = "Error when deleting model...",
+                )
+            }
+
+            is Resource.Success -> {
+                viewModel.selectedIds.value -= viewModel.selectedIds.value.last()
+                snackbarHostState.showSnackbar(
+                    message = "Model deleted successfully",
+                )
+            }
+
+            else -> {}
+        }
+    }
+
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         bottomBar = { BottomBar(navController = navController) },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                when (viewState.selectedCategory) {
-                    Category.FromText -> navController.navigate("chat_screen")
-                    Category.FromImage -> navController.navigate("image_uploading")
+            if (itemToDelete.value.isEmpty()) {
+                FloatingActionButton(onClick = {
+                    when (viewState.selectedCategory) {
+                        Category.FromText -> navController.navigate("chat_screen")
+                        Category.FromImage -> navController.navigate("image_uploading")
+                    }
+
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add")
                 }
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+            } else {
+                FloatingActionButton(onClick = {
+                    when (viewState.selectedCategory) {
+                        Category.FromText -> viewModel.deleteModel(true)
+                        Category.FromImage -> viewModel.deleteModel(false)
+                    }
+                }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                }
             }
         }
     ) { padding ->
@@ -103,23 +158,16 @@ fun ModelsListScreen(
                 )
                 when (viewState.selectedCategory) {
                     Category.FromText -> {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                            contentDescription = "Model",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(CenterHorizontally)
-                        )
+                        Spacer(modifier = Modifier.height(12.dp))
                         SearchBar(
                             hint = "Search...",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(10.dp)
                         ) {
                             // viewModel.searchPokemonList(it)
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         ModelsFromTextList(navController = navController, viewModel = viewModel)
                     }
 
@@ -136,7 +184,7 @@ fun ModelsListScreen(
                             hint = "Search in models from image...",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(10.dp)
                         ) {
                             // viewModel.searchPokemonList(it)
                         }
@@ -210,7 +258,9 @@ fun ModelsFromImageList(
     val isSearching by remember { viewModel.isSearching }
 
     if (modelListState.isNotEmpty()) {
-        LazyColumn(contentPadding = PaddingValues(16.dp)) {
+        LazyColumn(
+            contentPadding = PaddingValues(16.dp)
+        ) {
             val itemCount = //modelListState.size - 1
                 if (modelListState.size % 2 == 0) {
                     modelListState.size / 2
@@ -287,6 +337,7 @@ fun SearchBar(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ModelInRowEntry(
     entry: ModelEntry,
@@ -298,12 +349,14 @@ fun ModelInRowEntry(
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
-//    val dialogRes: MutableState<Boolean?> = remember { mutableStateOf(null) }
-//
-//    val showDialog = remember { mutableStateOf(false) }
-//    if (showDialog.value) {
-//        ModelViewTypeDialog(dialogRes = dialogRes, openDialog = showDialog)
-//    }
+    val selectedIds = remember {
+        viewModel.selectedIds
+    }
+    val inSelectionMode by remember { derivedStateOf { selectedIds.value.isNotEmpty() } }
+
+    val selected by remember { derivedStateOf { selectedIds.value.contains(entry.meshyId) } }
+
+    val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         contentAlignment = Center,
@@ -312,23 +365,53 @@ fun ModelInRowEntry(
             .clip(RoundedCornerShape(10.dp))
             .aspectRatio(1f)
             .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            dominantColor,
-                            defaultDominantColor
-                        )
+                Brush.verticalGradient(
+                    listOf(
+                        dominantColor,
+                        defaultDominantColor
                     )
-
-            )
-            .clickable {
-//                showDialog.value = true
-//                navController.navigate(
-//                    "ar_screen/${entry.id}"
-//                )
-                navController.navigate(
-                    "transit_dialog/${entry.id}/${entry.meshyId}"
                 )
-            }
+            )
+            /*        .clickable {
+        //                showDialog.value = true
+        //                navController.navigate(
+        //                    "ar_screen/${entry.id}"
+        //                )
+                        navController.navigate(
+                            "transit_dialog/${entry.id}/${entry.meshyId}"
+                        )
+                    }*/
+            .combinedClickable(
+                onClick = {
+                    if (!inSelectionMode) {
+                        navController.navigate(
+                            "transit_dialog/${entry.id}/${entry.meshyId}"
+                        )
+                    } else {
+                        selectedIds.value -= selectedIds.value.last()
+                    }
+                },
+                onLongClick = {
+                    if (!inSelectionMode) {
+                        selectedIds.value += entry.meshyId
+                    } else {
+                        selectedIds.value -= selectedIds.value.last()
+                    }
+//                    else
+//                        Modifier.toggleable(
+//                            value = selected,
+//                            interactionSource = interactionSource,
+//                            indication = null, // do not show a ripple
+//                            onValueChange = {
+//                                if (it) {
+//                                    selectedIds.value += entry.meshyId
+//                                } else {
+//                                    selectedIds.value -= entry.meshyId
+//                                }
+//                            }
+//                        )
+                },
+            )
 
     ) {
 //        if (dialogRes.value != null && dialogRes.value!!) {
@@ -365,6 +448,29 @@ fun ModelInRowEntry(
             )
         }
     }
+    if (inSelectionMode) {
+        Log.d("Selm", "inSel Mode")
+        if (selected) {
+            val bgColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+            Icon(
+                Icons.Filled.CheckCircle,
+                tint = MaterialTheme.colorScheme.primary,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(4.dp)
+                    .border(2.dp, bgColor, CircleShape)
+                    .clip(CircleShape)
+                    .background(bgColor)
+            )
+        } else {
+            Icon(
+                Icons.Outlined.DateRange, // todo change
+                tint = Color.White.copy(alpha = 0.7f),
+                contentDescription = null,
+                modifier = Modifier.padding(6.dp)
+            )
+        }
+    }
 }
 
 @Composable
@@ -372,14 +478,16 @@ fun ModelsInRow(
     rowIndex: Int,
     entries: List<ModelEntry>,
     navController: NavController,
-    viewModel: ModelsListViewModel
+    viewModel: ModelsListViewModel,
 ) {
+
     Column {
         Row {
             ModelInRowEntry(
                 entry = entries[rowIndex * 2],
                 navController = navController,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f),
                 viewModel = viewModel
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -403,7 +511,7 @@ fun RetrySection(
     error: String,
     onRetry: () -> Unit
 ) {
-    Column {
+    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = CenterHorizontally) {
         Text(error, color = Color.Red, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Button(

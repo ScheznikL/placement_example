@@ -2,6 +2,7 @@ package com.endofjanuary.placement_example.ar_screen
 
 import android.graphics.BitmapFactory
 import android.os.Environment
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +59,8 @@ fun ARScreen(
     modelId: Int?,
     navController: NavController,
 ) {
+
+    Log.d("On Ar","Enter" )
     val snackbarHostState = remember { SnackbarHostState() }
     //val viewModel = getViewModel<ARScreenViewModel>(parameters = { parametersOf(prompt) })
 

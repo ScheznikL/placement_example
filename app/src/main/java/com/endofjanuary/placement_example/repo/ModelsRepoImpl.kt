@@ -22,7 +22,7 @@ class ModelsRepoImpl(
 
     override suspend fun saveModel(modelEntity: ModelEntity): Resource<Long> {
         return try {
-           val resultID = modelEntityDao.insert(modelEntity)
+            val resultID = modelEntityDao.insert(modelEntity)
             Resource.Success(resultID)
         } catch (e: Exception) {
             Resource.Error(e.message.toString())
@@ -36,7 +36,7 @@ class ModelsRepoImpl(
         isRefine: Boolean?
     ): Resource<Int> {
         return try {
-           val res = modelEntityDao.updateModel(
+            val res = modelEntityDao.updateModel(
                 meshyId = meshyId,
                 modelImageUrl = modelImageUrl,
                 modelPath = modelPath,
@@ -51,6 +51,19 @@ class ModelsRepoImpl(
     override suspend fun getModelById(modelId: Int): Resource<ModelEntity> {
         return try {
             val result = modelEntityDao.getModelById(modelId)
+            if (result != null) {
+                Resource.Success(result)
+            } else {
+                Resource.Error("No model with corresponding $modelId")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message.toString())
+        }
+    }
+
+    override suspend fun deleteModelById(modelId: String): Resource<Int> {
+        return try {
+            val result = modelEntityDao.deleteModelById(modelId)
             if (result != null) {
                 Resource.Success(result)
             } else {
