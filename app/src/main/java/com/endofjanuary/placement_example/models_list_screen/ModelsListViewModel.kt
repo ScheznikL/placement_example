@@ -3,6 +3,8 @@ package com.endofjanuary.placement_example.models_list_screen
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
@@ -10,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.endofjanuary.placement_example.data.models.ModelEntry
+import com.endofjanuary.placement_example.data.room.ModelEntity
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import kotlinx.coroutines.Dispatchers
@@ -25,35 +28,26 @@ class ModelsListViewModel(
 
 
     val deletedModel = mutableStateOf<Resource<Int>>(Resource.None())
-    var modelsList = mutableStateOf<List<ModelEntry>>(listOf())
+
+    //var modelsList = mutableStateOf<List<ModelEntry>>(listOf())
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
 
     var isSearching = mutableStateOf(false)
 
-    // private val selectedCategory = MutableStateFlow(Category.FromText)
-    private val selectedCategory = MutableStateFlow<Category>(Category.FromText)
-    // private val selectedCategory = MutableStateFlow(Category.FromText)
-
+    private val selectedCategory = MutableStateFlow(Category.FromText)
     private val categories = MutableStateFlow(Category.entries.toList())
 
     // Holds our view state which the UI collects via [state]
-    //private val _state: MutableState<ModelListViewState> = mutableStateOf(ModelListViewState())
     private val _state = MutableStateFlow(ModelListViewState())
-
-    /* val state: State<ModelListViewState>
-         get() = _state*/
     val state: StateFlow<ModelListViewState>
         get() = _state
 
     fun onCategorySelected(category: Category) {
         selectedCategory.value = category
-        // _state.value.selectedCategory = category
     }
 
     private val _textModelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
-
-    // The UI collects from this StateFlow to get its state updates
     val textModelsListState: StateFlow<List<ModelEntry>> = _textModelsListState
 
     private val _imageModelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
@@ -61,6 +55,9 @@ class ModelsListViewModel(
 
     private val _selectedIds: MutableState<Set<String>> = mutableStateOf(emptySet())
     val selectedIds: MutableState<Set<String>> get() = _selectedIds
+
+    private val _selectedModel: MutableState<ModelEntry> = mutableStateOf(ModelEntry())
+    val selectedModel: MutableState<ModelEntry> get() = _selectedModel
 
     init {
         viewModelScope.launch {
@@ -76,7 +73,7 @@ class ModelsListViewModel(
                     categories
                 )
             }.catch { throwable ->
-                // TODO: emit a UI error here. For now we'll just rethrow
+                // TODO: emit a UI error here.
                 throw throwable
             }.collect {
                 _state.value = it
@@ -87,72 +84,139 @@ class ModelsListViewModel(
     fun loadModels() {
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
-            val result = modelsRoom.getAllModels()
-            when (result) {
-                is Resource.Success -> {
-
-                    loadError.value = ""
-                    isLoading.value = false
-                    if (!result.data.isNullOrEmpty()) {
-                        result.data!!.forEach { //TODO converter ?
-//                            modelsList.value += ModelEntry(
-//                                id = it.id,
-//                                modelPath = it.modelPath,
-//                                modelImageUrl = it.modelImageUrl,
-//                                modelDescription = it.modelDescription
-//                            )
-                            if (it.isFromText) {
-                                _textModelsListState.value += ModelEntry(
-                                    id = it.id,
-                                    modelPath = it.modelPath,
-                                    modelImageUrl = it.modelImageUrl,
-                                    modelDescription = it.modelDescription,
-                                    meshyId = it.meshyId
-                                )
-                            } else {
-                                _imageModelsListState.value += ModelEntry(
-                                    id = it.id,
-                                    modelPath = it.modelPath,
-                                    modelImageUrl = it.modelImageUrl,
-                                    modelDescription = it.modelDescription,
-                                    meshyId = it.meshyId
-                                )
-                            }
-                        }
+            val result = modelsRoom.getAllModelsFlow()
+            result.collect {
+                it.forEach{modelEntity ->
+                    if (modelEntity.isFromText) { //ConvertToModelEntity todo
+                        _textModelsListState.value += ModelEntry(
+                            id = modelEntity.id,
+                            modelPath = modelEntity.modelPath,
+                            modelImageUrl = modelEntity.modelImageUrl,
+                            modelDescription = modelEntity.modelDescription,
+                            meshyId = modelEntity.meshyId
+                        )
+                    } else {
+                        _imageModelsListState.value += ModelEntry(
+                            id = modelEntity.id,
+                            modelPath = modelEntity.modelPath,
+                            modelImageUrl = modelEntity.modelImageUrl,
+                            modelDescription = modelEntity.modelDescription,
+                            meshyId = modelEntity.meshyId
+                        )
                     }
                 }
-
-                is Resource.Error -> {
-                    loadError.value = result.message!!
-                    isLoading.value = false
-                }
-
-                is Resource.Loading -> {
-                    loadError.value = ""
-                    isLoading.value = true
-                }
-
-                is Resource.None -> {
-                    loadError.value = ""
-                    isLoading.value = false
-                }
             }
+//            when (result) {
+//                is Resource.Success -> {
+//
+//                    loadError.value = ""
+//                    isLoading.value = false
+//
+//                    if (!result.data.isNullOrEmpty()) {
+//                        result.data!!.forEach { //TODO converter ?
+////                            modelsList.value += ModelEntry(
+////                                id = it.id,
+////                                modelPath = it.modelPath,
+////                                modelImageUrl = it.modelImageUrl,
+////                                modelDescription = it.modelDescription
+////                            )
+//                            if (it.isFromText) {
+//                                _textModelsListState.value += ModelEntry(
+//                                    id = it.id,
+//                                    modelPath = it.modelPath,
+//                                    modelImageUrl = it.modelImageUrl,
+//                                    modelDescription = it.modelDescription,
+//                                    meshyId = it.meshyId
+//                                )
+//                            } else {
+//                                _imageModelsListState.value += ModelEntry(
+//                                    id = it.id,
+//                                    modelPath = it.modelPath,
+//                                    modelImageUrl = it.modelImageUrl,
+//                                    modelDescription = it.modelDescription,
+//                                    meshyId = it.meshyId
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                is Resource.Error -> {
+//                    loadError.value = result.message!!
+//                    isLoading.value = false
+//                }
+//
+//                is Resource.Loading -> {
+//                    loadError.value = ""
+//                    isLoading.value = true
+//                }
+//
+//                is Resource.None -> {
+//                    loadError.value = ""
+//                    isLoading.value = false
+//                }
+//            }
         }
     }
 
-    fun deleteModel(isFromText: Boolean) {
-        val id = selectedIds.value.first()
+    private var integer = 1
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun insetModel() { // todo TEMP
+
+        viewModelScope.launch(context = Dispatchers.IO) {
+            modelsRoom.saveModel(
+                ModelEntity(
+                    modelInstance = ByteArray(1), // TEMP
+                    modelPath = _textModelsListState.value.first().modelPath,
+                    modelDescription = "model.value.modelDescription",
+                    modelImageUrl = _textModelsListState.value.first().modelImageUrl,
+                    isFromText = true,
+                    isRefine = false,
+                    meshyId = "new${integer++}",
+                )
+            )
+        }
+
+    }
+
+    fun deleteModels() {
+        // val id = selectedIds.value.first()
         try {
-            if (isFromText) {
-                val indexToDelete = _textModelsListState.value.indexOfFirst { it.meshyId == id }
-                _textModelsListState.value -= _textModelsListState.value.elementAt(indexToDelete)
+//            if (isFromText) {
+//                val indexToDelete = _textModelsListState.value.indexOfFirst { it.meshyId == id }
+//                _textModelsListState.value -= _textModelsListState.value.elementAt(indexToDelete)
+//            } else {
+//                val indexToDelete = _imageModelsListState.value.indexOfFirst { it.meshyId == id }
+//                _imageModelsListState.value -= _imageModelsListState.value.elementAt(indexToDelete)
+//            }
+
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result: MutableList<Resource<Int>> = mutableListOf()
+
+                selectedIds.value.forEach { result += modelsRoom.deleteModelById(it) }
+
+        //TODO Loading - try - ...
+
+            }
+
+        } catch (e: Exception) { // TODO are two try bad
+            deletedModel.value = Resource.Error(message = e.message.toString())
+        }
+    }
+
+    fun deleteModel(model: ModelEntry) {
+
+        try {
+            if (model.isFromText) {
+                _textModelsListState.value -= _textModelsListState.value.first { it.meshyId == model.meshyId }
             } else {
-                val indexToDelete = _imageModelsListState.value.indexOfFirst { it.meshyId == id }
-                _imageModelsListState.value -= _imageModelsListState.value.elementAt(indexToDelete)
+                _imageModelsListState.value -= _imageModelsListState.value.first { it.meshyId == model.meshyId }
             }
 
             viewModelScope.launch(Dispatchers.IO) {
-                val result = modelsRoom.deleteModelById(id)
+                val result = modelsRoom.deleteModelById(model.meshyId)
                 when (result) {
                     is Resource.Success -> {
                         deletedModel.value = result

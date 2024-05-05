@@ -1,6 +1,8 @@
 package com.endofjanuary.placement_example.models_list_screen
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,7 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -74,9 +75,9 @@ import coil.request.ImageRequest
 import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.data.models.ModelEntry
 import com.endofjanuary.placement_example.utils.BottomBar
-import com.endofjanuary.placement_example.utils.Resource
 import org.koin.androidx.compose.getViewModel
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun ModelsListScreen(
     navController: NavController
@@ -96,25 +97,25 @@ fun ModelsListScreen(
     }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(deleted.value) {
-        when (deleted.value) {
-            is Resource.Error -> {
-                viewModel.selectedIds.value = emptySet()
-                snackbarHostState.showSnackbar(
-                    message = "Error when deleting model...",
-                )
-            }
-
-            is Resource.Success -> {
-                viewModel.selectedIds.value -= viewModel.selectedIds.value.last()
-                snackbarHostState.showSnackbar(
-                    message = "Model deleted successfully",
-                )
-            }
-
-            else -> {}
-        }
-    }
+//    LaunchedEffect(deleted.value) {
+//        when (deleted.value) {
+//            is Resource.Error -> {
+//                viewModel.selectedIds.value = emptySet()
+//                snackbarHostState.showSnackbar(
+//                    message = "Error when deleting model...",
+//                )
+//            }
+//
+//            is Resource.Success -> {
+//                // viewModel.selectedIds.value -= viewModel.selectedIds.value.last()
+//                snackbarHostState.showSnackbar(
+//                    message = "Model deleted successfully",
+//                )
+//            }
+//
+//            else -> {}
+//        }
+//    }
 
     Scaffold(
         snackbarHost = {
@@ -124,20 +125,30 @@ fun ModelsListScreen(
         floatingActionButton = {
             if (itemToDelete.value.isEmpty()) {
                 FloatingActionButton(onClick = {
-                    when (viewState.selectedCategory) {
-                        Category.FromText -> navController.navigate("chat_screen")
-                        Category.FromImage -> navController.navigate("image_uploading")
-                    }
-
+                    viewModel.insetModel()
                 }) {
                     Icon(Icons.Default.Add, contentDescription = "Add")
                 }
+                /**
+                 * Todo under save
+
+                FloatingActionButton(onClick = {
+                navController.navigate("new_model")
+                //                    when (viewState.selectedCategory) {new_model
+                //                        Category.FromText -> navController.navigate("chat_screen")
+                //                        Category.FromImage -> navController.navigate("image_uploading")
+                //                    }
+
+                }) {
+                Icon(Icons.Default.Add, contentDescription = "Add")
+                }*/
             } else {
                 FloatingActionButton(onClick = {
-                    when (viewState.selectedCategory) {
-                        Category.FromText -> viewModel.deleteModel(true)
-                        Category.FromImage -> viewModel.deleteModel(false)
-                    }
+                    viewModel.deleteModels()
+//                    when (viewState.selectedCategory) {
+//                        Category.FromText -> viewModel.deleteModels()
+//                        Category.FromImage -> viewModel.deleteModels()
+//                    }
                 }) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete")
                 }
@@ -216,11 +227,6 @@ fun ModelsFromTextList(
                     modelListState.size / 2 + 1
                 }
             items(itemCount) {
-//            if(it >= itemCount - 1 && !endReached && !isLoading && !isSearching) {
-//                LaunchedEffect(key1 = true) {
-//                    viewModel.loadPokemonPaginated()
-//                }
-//            }
                 ModelsInRow(
                     rowIndex = it,
                     entries = modelListState,
@@ -294,46 +300,44 @@ fun ModelsFromImageList(
     }
 }
 
-
 @Composable
-fun SearchBar(
-    modifier: Modifier = Modifier,
-    hint: String = "",
-    onSearch: (String) -> Unit = {}
+fun ModelsInRow(
+    rowIndex: Int,
+    entries: List<ModelEntry>,
+    navController: NavController,
+    viewModel: ModelsListViewModel,
 ) {
-    var text by remember {
-        mutableStateOf("")
-    }
-    var isHintDisplayed by remember {
-        mutableStateOf(hint != "")
-    }
 
-    Box(modifier = modifier) {
-        BasicTextField(
-            value = text,
-            onValueChange = {
-                text = it
-                onSearch(it)
-            },
-            maxLines = 1,
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(5.dp, CircleShape)
-                .background(Color.White, CircleShape)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .onFocusChanged {
-                    // isHintDisplayed = it !=   && text.isEmpty()
-                }
-        )
-        if (isHintDisplayed) {
-            Text(
-                text = hint,
-                color = Color.LightGray,
+    val selectedIds = remember { viewModel.selectedIds }
+    val inSelectionMode by remember { derivedStateOf { selectedIds.value.isNotEmpty() } }
+    Column {
+        Row {
+            val selected by remember { derivedStateOf { selectedIds.value.contains(entries[rowIndex * 2].meshyId) } }
+            ModelInRowEntry(
+                entry = entries[rowIndex * 2],
+                navController = navController,
                 modifier = Modifier
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                    .weight(1f),
+                viewModel = viewModel,
+                inSelectionMode = inSelectionMode,
+                selected = selected
             )
+            Spacer(modifier = Modifier.width(16.dp))
+            if (entries.size >= rowIndex * 2 + 2) {
+                val selected2 by remember { derivedStateOf { selectedIds.value.contains(entries[rowIndex * 2 + 1].meshyId) } }
+                ModelInRowEntry(
+                    entry = entries[rowIndex * 2 + 1],
+                    navController = navController,
+                    modifier = Modifier.weight(1f),
+                    viewModel = viewModel,
+                    inSelectionMode = inSelectionMode,
+                    selected = selected2
+                )
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+            }
         }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -343,18 +347,14 @@ fun ModelInRowEntry(
     entry: ModelEntry,
     navController: NavController,
     modifier: Modifier = Modifier,
-    viewModel: ModelsListViewModel
+    viewModel: ModelsListViewModel,
+    inSelectionMode: Boolean,
+    selected: Boolean
 ) {
     val defaultDominantColor = MaterialTheme.colorScheme.surface
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
-    val selectedIds = remember {
-        viewModel.selectedIds
-    }
-    val inSelectionMode by remember { derivedStateOf { selectedIds.value.isNotEmpty() } }
-
-    val selected by remember { derivedStateOf { selectedIds.value.contains(entry.meshyId) } }
 
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -372,15 +372,6 @@ fun ModelInRowEntry(
                     )
                 )
             )
-            /*        .clickable {
-        //                showDialog.value = true
-        //                navController.navigate(
-        //                    "ar_screen/${entry.id}"
-        //                )
-                        navController.navigate(
-                            "transit_dialog/${entry.id}/${entry.meshyId}"
-                        )
-                    }*/
             .combinedClickable(
                 onClick = {
                     if (!inSelectionMode) {
@@ -388,15 +379,17 @@ fun ModelInRowEntry(
                             "transit_dialog/${entry.id}/${entry.meshyId}"
                         )
                     } else {
-                        selectedIds.value -= selectedIds.value.last()
+                        viewModel.selectedIds.value -= viewModel.selectedIds.value.last()
                     }
                 },
                 onLongClick = {
+                    Log.d("onLongClick", "${entry.meshyId} - ${entry.modelDescription}")
                     if (!inSelectionMode) {
-                        selectedIds.value += entry.meshyId
+                        viewModel.selectedIds.value += entry.meshyId
                     } else {
-                        selectedIds.value -= selectedIds.value.last()
+                        viewModel.selectedIds.value -= viewModel.selectedIds.value.last()
                     }
+                    Log.d("onLongClick", viewModel.selectedIds.value.toString())
 //                    else
 //                        Modifier.toggleable(
 //                            value = selected,
@@ -449,7 +442,6 @@ fun ModelInRowEntry(
         }
     }
     if (inSelectionMode) {
-        Log.d("Selm", "inSel Mode")
         if (selected) {
             val bgColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
             Icon(
@@ -462,47 +454,7 @@ fun ModelInRowEntry(
                     .clip(CircleShape)
                     .background(bgColor)
             )
-        } else {
-            Icon(
-                Icons.Outlined.DateRange, // todo change
-                tint = Color.White.copy(alpha = 0.7f),
-                contentDescription = null,
-                modifier = Modifier.padding(6.dp)
-            )
         }
-    }
-}
-
-@Composable
-fun ModelsInRow(
-    rowIndex: Int,
-    entries: List<ModelEntry>,
-    navController: NavController,
-    viewModel: ModelsListViewModel,
-) {
-
-    Column {
-        Row {
-            ModelInRowEntry(
-                entry = entries[rowIndex * 2],
-                navController = navController,
-                modifier = Modifier
-                    .weight(1f),
-                viewModel = viewModel
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            if (entries.size >= rowIndex * 2 + 2) {
-                ModelInRowEntry(
-                    entry = entries[rowIndex * 2 + 1],
-                    navController = navController,
-                    modifier = Modifier.weight(1f),
-                    viewModel
-                )
-            } else {
-                Spacer(modifier = Modifier.weight(1f))
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -591,6 +543,50 @@ private fun CategoryTabs(
         }
     }
 }
+
+@Composable
+fun SearchBar(
+    modifier: Modifier = Modifier,
+    hint: String = "",
+    onSearch: (String) -> Unit = {}
+) {
+    var text by remember {
+        mutableStateOf("")
+    }
+    var isHintDisplayed by remember {
+        mutableStateOf(hint != "")
+    }
+
+    Box(modifier = modifier) {
+        BasicTextField(
+            value = text,
+            onValueChange = {
+                text = it
+                onSearch(it)
+            },
+            maxLines = 1,
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(5.dp, CircleShape)
+                .background(Color.White, CircleShape)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .onFocusChanged {
+                    // isHintDisplayed = it !=   && text.isEmpty()
+                }
+        )
+        if (isHintDisplayed) {
+            Text(
+                text = hint,
+                color = Color.LightGray,
+                modifier = Modifier
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+            )
+        }
+    }
+}
+
+
 //
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable

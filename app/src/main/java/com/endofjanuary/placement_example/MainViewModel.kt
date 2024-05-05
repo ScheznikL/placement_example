@@ -395,7 +395,7 @@ class MainViewModel(
                 modelRoom.saveModel(
                     ModelEntity(
                         // modelInstance = result[0],
-                        modelInstance = ByteArray(1), // TEMP
+                        modelInstance = ByteArray(1), // todo TEMP
                         modelPath = model.value.modelPath,
                         modelDescription = model.value.modelDescription,
                         modelImageUrl = model.value.modelImageUrl,

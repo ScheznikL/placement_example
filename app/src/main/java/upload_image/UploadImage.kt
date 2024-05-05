@@ -60,10 +60,10 @@ fun UploadImage(
     val textInput by remember { viewModel.inputValueState }
     val isUploading by remember { viewModel.isUploading }
     val isUploadingError by remember { viewModel.isUploadingError }
-    var presignedUrl by remember { viewModel.presignedUrl }
+    val presignedUrl by remember { viewModel.presignedUrl }
 
     val isLoading by remember { mainViewModel.isLoading }
-    var isSuccess by remember { mainViewModel.isSuccess }
+    val isSuccess by remember { mainViewModel.isSuccess }
 
 
     val pickImage = rememberLauncherForActivityResult(

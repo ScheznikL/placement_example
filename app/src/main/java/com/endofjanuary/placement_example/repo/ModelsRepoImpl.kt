@@ -3,23 +3,24 @@ package com.endofjanuary.placement_example.repo
 import com.endofjanuary.placement_example.data.room.ModelEntity
 import com.endofjanuary.placement_example.data.room.ModelEntityDao
 import com.endofjanuary.placement_example.utils.Resource
+import kotlinx.coroutines.flow.Flow
 
 class ModelsRepoImpl(
     private val modelEntityDao: ModelEntityDao
 ) : ModelsRepo() {
     override suspend fun getAllModels(): Resource<List<ModelEntity>> {
         return try {
-            val result = modelEntityDao.getAll()
-            if (result.isNotEmpty()) {
-                Resource.Success(result)
-            } else {
-                Resource.Error("empty List")
-            }
+           // val result = modelEntityDao.getAll()
+           // if (result.isNotEmpty()) {
+                Resource.Success(emptyList())
+//            } else {
+//                Resource.Error("empty List")
+//            }
         } catch (e: Exception) {
             Resource.Error(e.message.toString())
         }
     }
-
+    override suspend fun getAllModelsFlow(): Flow<List<ModelEntity>> = modelEntityDao.getAll()
     override suspend fun saveModel(modelEntity: ModelEntity): Resource<Long> {
         return try {
             val resultID = modelEntityDao.insert(modelEntity)

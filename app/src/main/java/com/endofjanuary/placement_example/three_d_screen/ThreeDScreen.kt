@@ -104,6 +104,7 @@ fun ThreeDMain(
         viewModel.modelImgUrl
     }
     val modelPath = mutableStateOf(viewModel.modelFromRoom.value.data?.modelPath)
+    val isFromText = mutableStateOf(viewModel.modelFromRoom.value.data?.isFromText)
 
     val modelDescription: String? =
         remember { viewModel.modelFromRoom.value.data?.modelDescription }
@@ -131,7 +132,8 @@ fun ThreeDMain(
                 modelPath = modelPath,
                 overwrite = overwriteRefine,
                 viewModel = viewModel,
-                downloader = downloader
+                downloader = downloader,
+                isFromText = isFromText
             )
         }
     ) { padding ->

@@ -38,7 +38,8 @@ fun ThreeDScreenTopBar(
     navController: NavController,
     overwrite: MutableState<Boolean>,
     downloader: DownloaderImpl,
-    modelPath: MutableState<String?>
+    modelPath: MutableState<String?>,
+    isFromText: MutableState<Boolean?>
 ) {
 
 
@@ -79,16 +80,18 @@ fun ThreeDScreenTopBar(
             }
         },
         actions = {
-            Column {
-                IconButton(onClick = {
-                    openDialog.value = true
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = "Refine"
-                    )
+            if (isFromText.value ?: true) {
+                Column {
+                    IconButton(onClick = {
+                        openDialog.value = true
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = "Refine"
+                        )
+                    }
+                    Text("Refine")
                 }
-                Text("Refine")
             }
             IconButton(onClick = { openDownloadDialog.value = true }) {
                 Icon(
@@ -118,6 +121,6 @@ fun ThreeDScreenTopBar(
         confirm = confirmDownload,
         path = modelPath.value,
         downloader = downloader,
-        modelDescription = modelDescription?: "none description"
+        modelDescription = modelDescription ?: "none description"
     )
 }

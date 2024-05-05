@@ -21,7 +21,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,13 +30,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.endofjanuary.placement_example.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TakePhoto(
     viewModel: UploadImageViewModel
 ) {
-    val scaffoldState = rememberBottomSheetScaffoldState()
-
     val context = LocalContext.current
 
     val controller = remember {

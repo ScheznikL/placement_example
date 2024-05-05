@@ -212,6 +212,7 @@ fun PhotoItem(modifier: Modifier = Modifier) {
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
+    
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier

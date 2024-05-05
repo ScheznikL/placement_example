@@ -21,6 +21,7 @@ import com.endofjanuary.placement_example.models_list_screen.ModelsListScreen
 import com.endofjanuary.placement_example.register_screen.RegistrationScreen
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
+import com.endofjanuary.placement_example.transit_dialog.NewModelType
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
 import home.HomeScreen
 import upload_image.UploadImage
@@ -143,11 +144,11 @@ class MainActivity : ComponentActivity() {
                         }
                         ModelViewTypeDialog(navController, modelId = model!!, meshyId!!)
                     }
-//                    dialog(
-//                        "image_uploading",
-//                    ) {
-//                        UploadImageDialog(navController)
-//                    }
+                    dialog(
+                        "new_model",
+                    ) {
+                        NewModelType(navController)
+                    }
                 }
             }
         }
