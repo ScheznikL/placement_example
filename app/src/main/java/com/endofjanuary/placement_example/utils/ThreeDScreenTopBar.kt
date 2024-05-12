@@ -43,11 +43,11 @@ fun ThreeDScreenTopBar(
 ) {
 
 
-    val openDialog = remember { mutableStateOf(false) }
+    val openRefineDialog = remember { mutableStateOf(false) }
     val openDownloadDialog = remember { mutableStateOf(false) }
     val confirmDownload = remember { mutableStateOf(false) }
 
-    val confirm = remember { mutableStateOf(false) }
+    val confirmRefine = remember { mutableStateOf(false) }
     val openDetailedDialog = remember { mutableStateOf(false) }
 
 
@@ -83,7 +83,7 @@ fun ThreeDScreenTopBar(
             if (isFromText.value ?: true) {
                 Column {
                     IconButton(onClick = {
-                        openDialog.value = true
+                        openRefineDialog.value = true
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Star,
@@ -107,11 +107,11 @@ fun ThreeDScreenTopBar(
             }
         },
     )
-    if (confirm.value) {
+    if (confirmRefine.value) {
         openDetailedDialog.value = true
     }
 
-    DoRefineDialog(openDialog, confirm)
+    DoRefineDialog(openRefineDialog, confirmRefine)
     SpecifyRefineOptions(
         mainViewModel, openDetailedDialog, meshyId, overwrite
         //TODO if time is up
