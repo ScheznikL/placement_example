@@ -23,6 +23,7 @@ import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
 import com.endofjanuary.placement_example.transit_dialog.NewModelType
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
+import com.endofjanuary.placement_example.user_cabinet.UserProfile
 import home.HomeScreen
 import upload_image.UploadImage
 
@@ -55,6 +56,9 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("home_screen") {
                         HomeScreen(navController)
+                    }
+                    composable("user_profile") {
+                        UserProfile(navController)
                     }
                     composable(
                         "ar_screen/{id}",

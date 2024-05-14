@@ -13,7 +13,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
    // kotlin("kapt")
    id("com.google.devtools.ksp")
-  //  id("com.google.devtools.ksp") version ksp_version apply false
+    id("com.google.gms.google-services")
+    //  id("com.google.devtools.ksp") version ksp_version apply false
    // kotlin("ksp") version "1.9.10-1.0.13"
    // kotlin("ksp") version "1.9.10-1.0.13"
 }
@@ -158,4 +159,8 @@ dependencies {
 
     //flows
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
+    //firebase
+    implementation("com.google.firebase:firebase-auth:23.0.0")
+
 }

@@ -50,11 +50,11 @@ fun BottomBar(navController: NavController) {
                         contentDescription = "Models List"
                     )
                 }
-                IconButton(onClick = {/* navController.navigate("models_list") */ }) {
+                IconButton(onClick = { navController.navigate("user_profile")  }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
                         imageVector = Icons.Default.Person,
-                        contentDescription = "AR display"
+                        contentDescription = "user profile"
                     )
                 }
             }

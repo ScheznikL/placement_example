@@ -9,14 +9,20 @@ import com.endofjanuary.placement_example.data.remote.meshy.AuthTokenInterceptor
 import com.endofjanuary.placement_example.data.remote.meshy.MeshyApi
 import com.endofjanuary.placement_example.loading.LoadingScreenViewModel
 import com.endofjanuary.placement_example.models_list_screen.ModelsListViewModel
+import com.endofjanuary.placement_example.register_screen.RegistrationViewModel
 import com.endofjanuary.placement_example.repo.AWStorageRepo
 import com.endofjanuary.placement_example.repo.AWStorageRepoImpl
+import com.endofjanuary.placement_example.repo.AuthenticationRepo
+import com.endofjanuary.placement_example.repo.AuthenticationRepoImpl
 import com.endofjanuary.placement_example.repo.ChatRepo
 import com.endofjanuary.placement_example.repo.ChatRepoImpl
 import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.repo.MeshyRepoImpl
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
+import com.endofjanuary.placement_example.user_cabinet.UserProfileViewModel
 import com.example.jetcaster.ui.home.HomeViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -54,6 +60,9 @@ val appModule = module {
             .build()
             .create(ChatComplitionApi::class.java)
     }
+    single {
+        Firebase.auth
+    }
     single<MeshyRepo> {
         MeshyRepoImpl(get())
     }
@@ -63,7 +72,15 @@ val appModule = module {
     single<AWStorageRepo> {
         AWStorageRepoImpl()
     }
-
+    single<AuthenticationRepo> {
+        AuthenticationRepoImpl(get())
+    }
+    viewModel {
+        UserProfileViewModel(get())
+    }
+    viewModel {
+        RegistrationViewModel(get())
+    }
     viewModel {
         ARScreenViewModel(get())
     }
@@ -76,11 +93,9 @@ val appModule = module {
     viewModel {
         ChatScreenViewModel(get(), get())
     }
-
     viewModel {
         LoadingScreenViewModel(get(), get())
     }
-
     viewModel {
         ModelsListViewModel(get())
     }
