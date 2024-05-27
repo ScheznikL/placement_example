@@ -109,14 +109,6 @@ class ModelsListViewModel(
 
     private val _rewriteIndex = MutableStateFlow(-1) // TODO get rid of
 
-    private fun findDeviantIndex(list: List<Long>): Int/*?*/ { // todo transfer to repoImpl
-        // if (list.size < 2) return null
-        val deviantIndex = list.zipWithNext().indexOfFirst { (a, b) ->
-            b < a
-        }
-        return /*if (deviantIndex != -1) */(deviantIndex + 1) /*else null*/
-    }
-
     fun saveLastModel(modelId: String, id: Int, modelImageUrl: String) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
@@ -159,8 +151,9 @@ class ModelsListViewModel(
     }
 
     fun loadModels() {
+        isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
-            isLoading.value = true
+
             //todo ConvertModelEntityToModelEntry
             try{
                 val result = modelsRoom.getAllModelsFlow().mapNotNull { models ->
@@ -175,12 +168,13 @@ class ModelsListViewModel(
                         )
                     }
                 }
+                isLoading.value = false
                 result.collect {
                     Log.d("modelsRoom.getAllModelsFlow()", " ->>>  ${it.size}")
                     _textModelsListState.value = it.filter { model -> model.isFromText }
                     _imageModelsListState.value = it.filter { model -> !(model.isFromText) }
                 }
-                isLoading.value = false
+
             }catch (e : Exception){
                 isLoading.value = false
                 loadError.value = e.message.toString()
