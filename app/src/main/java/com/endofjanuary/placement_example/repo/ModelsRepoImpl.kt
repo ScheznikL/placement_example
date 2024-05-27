@@ -62,6 +62,19 @@ class ModelsRepoImpl(
         }
     }
 
+    override suspend fun getModelsById(vararg modelsIds: String): Resource<List<ModelEntity>> {
+        return try {
+            val result = modelEntityDao.getModelsById(*modelsIds)
+            if (result != null) {
+                Resource.Success(result)
+            } else {
+                Resource.Error("Data is null")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message.toString())
+        }
+    }
+
     override suspend fun deleteModelById(modelId: String): Resource<Int> {
         return try {
             val result = modelEntityDao.deleteModelById(modelId)

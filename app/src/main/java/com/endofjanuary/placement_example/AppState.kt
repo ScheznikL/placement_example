@@ -26,7 +26,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 sealed class Screen(val route: String) {
-    object Home : Screen("home")
+    object Home : Screen("com/endofjanuary/placement_example/home")
     object ThreeD : Screen("threed_screen/{prompt}") {
         fun createRoute(prompt: String) = "player/$prompt"
     }

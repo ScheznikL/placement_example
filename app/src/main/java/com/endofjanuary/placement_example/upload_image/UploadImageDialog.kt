@@ -1,4 +1,4 @@
-package upload_image
+package com.endofjanuary.placement_example.upload_image
 
 import android.net.Uri
 import android.util.Log

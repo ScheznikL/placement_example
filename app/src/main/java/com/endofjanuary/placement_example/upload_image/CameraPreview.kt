@@ -1,4 +1,4 @@
-package upload_image
+package com.endofjanuary.placement_example.upload_image
 
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView

@@ -2,9 +2,11 @@ package com.endofjanuary.placement_example
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.remember
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -16,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.endofjanuary.placement_example.ar_screen.ARScreen
 import com.endofjanuary.placement_example.chat.ChatScreenNew
+import com.endofjanuary.placement_example.home.HomeScreen
 import com.endofjanuary.placement_example.loading.LoadingScreen
 import com.endofjanuary.placement_example.models_list_screen.ModelsListScreen
 import com.endofjanuary.placement_example.register_screen.RegistrationScreen
@@ -23,13 +26,13 @@ import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
 import com.endofjanuary.placement_example.transit_dialog.NewModelType
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
+import com.endofjanuary.placement_example.upload_image.UploadImage
 import com.endofjanuary.placement_example.user_cabinet.UserProfile
-import home.HomeScreen
-import upload_image.UploadImage
 
 
 class MainActivity : ComponentActivity() {
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //   val downloader = DownloaderImpl(this)
@@ -116,7 +119,7 @@ class MainActivity : ComponentActivity() {
                         ModelsListScreen(navController = navController)
                     }
                     dialog(
-                        "upload_image/{type}",
+                        "com/endofjanuary/placement_example/upload_image/{type}",
                         arguments = listOf(
                             navArgument("type") {
                                 type = NavType.BoolType

@@ -8,9 +8,12 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
+import com.endofjanuary.placement_example.LastModelsParam
+import com.endofjanuary.placement_example.ModelAccessParam
 import com.endofjanuary.placement_example.data.models.ModelEntry
 import com.endofjanuary.placement_example.data.room.ModelEntity
 import com.endofjanuary.placement_example.repo.ModelsRepo
@@ -19,11 +22,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class ModelsListViewModel(
-    private val modelsRoom: ModelsRepo
+    private val modelsRoom: ModelsRepo,
+    private val dataStore: DataStore<LastModelsParam>
 ) : ViewModel() {
 
 
@@ -81,13 +86,81 @@ class ModelsListViewModel(
         }
     }
 
+    private val _rewrite = MutableStateFlow(-1)
+
+    private fun findDeviantIndex(list: List<Long>): Int/*?*/ { // todo transfer to repoImpl
+        // if (list.size < 2) return null
+        val deviantIndex = list.zipWithNext().indexOfFirst { (a, b) ->
+            b < a
+        }
+        return /*if (deviantIndex != -1) */(deviantIndex + 1) /*else null*/
+    }
+
+    private suspend fun checkExistingSaves() {
+        //    viewModelScope.launch(Dispatchers.IO) {
+        // check where to write - 10 is max
+        dataStore.data.collectLatest { listOfLastModels ->
+            if (listOfLastModels.lastModelsCount >= 10) {
+
+                val increase = listOfLastModels.lastModelsList.zipWithNext { a, b ->
+                    b.unixTimestamp > a.unixTimestamp
+                }.all { it }
+
+                if (increase) {// first or if all in increasing matter                    {
+                    _rewrite.value = 0
+                } else {
+                    _rewrite.value =
+                        findDeviantIndex(listOfLastModels.lastModelsList.map { it.unixTimestamp })
+                    //    ?: 0
+                }
+            } else if (listOfLastModels.lastModelsCount == 0) {
+                _rewrite.value = -1
+            }
+        }
+    }
+
+    fun saveLastModel(modelId: String) {
+        try {
+            viewModelScope.launch(Dispatchers.IO) {
+                checkExistingSaves()
+
+                // write
+
+                dataStore.updateData { currentSettings ->
+                    if (_rewrite.value != -1) {
+                        currentSettings.toBuilder()
+                            .addLastModels(
+                                _rewrite.value,
+                                ModelAccessParam.newBuilder()
+                                    .setModelId(modelId)
+                                    .setUnixTimestamp(System.currentTimeMillis())
+                            )
+                            .build()
+                    } else {
+                        currentSettings.toBuilder()
+                            .addLastModels(
+                                currentSettings.lastModelsCount + 1,
+                                ModelAccessParam.newBuilder()
+                                    .setModelId(modelId)
+                                    .setUnixTimestamp(System.currentTimeMillis())
+                            )
+                            .build()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+
     fun loadModels() {
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
             val result = modelsRoom.getAllModelsFlow()
             result.collect {
-                it.forEach{modelEntity ->
-                    if (modelEntity.isFromText) { //ConvertToModelEntity todo
+                it.forEach { modelEntity ->
+                    if (modelEntity.isFromText) { //todo ConvertModelEntityToModelEntry
                         _textModelsListState.value += ModelEntry(
                             id = modelEntity.id,
                             modelPath = modelEntity.modelPath,
@@ -197,7 +270,7 @@ class ModelsListViewModel(
 
                 selectedIds.value.forEach { result += modelsRoom.deleteModelById(it) }
 
-        //TODO Loading - try - ...
+                //TODO Loading - try - ...
 
             }
 
@@ -207,7 +280,6 @@ class ModelsListViewModel(
     }
 
     fun deleteModel(model: ModelEntry) {
-
         try {
             if (model.isFromText) {
                 _textModelsListState.value -= _textModelsListState.value.first { it.meshyId == model.meshyId }

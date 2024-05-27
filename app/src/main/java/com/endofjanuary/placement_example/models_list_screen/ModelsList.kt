@@ -375,6 +375,7 @@ fun ModelInRowEntry(
             .combinedClickable(
                 onClick = {
                     if (!inSelectionMode) {
+                        viewModel.saveLastModel(entry.meshyId)
                         navController.navigate(
                             "transit_dialog/${entry.id}/${entry.meshyId}"
                         )

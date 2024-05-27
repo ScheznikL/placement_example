@@ -3,6 +3,7 @@ package com.endofjanuary.placement_example.di
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.ar_screen.ARScreenViewModel
 import com.endofjanuary.placement_example.chat.ChatScreenViewModel
+import com.endofjanuary.placement_example.data.proto.appStartupParamsDataStore
 import com.endofjanuary.placement_example.data.remote.gpt.AuthTokenGptInterseptor
 import com.endofjanuary.placement_example.data.remote.gpt.ChatComplitionApi
 import com.endofjanuary.placement_example.data.remote.meshy.AuthTokenInterceptor
@@ -19,17 +20,18 @@ import com.endofjanuary.placement_example.repo.ChatRepoImpl
 import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.repo.MeshyRepoImpl
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
+import com.endofjanuary.placement_example.upload_image.UploadImageViewModel
 import com.endofjanuary.placement_example.user_cabinet.UserProfileViewModel
 import com.example.jetcaster.ui.home.HomeViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import okhttp3.OkHttpClient
+import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import upload_image.UploadImageViewModel
 
 private const val BASE_MESHY_URL = "https://api.meshy.ai/"
 private const val BASE_GPT_URL = "https://api.openai.com/v1/"
@@ -63,6 +65,9 @@ val appModule = module {
     single {
         Firebase.auth
     }
+    single {
+        androidApplication().applicationContext.appStartupParamsDataStore
+    }
     single<MeshyRepo> {
         MeshyRepoImpl(get())
     }
@@ -74,6 +79,9 @@ val appModule = module {
     }
     single<AuthenticationRepo> {
         AuthenticationRepoImpl(get())
+    }
+    viewModel {
+        HomeViewModel(get(),get())
     }
     viewModel {
         UserProfileViewModel(get())
@@ -88,16 +96,13 @@ val appModule = module {
         ThreeDScreenViewModel(get())
     }
     viewModel {
-        HomeViewModel()
-    }
-    viewModel {
         ChatScreenViewModel(get(), get())
     }
     viewModel {
         LoadingScreenViewModel(get(), get())
     }
     viewModel {
-        ModelsListViewModel(get())
+        ModelsListViewModel(get(), get())
     }
     viewModel {
         UploadImageViewModel(get())

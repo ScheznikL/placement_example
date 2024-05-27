@@ -15,6 +15,9 @@ interface ModelEntityDao {
     @Query("SELECT * FROM models WHERE id = :modelId")
     fun getModelById(modelId: Int): ModelEntity?
 
+    @Query("SELECT * FROM models WHERE meshyId IN (:modelsIds)")
+    fun getModelsById(vararg modelsIds: String): List<ModelEntity>?
+
     @Query("SELECT * FROM models ORDER BY id DESC LIMIT 1")
     fun getLastModel(): ModelEntity?
 

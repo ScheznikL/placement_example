@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option java_package = "com.endofjanuary.placement_example";
+option java_multiple_files = true;
+
+message ModelAccessParam {
+  string model_id = 1;
+  int64 unix_timestamp = 2;
+}
+
+message LastModelsParam {
+  repeated ModelAccessParam lastModels  = 1;
+}

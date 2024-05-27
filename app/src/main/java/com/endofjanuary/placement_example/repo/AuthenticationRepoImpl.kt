@@ -47,8 +47,8 @@ class AuthenticationRepoImpl(
                 User(
                     email = it.email!!,
                     displayName = it.displayName,
-                    profileUrl = it.photoUrl?.path,
-                    phoneNumber = it.phoneNumber,
+                    profilePictureUrl = it.photoUrl?.path,
+//                    phoneNumber = it.phoneNumber,
                     isEmailVerified = it.isEmailVerified
                 )
             })

@@ -14,6 +14,7 @@ plugins {
    // kotlin("kapt")
    id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
+    id("com.google.protobuf")
     //  id("com.google.devtools.ksp") version ksp_version apply false
    // kotlin("ksp") version "1.9.10-1.0.13"
    // kotlin("ksp") version "1.9.10-1.0.13"
@@ -63,7 +64,28 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    protobuf {
+        protoc {
+            artifact = ("com.google.protobuf:protoc:3.20.1")
+        }
+
+        generateProtoTasks {
+            all().forEach{ task ->
+                task.builtins {
+                    create("java") {
+                        option("lite")
+                    }
+                    create("kotlin") {
+                        option("lite")
+                    }
+                }
+            }
+        }
+    }
 }
+
+
+
 // Compile time check
 
 dependencies {
@@ -162,5 +184,10 @@ dependencies {
 
     //firebase
     implementation("com.google.firebase:firebase-auth:23.0.0")
+
+    //dataStore
+    implementation ("androidx.datastore:datastore:1.1.1")
+    implementation ("com.google.protobuf:protobuf-javalite:3.25.1")
+    implementation ("com.google.protobuf:protobuf-kotlin-lite:3.25.1")
 
 }

@@ -59,7 +59,7 @@ import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.utils.ChatTopBar
 import org.koin.androidx.compose.getViewModel
-import upload_image.UploadImageViewModel
+import com.endofjanuary.placement_example.upload_image.UploadImageViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

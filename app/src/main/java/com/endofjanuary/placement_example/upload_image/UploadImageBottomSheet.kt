@@ -1,4 +1,4 @@
-package upload_image
+package com.endofjanuary.placement_example.upload_image
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
