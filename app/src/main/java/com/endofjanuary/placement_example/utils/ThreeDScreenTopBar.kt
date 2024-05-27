@@ -1,23 +1,27 @@
 package com.endofjanuary.placement_example.utils
 
 import android.util.Log
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.DownloaderImpl
 import com.endofjanuary.placement_example.MainViewModel
@@ -54,19 +58,7 @@ fun ThreeDScreenTopBar(
     Log.d("modelPath & desc", "${modelPath.value} $modelDescription")
     TopAppBar(
         title = {
-            Row {
-                /* if (showMore) {
-                     Text(text = text)
-                 } else {
-                     Text(text = text, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                 }
-                 IconButton(onClick = { showMore = !showMore }) {
-                     if (!showMore)
-                         Icon(Icons.Default.KeyboardArrowDown, contentDescription = "more")
-                     else
-                         Icon(Icons.Default.KeyboardArrowUp, contentDescription = "less")
-                 }*/
-            }
+            Row { }
         },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -81,17 +73,17 @@ fun ThreeDScreenTopBar(
         },
         actions = {
             if (isFromText.value ?: true) {
-                Column {
-                    IconButton(onClick = {
-                        openRefineDialog.value = true
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = "Refine"
-                        )
+                    TextButton(
+                        onClick = {
+                            openRefineDialog.value = true
+                        },
+                        modifier = Modifier.background(
+                            Color.Yellow.copy(0.5f),
+                            RoundedCornerShape(8.dp)
+                        ),
+                    ) {
+                        Text("Refine")
                     }
-                    Text("Refine")
-                }
             }
             IconButton(onClick = { openDownloadDialog.value = true }) {
                 Icon(

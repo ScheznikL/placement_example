@@ -23,14 +23,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
 class ModelsListViewModel(
     private val modelsRoom: ModelsRepo,
-    private val dataStore: DataStore<LastModelsParam>
+    private val dataStore: DataStore<LastModelsParam>,
 ) : ViewModel() {
 
 
@@ -60,11 +60,28 @@ class ModelsListViewModel(
     private val _imageModelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
     val imageModelsListState: StateFlow<List<ModelEntry>> = _imageModelsListState
 
-    private val _selectedIds: MutableState<Set<String>> = mutableStateOf(emptySet())
-    val selectedIds: MutableState<Set<String>> get() = _selectedIds
+    private val _selectedIds: MutableState<List<String>> = mutableStateOf(emptyList())
+    val selectedIds: MutableState<List<String>> get() = _selectedIds
 
-    private val _selectedModel: MutableState<ModelEntry> = mutableStateOf(ModelEntry())
-    val selectedModel: MutableState<ModelEntry> get() = _selectedModel
+    private val _selectionMode: MutableState<Boolean> = mutableStateOf(false)
+    val selectionMode: MutableState<Boolean> get() = _selectionMode
+
+
+    fun selectModel(model: ModelEntry) {
+        val modelMeshyId = model.meshyId
+        if (!selectedIds.value.contains(modelMeshyId)) _selectedIds.value += model.meshyId
+        else _selectedIds.value = _selectedIds.value.minus(modelMeshyId)
+        Log.d("CHECK selectedIds", selectedIds.value.toString())
+    }
+
+    fun activateSelectionMode() {
+        _selectionMode.value = true
+    }
+
+    fun deactivateSelectionMode() {
+        _selectionMode.value = false
+        _selectedIds.value = emptyList()
+    }
 
     init {
         viewModelScope.launch {
@@ -73,8 +90,10 @@ class ModelsListViewModel(
             combine(
                 categories,
                 selectedCategory,
-            ) { categories,
-                selectedCategory ->
+            ) {
+                    categories,
+                    selectedCategory,
+                ->
                 ModelListViewState(
                     selectedCategory,
                     categories
@@ -98,34 +117,6 @@ class ModelsListViewModel(
         return /*if (deviantIndex != -1) */(deviantIndex + 1) /*else null*/
     }
 
-    private suspend fun checkExistingSaves() {
-        //viewModelScope.launch(Dispatchers.IO) {
-        // check where to write - 10 is max
-        dataStore.data.collectLatest { listOfLastModels ->
-            Log.d("modelList calc _rewrite", "start ${_rewriteIndex.value}")
-            if (listOfLastModels.lastModelsCount == 10) {
-                Log.d("modelList calc _rewrite", ">= 10: ${_rewriteIndex.value}")
-
-                val increase = listOfLastModels.lastModelsList.zipWithNext { a, b ->
-                    b.unixTimestamp > a.unixTimestamp
-                }.all { it }
-
-                if (increase) {// first or if all in increasing matter                    {
-                    _rewriteIndex.value = 0
-                } else {
-                    _rewriteIndex.value =
-                        findDeviantIndex(listOfLastModels.lastModelsList.map { it.unixTimestamp })
-                    //    ?: 0
-                }
-            } else if (listOfLastModels.lastModelsCount == 0) {
-                _rewriteIndex.value = 0
-                //     }
-                Log.d("modelList calc _rewrite", "end ${_rewriteIndex.value}")
-
-            }
-        }
-    }
-
     fun saveLastModel(modelId: String, id: Int, modelImageUrl: String) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
@@ -147,7 +138,7 @@ class ModelsListViewModel(
                                     .setUnixTimestamp(System.currentTimeMillis())
                             )
                             .build()
-                    } else  {
+                    } else {
                         _rewriteIndex.value = 0
                         currentSettings.toBuilder()
                             .addLastModels(
@@ -170,28 +161,31 @@ class ModelsListViewModel(
     fun loadModels() {
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
-            val result = modelsRoom.getAllModelsFlow()
-            result.collect {
-                it.forEach { modelEntity ->
-                    if (modelEntity.isFromText) { //todo ConvertModelEntityToModelEntry
-                        _textModelsListState.value += ModelEntry(
-                            id = modelEntity.id,
-                            modelPath = modelEntity.modelPath,
-                            modelImageUrl = modelEntity.modelImageUrl,
-                            modelDescription = modelEntity.modelDescription,
-                            meshyId = modelEntity.meshyId
-                        )
-                    } else {
-                        _imageModelsListState.value += ModelEntry(
-                            id = modelEntity.id,
-                            modelPath = modelEntity.modelPath,
-                            modelImageUrl = modelEntity.modelImageUrl,
-                            modelDescription = modelEntity.modelDescription,
-                            meshyId = modelEntity.meshyId
+            //todo ConvertModelEntityToModelEntry
+            try{
+                val result = modelsRoom.getAllModelsFlow().mapNotNull { models ->
+                    models.map { model ->
+                        ModelEntry(
+                            id = model.id,
+                            modelPath = model.modelPath,
+                            modelImageUrl = model.modelImageUrl,
+                            modelDescription = model.modelDescription,
+                            meshyId = model.meshyId,
+                            isFromText = model.isFromText
                         )
                     }
                 }
+                result.collect {
+                    Log.d("modelsRoom.getAllModelsFlow()", " ->>>  ${it.size}")
+                    _textModelsListState.value = it.filter { model -> model.isFromText }
+                    _imageModelsListState.value = it.filter { model -> !(model.isFromText) }
+                }
+                isLoading.value = false
+            }catch (e : Exception){
+                isLoading.value = false
+                loadError.value = e.message.toString()
             }
+        }
 //            when (result) {
 //                is Resource.Success -> {
 //
@@ -242,7 +236,6 @@ class ModelsListViewModel(
 //                    isLoading.value = false
 //                }
 //            }
-        }
     }
 
     private var integer = 1
@@ -254,9 +247,9 @@ class ModelsListViewModel(
             modelsRoom.saveModel(
                 ModelEntity(
                     modelInstance = ByteArray(1), // TEMP
-                    modelPath = _textModelsListState.value.first().modelPath,
+                    modelPath = "_textModelsListState.value.first().modelPath",
                     modelDescription = "model.value.modelDescription",
-                    modelImageUrl = _textModelsListState.value.first().modelImageUrl,
+                    modelImageUrl = "_textModelsListState.value.first().modelImageUrl",
                     isFromText = true,
                     isRefine = false,
                     meshyId = "new${integer++}",
@@ -339,7 +332,7 @@ data class ModelListViewState(
     //  val refreshing: Boolean = false,
     val selectedCategory: Category = Category.FromText,
     val categories: List<Category> = emptyList(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 ) {
     constructor() : this(Category.FromText, Category.values().asList())
 }

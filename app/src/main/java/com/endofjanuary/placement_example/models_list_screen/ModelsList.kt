@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +30,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -80,7 +83,7 @@ import org.koin.androidx.compose.getViewModel
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun ModelsListScreen(
-    navController: NavController
+    navController: NavController,
 ) {
     val viewModel = getViewModel<ModelsListViewModel>()
     val viewState by viewModel.state.collectAsStateWithLifecycle()
@@ -123,7 +126,7 @@ fun ModelsListScreen(
         },
         bottomBar = { BottomBar(navController = navController) },
         floatingActionButton = {
-            if (itemToDelete.value.isEmpty()) {
+            if (!viewModel.selectionMode.value) {
                 FloatingActionButton(onClick = {
                     viewModel.insetModel()
                 }) {
@@ -145,10 +148,6 @@ fun ModelsListScreen(
             } else {
                 FloatingActionButton(onClick = {
                     viewModel.deleteModels()
-//                    when (viewState.selectedCategory) {
-//                        Category.FromText -> viewModel.deleteModels()
-//                        Category.FromImage -> viewModel.deleteModels()
-//                    }
                 }) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete")
                 }
@@ -160,6 +159,9 @@ fun ModelsListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .clickable {
+                    viewModel.deactivateSelectionMode()
+                }
         ) {
             Column {
                 CategoryTabs(
@@ -211,7 +213,7 @@ fun ModelsListScreen(
 @Composable
 fun ModelsFromTextList(
     navController: NavController,
-    viewModel: ModelsListViewModel
+    viewModel: ModelsListViewModel,
 ) {
     val modelListState by viewModel.textModelsListState.collectAsState()
     val loadError by remember { viewModel.loadError }
@@ -255,7 +257,7 @@ fun ModelsFromTextList(
 
 @Composable
 fun ModelsFromImageList(
-    navController: NavController, viewModel: ModelsListViewModel
+    navController: NavController, viewModel: ModelsListViewModel,
 ) {
     //val modelsList by remember { viewModel.modelsList }
     val modelListState by viewModel.imageModelsListState.collectAsState()
@@ -267,6 +269,7 @@ fun ModelsFromImageList(
         LazyColumn(
             contentPadding = PaddingValues(16.dp)
         ) {
+            Log.d("modelListState", " ->>>  ${modelListState.size}")
             val itemCount = //modelListState.size - 1
                 if (modelListState.size % 2 == 0) {
                     modelListState.size / 2
@@ -308,30 +311,22 @@ fun ModelsInRow(
     viewModel: ModelsListViewModel,
 ) {
 
-    val selectedIds = remember { viewModel.selectedIds }
-    val inSelectionMode by remember { derivedStateOf { selectedIds.value.isNotEmpty() } }
     Column {
         Row {
-            val selected by remember { derivedStateOf { selectedIds.value.contains(entries[rowIndex * 2].meshyId) } }
             ModelInRowEntry(
                 entry = entries[rowIndex * 2],
                 navController = navController,
                 modifier = Modifier
                     .weight(1f),
                 viewModel = viewModel,
-                inSelectionMode = inSelectionMode,
-                selected = selected
             )
             Spacer(modifier = Modifier.width(16.dp))
             if (entries.size >= rowIndex * 2 + 2) {
-                val selected2 by remember { derivedStateOf { selectedIds.value.contains(entries[rowIndex * 2 + 1].meshyId) } }
                 ModelInRowEntry(
                     entry = entries[rowIndex * 2 + 1],
                     navController = navController,
                     modifier = Modifier.weight(1f),
                     viewModel = viewModel,
-                    inSelectionMode = inSelectionMode,
-                    selected = selected2
                 )
             } else {
                 Spacer(modifier = Modifier.weight(1f))
@@ -348,13 +343,14 @@ fun ModelInRowEntry(
     navController: NavController,
     modifier: Modifier = Modifier,
     viewModel: ModelsListViewModel,
-    inSelectionMode: Boolean,
-    selected: Boolean
 ) {
     val defaultDominantColor = MaterialTheme.colorScheme.surface
+    val deletedDominantColor = MaterialTheme.colorScheme.error
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
+    val selectedIds by remember { viewModel.selectedIds }
+    val selectedMode  by remember { viewModel.selectionMode }
 
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -368,28 +364,26 @@ fun ModelInRowEntry(
                 Brush.verticalGradient(
                     listOf(
                         dominantColor,
-                        defaultDominantColor
+                        if (selectedIds.contains(entry.meshyId) && selectedMode) deletedDominantColor
+                        else defaultDominantColor
                     )
                 )
             )
             .combinedClickable(
                 onClick = {
-                    if (!inSelectionMode) {
+                    if (!viewModel.selectionMode.value) {
                         viewModel.saveLastModel(entry.meshyId, entry.id, entry.modelImageUrl)
                         navController.navigate(
                             "transit_dialog/${entry.id}/${entry.meshyId}"
                         )
                     } else {
-                        viewModel.selectedIds.value -= viewModel.selectedIds.value.last()
+                        viewModel.selectModel(entry)
                     }
                 },
                 onLongClick = {
+                    if (!viewModel.selectionMode.value) viewModel.activateSelectionMode()
                     Log.d("onLongClick", "${entry.meshyId} - ${entry.modelDescription}")
-                    if (!inSelectionMode) {
-                        viewModel.selectedIds.value += entry.meshyId
-                    } else {
-                        viewModel.selectedIds.value -= viewModel.selectedIds.value.last()
-                    }
+                    viewModel.selectModel(entry)
                     Log.d("onLongClick", viewModel.selectedIds.value.toString())
 //                    else
 //                        Modifier.toggleable(
@@ -442,27 +436,27 @@ fun ModelInRowEntry(
             )
         }
     }
-    if (inSelectionMode) {
-        if (selected) {
-            val bgColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-            Icon(
-                Icons.Filled.CheckCircle,
-                tint = MaterialTheme.colorScheme.primary,
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(4.dp)
-                    .border(2.dp, bgColor, CircleShape)
-                    .clip(CircleShape)
-                    .background(bgColor)
-            )
-        }
-    }
+//    if (inSelectionMode) {
+//        if (selected) {
+//            val bgColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+//            Icon(
+//                Icons.Filled.CheckCircle,
+//                tint = MaterialTheme.colorScheme.primary,
+//                contentDescription = null,
+//                modifier = Modifier
+//                    .padding(4.dp)
+//                    .border(2.dp, bgColor, CircleShape)
+//                    .clip(CircleShape)
+//                    .background(bgColor)
+//            )
+//        }
+//    }
 }
 
 @Composable
 fun RetrySection(
     error: String,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.Center, horizontalAlignment = CenterHorizontally) {
         Text(error, color = Color.Red, fontSize = 18.sp)
@@ -479,7 +473,7 @@ fun RetrySection(
 @Composable
 fun NoDataSection(
     error: String,
-    onGoHome: () -> Unit
+    onGoHome: () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
@@ -499,7 +493,7 @@ fun NoDataSection(
 @Composable
 fun HomeCategoryTabIndicator(
     modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurface
+    color: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     Spacer(
         modifier
@@ -514,7 +508,7 @@ private fun CategoryTabs(
     categories: List<Category>,
     selectedCategory: Category,
     onCategorySelected: (Category) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val selectedIndex = categories.indexOfFirst { it == selectedCategory }
     val indicator = @Composable { tabPositions: List<TabPosition> ->
@@ -549,7 +543,7 @@ private fun CategoryTabs(
 fun SearchBar(
     modifier: Modifier = Modifier,
     hint: String = "",
-    onSearch: (String) -> Unit = {}
+    onSearch: (String) -> Unit = {},
 ) {
     var text by remember {
         mutableStateOf("")

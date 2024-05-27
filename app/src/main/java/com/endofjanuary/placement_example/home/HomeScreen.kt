@@ -69,6 +69,7 @@ fun HomeScreen(
     navController: NavController
 ) {
     val viewModel = getViewModel<HomeViewModel>()
+    //val VM_T = getViewModel<ModelsListViewModel>()
     //val snackbarHostState = remember { SnackbarHostState() }
     val viewState by viewModel.state.collectAsStateWithLifecycle()
 
@@ -85,12 +86,23 @@ fun HomeScreen(
             },
             // snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
-            HomeContent(
-                modifier = Modifier.padding(innerPadding),
-                navController = navController,
-                viewModel = viewModel,
-                viewState = viewState
-            )
+           // Column{
+             /*   IconButton(
+                    onClick = { *//*VM_T.deleteModel() *//*},
+                    enabled = !viewState.lastModels.isNullOrEmpty()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "delete all last viewed"
+                    )
+                }*/
+                HomeContent(
+                    modifier = Modifier.padding(innerPadding),
+                    navController = navController,
+                    viewModel = viewModel,
+                    viewState = viewState
+                )
+            //}
         }
     }
 }

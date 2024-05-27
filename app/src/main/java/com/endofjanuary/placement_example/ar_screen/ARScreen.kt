@@ -1,32 +1,25 @@
 package com.endofjanuary.placement_example.ar_screen
 
-import android.graphics.BitmapFactory
-import android.os.Environment
-import android.util.Log
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
 import com.endofjanuary.placement_example.utils.BottomBar
@@ -51,25 +44,13 @@ import io.github.sceneview.rememberOnGestureListener
 import io.github.sceneview.rememberView
 import org.koin.androidx.compose.getViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun ARScreen(
-//    modifier: Modifier = Modifier,
-    //prompt: String = "none",
     modelId: Int?,
     navController: NavController,
 ) {
-
-    Log.d("On Ar","Enter" )
     val snackbarHostState = remember { SnackbarHostState() }
-    //val viewModel = getViewModel<ARScreenViewModel>(parameters = { parametersOf(prompt) })
-
-
-    // val viewModel: ARScreenViewModel by koinViewModel(parametersOf(prompt))
-    val modelEntry:Resource<Boolean> = Resource.Success(true)
-    /*  val loadError by remember { viewModel.loadError }
-      val isLoading by remember { viewModel.isLoading }
-      val loadSuccess by remember {viewModel.isSuccess }*/
 
     Scaffold(
         snackbarHost = {
@@ -83,101 +64,15 @@ fun ARScreen(
                 .fillMaxSize()
                 .padding(contentPadding)
         ) {
-            when (modelEntry) {
-                is Resource.Error -> {
-                    LaunchedEffect(snackbarHostState) {
-                        snackbarHostState.showSnackbar(
-                            message = "Error: ${modelEntry.message}",
-                            actionLabel = "message"
-                        )
-                    }
-                    //ErrorScreen(modelEntry.message ?: "error")
-                }
-
-                is Resource.Loading -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                is Resource.Success -> ARMain(modelId)
-                is Resource.None -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
+            ARSceneDisplay(modelId)
         }
     }
 
 }
 
-@Composable
-fun ARMain(
-    //modelEntry: MutableState<ModelEntry>,
-//    modelEntry: ModelEntry,
-//    viewModel: ARScreenViewModel,
-    modelId: Int?,
-    modifier: Modifier = Modifier
-) {
-
-//    val modelEntry = produceState<Resource<ModelEntry>>(initialValue = Resource.Loading()) {
-//        value = viewModel.loadModelRemote(modelLoader = , localId = modelId)
-//    }.value
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        ARSceneDisplay(modelId)////
-        /* Row(
-             modifier = Modifier.fillMaxWidth(),
-             verticalAlignment = Alignment.CenterVertically,
-             horizontalArrangement = Arrangement.SpaceAround,
-         ) {
-             CoilImage(
-                 request = ImageRequest.Builder(LocalContext.current)
-                     .data(modelEntry.modelImageUrl)
-                     .build(),
-                 contentDescription = modelEntry.modelDescription.split(' ').get(0),
-                 fadeIn = true,
-                 modifier = Modifier
-                     .size(120.dp)
-                     .align(CenterVertically)
-                     .clip(CircleShape)
-                     .border(width = 2.dp, color = Color.Cyan)
-                     .clickable {
-                         //TODO go just 3d (nav)
-                     }
-             ) {
-                 CircularProgressIndicator(
-                     color = MaterialTheme.colorScheme.primary,
-                     modifier = Modifier.scale(0.5f)
-                 )
-             }
-
-         }
-     */
-    }
-}
-
-//from local storage
-@Composable
-fun DecoratedImage(
-    thumbnailPath: String,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .size(140.dp)
-            .clip(CircleShape)
-            .border(width = 2.dp, color = Color.Cyan),
-    ) {
-        //todo add progress
-        val path: String = Environment.getExternalStorageDirectory().path + "/myImage.jpg"
-        val bitmap = BitmapFactory.decodeFile(path).asImageBitmap()
-        Image(bitmap = bitmap, contentDescription = null)
-        /*Image(
-            painter = painterResource(id = thumbnailPath),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds
-        )*/
-    }
-}
-
 
 @Composable
 fun ARSceneDisplay(
-//    viewModel: ThreeDScreenViewModel,
-//    modelEntry: ModelEntry,
     modelId : Int?
 ) {
 
@@ -199,7 +94,6 @@ fun ARSceneDisplay(
     val viewModel = getViewModel<ThreeDScreenViewModel>()
 
     LaunchedEffect(key1 = viewModel) {
-        // viewModel.loadModelLocal(modelLoader, engine, modelLoader.assetLoader, assetManager, resourceLoader)
         viewModel.loadModelRemote(modelLoader, modelId ?: 1)
     }
     //var loadedInstances = remember { viewModel.loadedInstances }
@@ -284,44 +178,14 @@ fun ARSceneDisplay(
                                 )
                             }
                     },
-                    /* onSingleTapConfirmed = { motionEvent, node ->
-                         if (node == null) {
-                             val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
-                             hitResults?.firstOrNull {
-                                 it.isValid(
-                                     depthPoint = false,
-                                     point = false
-                                 )
-                             }?.createAnchorOrNull()
-                                 ?.let { anchor ->
-
-                                     planeRenderer = false
-                                     childNodes += viewModel.createAnchorNode(
-                                         engine = engine,
-                                         modelLoader = modelLoader,
-                                         materialLoader = materialLoader,
-                                         modelInstances = modelInstances,
-                                         anchor = anchor,
-                                         modelPath =  modelEntry.value.modelPath
-                                     )
-                                 }
-                         }
-                     }*/
-
                 )
             )
         }
 
         else -> {
-
-//        LaunchedEffect(true) {
-//            viewModel.loadGlbModel(modelLoader = modelLoader, modelPath = modelEntry.modelPath)
-//        }
-
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize()
             ) {
                 Text(
                     style = MaterialTheme.typography.bodySmall,
@@ -333,6 +197,4 @@ fun ARSceneDisplay(
             }
         }
     }
-
-
 }

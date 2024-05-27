@@ -41,11 +41,8 @@ class MainActivity : ComponentActivity() {
                 this, CAMERAX_PERMISSIONS, 0
             )
         }
-
-        val appContext = applicationContext
         setContent {
             Placement_exampleTheme {
-                //  var appState: ARExampleAppState = rememberARExampleAppState()
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
