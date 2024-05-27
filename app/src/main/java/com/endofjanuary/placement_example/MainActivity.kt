@@ -118,8 +118,8 @@ class MainActivity : ComponentActivity() {
                     ) {
                         ModelsListScreen(navController = navController)
                     }
-                    dialog(
-                        "com/endofjanuary/placement_example/upload_image/{type}",
+                    dialog( // todo screen
+                        "upload_image/{type}",
                         arguments = listOf(
                             navArgument("type") {
                                 type = NavType.BoolType

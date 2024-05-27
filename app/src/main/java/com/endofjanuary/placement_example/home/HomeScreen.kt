@@ -2,7 +2,9 @@ package com.endofjanuary.placement_example.home
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,10 +23,14 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -66,6 +72,12 @@ fun HomeScreen(
     //val snackbarHostState = remember { SnackbarHostState() }
     val viewState by viewModel.state.collectAsStateWithLifecycle()
 
+/*    LaunchedEffect(viewModel.state.value.lastModels) {
+        if (!viewState.lastModels.isNullOrEmpty()) {
+            viewModel.loadLastModels()
+        }
+    }*/
+
     Surface(Modifier.fillMaxSize()) {
         Scaffold(
             bottomBar = {
@@ -74,8 +86,7 @@ fun HomeScreen(
             // snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
             HomeContent(
-                modifier = Modifier
-                    .padding(innerPadding),
+                modifier = Modifier.padding(innerPadding),
                 navController = navController,
                 viewModel = viewModel,
                 viewState = viewState
@@ -94,10 +105,16 @@ fun HomeContent(
     val surfaceColor = MaterialTheme.colorScheme.surface
     val appBarColor = surfaceColor.copy(alpha = 0.87f)
 
-    val showBottomSheet = remember {
-        mutableStateOf(false)
-    }
+    val showBottomSheet = remember { mutableStateOf(false) }
+
+    val scrollState = rememberLazyListState()
+
     val context = LocalContext.current
+
+    LaunchedEffect(viewState.lastModels) {
+        if (!viewState.lastModels.isNullOrEmpty())
+            scrollState.scrollToItem(viewState.lastModels.size - 1)
+    }
 
     LaunchedEffect(viewState.errorMessage) {
         if (!viewState.errorMessage.isNullOrEmpty()) {
@@ -108,14 +125,14 @@ fun HomeContent(
             ).show()
         }
     }
+
     Column(
         modifier = modifier.windowInsetsPadding(
             WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
         )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             Spacer(
                 Modifier
@@ -124,20 +141,36 @@ fun HomeContent(
                     .windowInsetsTopHeight(WindowInsets.statusBars)
             )
             HomeAppBar(
-                backgroundColor = appBarColor,
-                modifier = Modifier.fillMaxWidth()
+                backgroundColor = appBarColor, modifier = Modifier.fillMaxWidth()
             )
-
         }
-        Text(//
-            "Last Models:",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp)
+        ) {
+            Text(//
+                "Last Models:", style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                )
             )
-        )
+            IconButton(
+                onClick = { viewModel.clearLastModelPreview(context) },
+                enabled = !viewState.lastModels.isNullOrEmpty()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "delete all last viewed"
+                )
+            }
+        }
         if (!viewState.lastModels.isNullOrEmpty()) {
-            LazyRow {
+            LazyRow(
+                reverseLayout = true,
+                state = scrollState
+            ) {
                 items(viewState.lastModels.size) {
                     Box(
                         modifier = modifier
@@ -145,9 +178,10 @@ fun HomeContent(
                             .padding(horizontal = 5.dp, vertical = 10.dp)
                     ) {
                         ModelItem(
+                            modelItem = viewState.lastModels[it],
                             navController = navController,
                             viewModel = viewModel,
-                            modelItem = viewState.lastModels[it]
+                            index = it
                         )
                     }
                 }
@@ -157,11 +191,16 @@ fun HomeContent(
                 message = viewModel.state.value.errorMessage ?: "You haven't viewed any model yet"
             )
         }
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 35.dp)
+        ) {
             Button(
                 onClick = {
                     navController.navigate("chat_screen")
                 },
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Begin chat to create unique model")
             }
@@ -169,6 +208,7 @@ fun HomeContent(
                 onClick = {
                     showBottomSheet.value = true
                 },
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Model from Image")
             }
@@ -187,15 +227,15 @@ fun ModelItem(
     modifier: Modifier = Modifier,
     modelItem: HomeScreenModel,
     navController: NavController,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    index: Int
 ) {
     val defaultDominantColor = MaterialTheme.colorScheme.surface
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
 
-    Box(
-        contentAlignment = Alignment.Center,
+    Box(contentAlignment = Alignment.Center,
         modifier = modifier
             .shadow(5.dp, RoundedCornerShape(10.dp))
             .clip(RoundedCornerShape(10.dp))
@@ -203,41 +243,34 @@ fun ModelItem(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        dominantColor,
-                        defaultDominantColor
+                        dominantColor, defaultDominantColor
                     )
                 )
             )
             .clickable {
-                navController.navigate(
-                    "transit_dialog/${modelItem.id}/${modelItem.modelId}"
-                )
-            }
-    ) {
-        Box(contentAlignment = Alignment.Center) {// SubcomposeAsyncImage
+                if (modelItem.id != null)
+                    navController.navigate(
+                        "transit_dialog/${modelItem.id}/${modelItem.modelId}"
+                    )
+            }) {
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(modelItem.imageUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = "last model",
-                onSuccess = {
+                model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
+                    .crossfade(true).build(), contentDescription = "last model", onSuccess = {
                     viewModel.calcDominantColor(it.result.drawable) { color ->
                         dominantColor = color
                     }
-                },
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(120.dp)
+                }, contentScale = ContentScale.Crop, modifier = Modifier.size(120.dp)
                 //.align(Alignment.CenterHorizontally)
             )
             Text(
-                text = modelItem.timeStep.toString(),
+                text = "$index ${modelItem.timeStep}", // todo get rid of indexes
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomStart)
             )
-        }
+
     }
 
 }
@@ -250,10 +283,11 @@ fun EmptyModelItem(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .shadow(5.dp, RoundedCornerShape(10.dp))
-            .clip(RoundedCornerShape(10.dp))
-            .aspectRatio(1f)
-            .background(Color.LightGray)
+            // .shadow(5.dp, RoundedCornerShape(10.dp))
+            .aspectRatio(2f)
+            .border(1.dp, Color.LightGray, RoundedCornerShape(10.dp))
+        //.clip(RoundedCornerShape(10.dp))
+        //.background(Color.Gray)
     ) {
         Text(
             text = message,
@@ -267,8 +301,7 @@ fun EmptyModelItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeAppBar(
-    backgroundColor: Color,
-    modifier: Modifier = Modifier
+    backgroundColor: Color, modifier: Modifier = Modifier
 ) {
     TopAppBar(
         title = {
@@ -281,7 +314,6 @@ fun HomeAppBar(
                         .heightIn(max = 24.dp)
                 )
             }
-        },
-        modifier = modifier
+        }, modifier = modifier
     )
 }

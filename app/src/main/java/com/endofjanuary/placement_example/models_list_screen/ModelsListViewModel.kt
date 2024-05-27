@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class ModelsListViewModel(
@@ -86,7 +88,7 @@ class ModelsListViewModel(
         }
     }
 
-    private val _rewrite = MutableStateFlow(-1)
+    private val _rewriteIndex = MutableStateFlow(-1) // TODO get rid of
 
     private fun findDeviantIndex(list: List<Long>): Int/*?*/ { // todo transfer to repoImpl
         // if (list.size < 2) return null
@@ -97,51 +99,63 @@ class ModelsListViewModel(
     }
 
     private suspend fun checkExistingSaves() {
-        //    viewModelScope.launch(Dispatchers.IO) {
+        //viewModelScope.launch(Dispatchers.IO) {
         // check where to write - 10 is max
         dataStore.data.collectLatest { listOfLastModels ->
-            if (listOfLastModels.lastModelsCount >= 10) {
+            Log.d("modelList calc _rewrite", "start ${_rewriteIndex.value}")
+            if (listOfLastModels.lastModelsCount == 10) {
+                Log.d("modelList calc _rewrite", ">= 10: ${_rewriteIndex.value}")
 
                 val increase = listOfLastModels.lastModelsList.zipWithNext { a, b ->
                     b.unixTimestamp > a.unixTimestamp
                 }.all { it }
 
                 if (increase) {// first or if all in increasing matter                    {
-                    _rewrite.value = 0
+                    _rewriteIndex.value = 0
                 } else {
-                    _rewrite.value =
+                    _rewriteIndex.value =
                         findDeviantIndex(listOfLastModels.lastModelsList.map { it.unixTimestamp })
                     //    ?: 0
                 }
             } else if (listOfLastModels.lastModelsCount == 0) {
-                _rewrite.value = -1
+                _rewriteIndex.value = 0
+                //     }
+                Log.d("modelList calc _rewrite", "end ${_rewriteIndex.value}")
+
             }
         }
     }
 
-    fun saveLastModel(modelId: String) {
+    fun saveLastModel(modelId: String, id: Int, modelImageUrl: String) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
-                checkExistingSaves()
-
-                // write
-
+                Log.d(
+                    "modelList dataStore model _rewrite",
+                    "start start ${dataStore.data.map { it.lastModelsList }}"
+                )
                 dataStore.updateData { currentSettings ->
-                    if (_rewrite.value != -1) {
+                    Log.d("modelList calc _rewrite", "start ${_rewriteIndex.value}")
+                    if (currentSettings.lastModelsCount >= 10) {
+                        Log.d("modelList calc _rewrite", ">= 10: ${_rewriteIndex.value}")
                         currentSettings.toBuilder()
-                            .addLastModels(
-                                _rewrite.value,
+                            .removeLastModels(0).addLastModels(
+                                //count,
                                 ModelAccessParam.newBuilder()
                                     .setModelId(modelId)
+                                    .setId(id)
+                                    .setModelImage(modelImageUrl)
                                     .setUnixTimestamp(System.currentTimeMillis())
                             )
                             .build()
-                    } else {
+                    } else  {
+                        _rewriteIndex.value = 0
                         currentSettings.toBuilder()
                             .addLastModels(
-                                currentSettings.lastModelsCount + 1,
+                                currentSettings.lastModelsCount,
                                 ModelAccessParam.newBuilder()
                                     .setModelId(modelId)
+                                    .setId(id)
+                                    .setModelImage(modelImageUrl)
                                     .setUnixTimestamp(System.currentTimeMillis())
                             )
                             .build()
@@ -152,7 +166,6 @@ class ModelsListViewModel(
             throw e
         }
     }
-
 
     fun loadModels() {
         viewModelScope.launch(Dispatchers.IO) {

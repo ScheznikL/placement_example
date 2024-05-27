@@ -6,6 +6,8 @@ option java_multiple_files = true;
 message ModelAccessParam {
   string model_id = 1;
   int64 unix_timestamp = 2;
+  int32 id = 3;
+  string model_image = 4;
 }
 
 message LastModelsParam {

@@ -16,9 +16,13 @@
 
 package com.example.jetcaster.ui.home
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.util.Log
+import android.widget.Toast
+import android.widget.Toast.LENGTH_LONG
 import androidx.compose.ui.graphics.Color
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
@@ -62,7 +66,9 @@ class HomeViewModel(
                     )
                 }
             }
+         //   loadLastModels()
         }
+
     }
 
     override fun onCleared() {
@@ -74,7 +80,9 @@ class HomeViewModel(
         return this.map {
             HomeScreenModel(
                 modelId = it.modelId,
-                timeStep = convertToReadableFormat(it.unixTimestamp)
+                id = it.id,
+                timeStep = convertToReadableFormat(it.unixTimestamp),
+                imageUrl = it.modelImage
             )
         }
     }
@@ -88,9 +96,28 @@ class HomeViewModel(
         }
     }
 
-    fun loadLastModels() {
-        if (_state.value.lastModels.isNullOrEmpty()) {
+    fun clearLastModelPreview(context: Context) {
+        try {
             viewModelScope.launch(Dispatchers.IO) {
+                dataStore.updateData { currentSettings ->
+                    currentSettings.toBuilder().clearLastModels().build()
+                }
+                Log.d("home dataStore", "list cleared")
+            }
+        } catch (e: Exception) { // todo change
+            Toast.makeText(
+                context,
+                e.message,
+                LENGTH_LONG
+            ).show()
+        }
+    }
+
+    suspend fun loadLastModels() { //todo get rid of
+        if (_state.value.lastModels.isNullOrEmpty()) {
+            Log.d("home", "Enter load Model")
+            viewModelScope.launch(Dispatchers.IO)
+            {
                 val result =
                     modelsRoomRepo.getModelsById(*_state.value.lastModels!!.mapNotNull { it.modelId }
                         .toTypedArray())
@@ -106,6 +133,7 @@ class HomeViewModel(
                     is Resource.Loading -> TODO()
                     is Resource.None -> TODO()
                     is Resource.Success -> {
+                        Log.d("home", "get Model success")
                         _state.update { currentState ->
                             currentState.copy(
                                 lastModels = currentState.lastModels!!.map { model ->
@@ -126,6 +154,7 @@ class HomeViewModel(
             }
         }
     }
+
     fun calcDominantColor(drawable: Drawable, onFinish: (Color) -> Unit) {
         val bmp = (drawable as BitmapDrawable).bitmap.copy(Bitmap.Config.ARGB_8888, true)
 
