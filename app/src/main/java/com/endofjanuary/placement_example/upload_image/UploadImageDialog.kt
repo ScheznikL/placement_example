@@ -54,7 +54,7 @@ fun UploadImageDialog(
     val mainViewModel = getViewModel<MainViewModel>()
 
     val textInput by remember { viewModel.inputValueState }
-    val uri by remember { viewModel.selectedUri }
+    val uri by remember { viewModel.image }
     val pickImage = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
         viewModel::onPhotoPickerSelect
@@ -182,17 +182,17 @@ fun UploadImageDialog(
                     val context = LocalContext.current
                     Button(
                         onClick = {
-                            viewModel.getPresignedUrl(context)
+                            viewModel.getImagePresignedUrl(context)
                         },
                     ) {
                         Text("Proceed")
                     }
 
                     LaunchedEffect(presignedUrl) {
-                        if (presignedUrl.isNotBlank()) {
+                        if (!presignedUrl.isNullOrBlank()) {
                             if (!isLoading || isSuccess == null) { // isSuccess == null - to avoid double loading
                                 mainViewModel.loadModelEntryFromImage(
-                                    url = presignedUrl,
+                                    url = presignedUrl!!,
                                     name = textInput
                                 )
                                 viewModel.presignedUrl.value = ""

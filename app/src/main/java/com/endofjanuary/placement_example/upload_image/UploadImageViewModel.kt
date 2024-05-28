@@ -22,32 +22,38 @@ class UploadImageViewModel(
     //private val modelRoom: ModelsRepo
 ) : ViewModel() {
     var inputValueState = mutableStateOf("")
-    var selectedUri: MutableState<Uri?> = mutableStateOf(null)
+    var image: MutableState<Uri?> = mutableStateOf(null)
     var photo: MutableState<Bitmap?> = mutableStateOf(null)
-    var presignedUrl = mutableStateOf("")
+    var presignedUrl: MutableState<String?> = mutableStateOf(null)
 
     var isUploading = mutableStateOf(false)
     var isUploadingError = mutableStateOf("")
 
 
     fun onPhotoPickerSelect(uri: Uri?) {
-        if (uri != null) selectedUri.value = uri
+        if (uri != null) image.value = uri
 
         Log.d("selected", uri?.toString() ?: "null uri")
     }
-
     fun getPresignedUrl(context: Context) {
+        if(image.value != null){
+            getImagePresignedUrl(context = context)
+        }else{
+            getBitmapPresignedUrl()
+        }
+    }
+    fun getImagePresignedUrl(context: Context) {
         /*
                 val flag = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 context.contentResolver.takePersistableUriPermission(selectedUri.value, flag)
         */
-        if (selectedUri.value != null) {
+        if (image.value != null) {
             isUploading.value = true
 
             viewModelScope.launch(Dispatchers.IO) {
                 val result = awStorageRepo.putObjectPresigned(
-                    selectedUri.value!!.path!!,
-                    context.contentResolver.openInputStream(selectedUri.value!!)!!
+                    image.value!!.path!!,
+                    context.contentResolver.openInputStream(image.value!!)!!
                 )
                 when (result) {
                     is Resource.Error -> {
@@ -66,7 +72,9 @@ class UploadImageViewModel(
         }
     }
 
-    fun getBitmapPresignedUrl(context: Context) {
+    fun getBitmapPresignedUrl() {
+        Log.d("getBitmapPresignedUrl", "Enter")
+
         if (photo.value != null) {
             isUploading.value = true
 
@@ -92,7 +100,7 @@ class UploadImageViewModel(
         }
     }
 
-    fun convertBitmapToByteArray(bitmap: Bitmap): ByteArray? {
+    private fun convertBitmapToByteArray(bitmap: Bitmap): ByteArray? {
         var baos: ByteArrayOutputStream? = null
         return try {
             baos = ByteArrayOutputStream()

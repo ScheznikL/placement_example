@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.utils
+package com.endofjanuary.placement_example.utils.screens
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -14,9 +14,9 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatTopBar(navController: NavController) {
+fun DefaultTopAppBar(title: String?, navController: NavController) {
     TopAppBar(
-        title = { Text(text = "Chat") },
+        title = { Text(text = title ?: "") },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),

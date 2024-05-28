@@ -57,9 +57,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
+import com.endofjanuary.placement_example.upload_image.UploadImageViewModel
 import com.endofjanuary.placement_example.utils.ChatTopBar
 import org.koin.androidx.compose.getViewModel
-import com.endofjanuary.placement_example.upload_image.UploadImageViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -193,6 +193,22 @@ fun ChatScreenNew(
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_photo_camera),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .clickable {
+                            if (isTextFieldEnabled)
+                                pickImage
+                                    .launch(
+                                        PickVisualMediaRequest(
+                                            ActivityResultContracts
+                                                .PickVisualMedia.ImageOnly
+                                        )
+                                    )
+                        },
+                    contentDescription = "open camera",
+                )
                 BasicTextField(
                     enabled = isTextFieldEnabled,
                     modifier = Modifier
@@ -229,7 +245,7 @@ fun ChatScreenNew(
                                         )
                                     )
                         },
-                    contentDescription = "final",
+                    contentDescription = "gallery",
                 )
                 /*                Icon(
                                     Icons.Default.Done,

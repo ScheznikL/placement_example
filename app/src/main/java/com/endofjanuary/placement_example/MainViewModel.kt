@@ -61,10 +61,11 @@ class MainViewModel(
         get() = _byteArrayState
 
     var model = mutableStateOf(ModelEntry())
-    var postId = mutableStateOf(PostId(""))
+    var postId : MutableState<PostId?> = mutableStateOf(PostId(""))
 
     val isLoading = mutableStateOf(false) //todo change to percentage
     val isSuccess = mutableStateOf<Pair<String, Long>?>(null)
+    val progress: MutableState<Int?> = mutableStateOf(null)
 
     // val modelId = mutableStateOf(0)
     val loadError = mutableStateOf<String?>(null)
@@ -111,10 +112,9 @@ class MainViewModel(
                     textureRichness.name.lowercase()
                 )
             )
-
             when (result) {
                 is Resource.Success -> {
-                    postId.value = result.data ?: PostId("")
+
                     if (result.data != null) {
                         Log.d("loadModelRefine_result Success id:", result.data.result)
 
@@ -155,10 +155,10 @@ class MainViewModel(
                                         )
                                     if (!overwrite) {
                                         saveByteInstancedModel(
-                                            context = context,
-                                            1,
+                                        //    context = context,
+                                            //1,
                                             isFromText = true,
-                                            isRefine = true
+                                            isRefine = true,
                                         )
                                     } else {
                                         updateByteInstancedModel(
@@ -197,14 +197,14 @@ class MainViewModel(
     }
 
     fun loadModelEntryFromImage(url: String, name: String = "") {
-        Log.d("loadModel img", "Enter point")
+        Log.d("loadModel img", "Enter point of name $name")
         viewModelScope.launch(Dispatchers.IO) {
-            val result = meshyRepository.postImageTo3D(PostFromImage(url))
             isLoading.value = true
+            val result = meshyRepository.postImageTo3D(PostFromImage(url))
 
             when (result) {
                 is Resource.Success -> {
-                    postId.value = result.data ?: PostId("")
+
                     if (result.data != null) {
                         Log.d("loadModelEntry_result Success id:", result.data.result)
 
@@ -212,14 +212,15 @@ class MainViewModel(
 
                         when (image3d) {
                             is Resource.Error -> {
-
-                                Log.d("eventualApiRes Error", image3d.toString())
+                                loadError.value = image3d.message
+                                isLoading.value = false
+                                Log.d(" loadModel eventualApiRes Error", image3d.message.toString())
                                 showNotification(NotificationType.ERROR, image3d.message!!)
                             }
 
                             is Resource.Success -> {
                                 Log.d(
-                                    "eventualApiRes Success id:",
+                                    " loadModel eventualApiRes Success id:",
                                     image3d.data?.id ?: "none"
                                 )
                                 while (image3d.data!!.status == "PENDING" || image3d.data!!.status == "IN_PROGRESS") {
@@ -227,7 +228,8 @@ class MainViewModel(
                                         "loadModel while",
                                         "while entered with status ${image3d.data!!.status} ${image3d.data!!.progress}%"
                                     )
-                                    delay(60000)
+                                    progress.value = image3d.data!!.progress
+                                    delay(40000)
                                     image3d = getImageTo3D(result.data.result)
 
                                     if (image3d is Resource.Error) {
@@ -241,14 +243,10 @@ class MainViewModel(
                                     model.value =
                                         ResponseToModelEntryConverter().toModelEntry(modelfromimage = image3d.data)
                                     saveByteInstancedModel(
-                                        context = context,
-                                        1,
                                         isFromText = false,
-                                        isRefine = false
+                                        isRefine = false,
+                                        imageDescription = name
                                     )
-                                    //   modelId.value = model.value.id
-                                    //isSuccess.value = model.value.meshyId
-
                                 }
                                 if (image3d.data!!.status == "FAILED" || image3d.data!!.status == "EXPIRED") {
                                     loadError.value = image3d.data!!.status
@@ -259,8 +257,7 @@ class MainViewModel(
                             }
 
                             else -> {
-                                isLoading.value = true
-
+                             //   isLoading.value = true
                             }
                         }
                     }
@@ -272,13 +269,11 @@ class MainViewModel(
                 }
 
                 is Resource.Loading -> {
-                    loadError.value = ""
                     isLoading.value = true
                 }
 
                 else -> {
                     isLoading.value = true
-                    loadError.value = ""
                 }
             }
         }
@@ -327,10 +322,10 @@ class MainViewModel(
 
                                     // All main prop - MESHYid set in saveByteInstancedModel
                                     saveByteInstancedModel(
-                                        context = context,
-                                        1,
+                                     //   context = context,
+                                //        1,
                                         isFromText = true,
-                                        isRefine = false
+                                        isRefine = false,
                                     )
 
                                 }
@@ -414,23 +409,20 @@ class MainViewModel(
     }
 
     //val context: Context = LocalContext.current
-    private fun saveByteInstancedModel(
-        context: Context,
-        //fileLocation: String,
-        count: Int,
+    fun saveByteInstancedModel(
         isFromText: Boolean,
         isRefine: Boolean,
-        resourceResolver: (resourceFileName: String) -> String = {
+/*        resourceResolver: (resourceFileName: String) -> String = {
             ModelLoader.getFolderPath(
                 model.value.modelPath,
                 it
             )
-        }
-
+        },*/
+        imageDescription: String? = null
     ) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
-                URL(model.value.modelPath).openStream().use { inputStream: InputStream ->
+                URL(model.value.modelImageUrl).openStream().use { inputStream: InputStream -> // TODO change to model
                     val inStream = BufferedInputStream(inputStream)
                     val output = ByteArrayOutputStream()
                     inStream.copyTo(output)
@@ -444,7 +436,7 @@ class MainViewModel(
                         ModelEntity(
                             modelInstance = output.toByteArray(),
                             modelPath = model.value.modelPath,
-                            modelDescription = model.value.modelDescription,
+                            modelDescription = imageDescription ?: model.value.modelDescription,
                             modelImageUrl = model.value.modelImageUrl,
                             isFromText = isFromText,
                             isRefine = isRefine,
@@ -457,12 +449,13 @@ class MainViewModel(
                             isLoading.value = false
                             modelImageUrl.value = model.value.modelImageUrl // TODO Pair?
                             modelPath.value = model.value.modelPath
+
                             isSuccess.value = Pair(model.value.meshyId, isSavedSuccess.value.data!!)
                             showNotification(NotificationType.SUCCESS, model.value.modelDescription)
                         }
 
                         is Resource.Loading -> {
-
+                            //isLoading.value = true
                         }
 
                         is Resource.None -> {}

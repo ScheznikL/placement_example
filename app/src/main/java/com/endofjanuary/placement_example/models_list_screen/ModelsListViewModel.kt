@@ -279,7 +279,7 @@ class ModelsListViewModel(
         }
     }
 
-    fun deleteModel(model: ModelEntry) {
+    fun deleteModel(model: ModelEntry) { // todo unused
         try {
             if (model.isFromText) {
                 _textModelsListState.value -= _textModelsListState.value.first { it.meshyId == model.meshyId }
@@ -301,7 +301,7 @@ class ModelsListViewModel(
                     else -> {}
                 }
             }
-        } catch (e: Exception) { // TODO are two try bad
+        } catch (e: Exception) {
             deletedModel.value = Resource.Error(message = e.message.toString())
         }
     }

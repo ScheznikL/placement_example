@@ -26,7 +26,7 @@ import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
 import com.endofjanuary.placement_example.transit_dialog.NewModelType
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
-import com.endofjanuary.placement_example.upload_image.UploadImage
+import com.endofjanuary.placement_example.upload_image.UploadImageScreen
 import com.endofjanuary.placement_example.user_cabinet.UserProfile
 
 
@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         ModelsListScreen(navController = navController)
                     }
-                    dialog( // todo screen
+                    composable(
                         "upload_image/{type}",
                         arguments = listOf(
                             navArgument("type") {
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                         val type = remember {
                             it.arguments?.getBoolean("type")
                         }
-                        UploadImage(navController = navController, typeGallery = type ?: true)
+                        UploadImageScreen(navController = navController, typeGallery = type ?: true)
                     }
 
                     dialog(
