@@ -124,7 +124,7 @@ fun UploadImageScreen(
                         top = 15.dp + contentPadding.calculateTopPadding(),
                         bottom = 20.dp + contentPadding.calculateBottomPadding(),
                         start = 10.dp,
-                        end = 10.dp,
+                        //end = 10.dp,
                         /*contentPadding.plus(PaddingValues(top = 15.dp))*/
                     ),
                     isActionEnabled = !isUploading && !isLoading,
@@ -213,7 +213,7 @@ fun UploadImageContent(
                         //  alpha = 0.5f,
                         model = image,
                         contentDescription = null,
-                        modifier = Modifier.clip(RoundedCornerShape(10.dp)),
+                        modifier = Modifier.padding(end = 15.dp).clip(RoundedCornerShape(10.dp)),
                         contentScale = ContentScale.Crop
                     )
                 } else {
@@ -221,7 +221,7 @@ fun UploadImageContent(
                         //  alpha = 0.5f,
                         bitmap = photo!!.asImageBitmap(),
                         contentDescription = null,
-                        modifier = Modifier.clip(RoundedCornerShape(10.dp)),
+                        modifier = Modifier.padding(end = 15.dp).clip(RoundedCornerShape(10.dp)),
                         contentScale = ContentScale.Crop
                     )
                 }
@@ -232,7 +232,7 @@ fun UploadImageContent(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 15.dp),
+                .padding(end = 15.dp),
             //  .align(Alignment.BottomCenter),
             value = modelName,
             onValueChange = onNameChange,
@@ -250,7 +250,7 @@ fun UploadImageContent(
             shape = RoundedCornerShape(9.dp),
             singleLine = true
         )
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(35.dp))
         Column(
             horizontalAlignment = Alignment.End,
             modifier = Modifier
@@ -263,8 +263,8 @@ fun UploadImageContent(
                 modifier = Modifier.size(width = 206.dp, height = 55.dp),
                 contentPadding = PaddingValues(8.dp),
                 shape = RoundedCornerShape(
-                    topStart = 8.dp,
-                    bottomStart = 8.dp,
+                    topStart = 15.dp,
+                    bottomStart = 15.dp,
                     topEnd = 0.dp,
                     bottomEnd = 0.dp
                 )
@@ -294,7 +294,8 @@ fun DismissPictureButton(
     Box(contentAlignment = Alignment.TopEnd, modifier = modifier) {
         picture()
         IconButton(
-            onClick = onClick
+            onClick = onClick,
+            modifier = Modifier.padding(end = 15.dp)
         ) {
             Icon(
                 Icons.Default.Close,
