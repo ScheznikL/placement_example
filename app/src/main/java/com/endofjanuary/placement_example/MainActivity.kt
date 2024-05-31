@@ -27,7 +27,7 @@ import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
 import com.endofjanuary.placement_example.transit_dialog.NewModelType
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
 import com.endofjanuary.placement_example.upload_image.UploadImageScreen
-import com.endofjanuary.placement_example.user_cabinet.UserProfile
+import com.endofjanuary.placement_example.user_cabinet.UserProfileScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(navController)
                     }
                     composable("user_profile") {
-                        UserProfile(navController)
+                        UserProfileScreen(navController)
                     }
                     composable(
                         "ar_screen/{id}",

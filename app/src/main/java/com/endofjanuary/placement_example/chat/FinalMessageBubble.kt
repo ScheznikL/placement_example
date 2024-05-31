@@ -83,10 +83,10 @@ fun FinalMessageBubble(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            IconButton(onClick = { onDone() }) {
+                            IconButton(onClick = onDone) {
                                 Icon(Icons.Default.Done, "done")
                             }
-                            IconButton(onClick = { onEdit() }) {
+                            IconButton(onClick = onEdit) {
                                 Icon(Icons.Default.Edit, "edit")
                             }
                         }

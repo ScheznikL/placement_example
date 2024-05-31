@@ -263,8 +263,8 @@ fun UploadImageContent(
                 modifier = Modifier.size(width = 206.dp, height = 55.dp),
                 contentPadding = PaddingValues(8.dp),
                 shape = RoundedCornerShape(
-                    topStart = 15.dp,
-                    bottomStart = 15.dp,
+                    topStart = 43.dp,
+                    bottomStart = 43.dp,
                     topEnd = 0.dp,
                     bottomEnd = 0.dp
                 )

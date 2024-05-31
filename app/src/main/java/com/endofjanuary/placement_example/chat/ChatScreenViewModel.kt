@@ -39,26 +39,27 @@ class ChatScreenViewModel(
     private val modelRoomRepo: ModelsRepo
 ) : ViewModel() {
 
+    val isAutoRefineEnabled = mutableStateOf(false)
+
+
     var loadError = mutableStateOf<String?>(null)
     var isLoading = mutableStateOf(false)
 
-    //var isSuccess = mutableStateOf(false)
     var inputValueState = mutableStateOf("")
-
     private val _messagesListState = mutableStateOf<List<MessageEntry>>(listOf())
+
     val messagesListState: State<List<MessageEntry>> get() = _messagesListState
 
-
     var description: String? = null
-
     private var fullUserMessage = ""
-    var selectedUri = mutableStateOf(Uri.EMPTY)
 
+    var selectedUri = mutableStateOf(Uri.EMPTY)
     val modelId = mutableStateOf(0)
+    private val converter = MessageToUIConverter()
     fun send(userMessageContext: String) {
         loadError.value = null
 
-        val converter = MessageToUIConverter()
+
         description = userMessageContext
 
         isLoading.value = true
@@ -85,11 +86,11 @@ class ChatScreenViewModel(
                     if (result.data != null) {
                         _messagesListState.value =
                             _messagesListState.value.plus(converter.toMessageEntry(result.data.choices[0].message))
-                        if (!result.data.choices[0].message.content.contains("FINAL object is")) {
-                            fullUserMessage += "${extractQuestionObj(result.data.choices[0].message.content)}: "
+                        if (!result.data.choices[0].message.content!!.contains("FINAL object is")) {
+                            fullUserMessage += "${extractQuestionObj(result.data.choices[0].message.content!!)}: "
                         } else {
                             description =
-                                extractFullDescription(result.data.choices[0].message.content)
+                                extractFullDescription(result.data.choices[0].message.content!!)
                         }
                     }
                 }
@@ -102,21 +103,28 @@ class ChatScreenViewModel(
 
                 is Resource.Loading -> {
                     isLoading.value = true
+                    loadError.value = null
                 }
 
                 else -> {
                     isLoading.value = true
+                    loadError.value = null
                 }
             }
         }
 
     }
 
+    fun addAutoRefineMessage() {
+        _messagesListState.value += converter.toMessageEntry(
+            Message(role = "refine", content = "You have enabled auto refine mode, so choose desired quality:")
+        )
+    }
+
     private fun extractFullDescription(assistantMessage: String): String =
         if (!assistantMessage.contains(" is : ")) assistantMessage.substringAfter("FINAL object is") else assistantMessage.substringAfter(
             "FINAL object is : "
         )
-
 
     private fun extractQuestionObj(assistantMessage: String): String? {
         if (assistantMessage.startsWith("What")) {
@@ -149,9 +157,11 @@ class ChatScreenViewModel(
             val lastModelStat = modelRoomRepo.getLastModel()
             when (lastModelStat) {
                 is Resource.Success -> {
-                    modelId.value = lastModelStat.data!!.id // if use update when successfully loaded no need in +1
+                    modelId.value =
+                        lastModelStat.data!!.id // if use update when successfully loaded no need in +1
                     Log.d("modelID", modelId.value.toString())
                 }
+
                 else -> {
                 }
             }

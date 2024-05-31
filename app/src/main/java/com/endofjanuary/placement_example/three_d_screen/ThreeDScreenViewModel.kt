@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.endofjanuary.placement_example.data.room.ModelEntity
+import com.endofjanuary.placement_example.repo.DownloaderRepo
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import com.google.android.filament.Engine
@@ -34,7 +35,10 @@ import java.nio.ByteBuffer
 class ThreeDScreenViewModel(
     //private val meshyRepository: MeshyRepo,
     private val modelRoom: ModelsRepo,
+    private val downloader: DownloaderRepo,
 ) : ViewModel() {
+
+
 
     private val _loadedInstancesState: MutableState<Resource<ModelInstance>> =
         mutableStateOf(Resource.None())
@@ -42,6 +46,9 @@ class ThreeDScreenViewModel(
         get() = _loadedInstancesState
 
     var modelImgUrl = mutableStateOf("")
+
+    val downloadError: MutableState<String?> = mutableStateOf(null)
+    val modelDescriptionShorten: MutableState<String?> = mutableStateOf(null)
 
     var modelFromRoom = mutableStateOf<Resource<ModelEntity>>(Resource.None())
 
@@ -79,6 +86,14 @@ class ThreeDScreenViewModel(
                 modelFromRoom.value = modelRoom.getModelById(localId)
                 when (modelFromRoom.value) {
                     is Resource.Success -> {
+                        //calculate short description
+                        val names = modelFromRoom.value.data!!.modelDescription.split(' ')
+                        modelDescriptionShorten.value = if (names.size >= 2) {
+                            names.subList(0, 2).joinToString(" ") { it }
+                        } else {
+                            names.joinToString(" ") { it }
+                        }
+
                         modelImgUrl.value = modelFromRoom.value.data!!.modelImageUrl
 //                        val result1 = modelLoader.loadModel(
 //                            modelFromRoom.value.data.modelPath
@@ -393,5 +408,16 @@ class ThreeDScreenViewModel(
         }
         return anchorNode
     }
-}
 
+    fun onDownload(modelName: String?) {
+
+        val result = downloader.downloadFile(
+            modelFromRoom.value.data!!.modelPath,
+            modelName = modelName ?: modelDescriptionShorten.value.toString()
+        )
+
+        if (result is Resource.Error) {
+            downloadError.value = result.message
+        }
+    }
+}

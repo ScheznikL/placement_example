@@ -1,5 +1,8 @@
 package com.endofjanuary.placement_example.home
 
+import android.content.Context
+import android.graphics.drawable.Drawable
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -69,26 +72,17 @@ fun HomeScreen(
     navController: NavController
 ) {
     val viewModel = getViewModel<HomeViewModel>()
-    //val VM_T = getViewModel<ModelsListViewModel>()
-    //val snackbarHostState = remember { SnackbarHostState() }
     val viewState by viewModel.state.collectAsStateWithLifecycle()
-
-/*    LaunchedEffect(viewModel.state.value.lastModels) {
-        if (!viewState.lastModels.isNullOrEmpty()) {
-            viewModel.loadLastModels()
-        }
-    }*/
 
     Surface(Modifier.fillMaxSize()) {
         Scaffold(
             bottomBar = {
                 BottomBar(navController)
             },
-            // snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
-           // Column{
-             /*   IconButton(
-                    onClick = { *//*VM_T.deleteModel() *//*},
+            // Column{
+            /*   IconButton(
+                   onClick = { *//*VM_T.deleteModel() *//*},
                     enabled = !viewState.lastModels.isNullOrEmpty()
                 ) {
                     Icon(
@@ -96,12 +90,15 @@ fun HomeScreen(
                         contentDescription = "delete all last viewed"
                     )
                 }*/
-                HomeContent(
-                    modifier = Modifier.padding(innerPadding),
-                    navController = navController,
-                    viewModel = viewModel,
-                    viewState = viewState
-                )
+            val context = LocalContext.current
+
+            HomeContent(
+                modifier = Modifier.padding(innerPadding),
+                navController = navController,
+                viewState = viewState,
+                onClearLastModels = viewModel::clearLastModelPreview,
+                calcDominantColor = viewModel::calcDominantColor
+            )
             //}
         }
     }
@@ -111,8 +108,9 @@ fun HomeScreen(
 fun HomeContent(
     modifier: Modifier = Modifier,
     navController: NavController,
-    viewModel: HomeViewModel,
-    viewState: HomeViewState
+    viewState: HomeViewState,
+    onClearLastModels: (Context) -> Unit,
+    calcDominantColor: (drawable: Drawable, onFinish: (Color) -> Unit) -> Unit
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
     val appBarColor = surfaceColor.copy(alpha = 0.87f)
@@ -169,7 +167,9 @@ fun HomeContent(
                 )
             )
             IconButton(
-                onClick = { viewModel.clearLastModelPreview(context) },
+                onClick = {
+                    onClearLastModels(context)
+                },
                 enabled = !viewState.lastModels.isNullOrEmpty()
             ) {
                 Icon(
@@ -192,7 +192,7 @@ fun HomeContent(
                         ModelItem(
                             modelItem = viewState.lastModels[it],
                             navController = navController,
-                            viewModel = viewModel,
+                            calcDominantColor = calcDominantColor,
                             index = it
                         )
                     }
@@ -200,7 +200,7 @@ fun HomeContent(
             }
         } else {
             EmptyModelItem(
-                message = viewModel.state.value.errorMessage ?: "You haven't viewed any model yet"
+                message = viewState.errorMessage ?: "You haven't viewed any model yet"
             )
         }
         Column(
@@ -239,12 +239,18 @@ fun ModelItem(
     modifier: Modifier = Modifier,
     modelItem: HomeScreenModel,
     navController: NavController,
-    viewModel: HomeViewModel,
-    index: Int
+    index: Int,
+    calcDominantColor: (drawable: Drawable, onFinish: (Color) -> Unit) -> Unit
 ) {
-    val defaultDominantColor = MaterialTheme.colorScheme.surface
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    var defaultDominantColor by remember {
+        mutableStateOf(surfaceColor)
+    }
     var dominantColor by remember {
-        mutableStateOf(defaultDominantColor)
+        mutableStateOf(surfaceColor)
+    }
+    var textColor by remember {
+        mutableStateOf(Color.Black)
     }
 
     Box(contentAlignment = Alignment.Center,
@@ -265,23 +271,32 @@ fun ModelItem(
                         "transit_dialog/${modelItem.id}/${modelItem.modelId}"
                     )
             }) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
-                    .crossfade(true).build(), contentDescription = "last model", onSuccess = {
-                    viewModel.calcDominantColor(it.result.drawable) { color ->
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
+                .crossfade(true).build(), contentDescription = "last model", onSuccess = {
+                calcDominantColor(it.result.drawable) { color ->
+                    if (color != Color(0.09411765f, 0.09411765f, 0.09411765f, 1.0f)) {
+                        Log.d("Color is", "$color black is ${Color.Black}")
                         dominantColor = color
+                    } else {
+                        dominantColor = color
+                        defaultDominantColor = Color(0.09411765f, 0.09411765f, 0.09411765f, 1.0f)
+                        textColor = Color.LightGray
                     }
-                }, contentScale = ContentScale.Crop, modifier = Modifier.size(120.dp)
-                //.align(Alignment.CenterHorizontally)
-            )
-            Text(
-                text = "$index ${modelItem.timeStep}", // todo get rid of indexes
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomStart)
-            )
+                    Log.d("Color is", "$color black is ${Color.Black}")
+                }
+            }, contentScale = ContentScale.Crop, modifier = Modifier.size(190.dp)
+            //.align(Alignment.CenterHorizontally)
+        )
+        Text(
+            text = "$index ${modelItem.timeStep}", // todo get rid of indexes
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomStart),
+            color = textColor
+        )
 
     }
 

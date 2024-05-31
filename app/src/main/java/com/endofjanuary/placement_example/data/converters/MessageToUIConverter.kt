@@ -6,7 +6,8 @@ import com.endofjanuary.placement_example.data.remote.gpt.response.Message
 class MessageToUIConverter {
     fun toMessageEntry(message: Message): MessageEntry {
         val messageType =
-            if (message.content.uppercase().contains("FINAL")) MessageType.Final else {
+            if (message.content.uppercase().contains("FINAL")) MessageType.Final
+            else {
                 when (message.role) {
                     "user" -> {
                         MessageType.User
@@ -14,6 +15,10 @@ class MessageToUIConverter {
 
                     "assistant" -> {
                         MessageType.Assistant
+                    }
+
+                    "refine" -> {
+                        MessageType.AutoRefine
                     }
 
                     else -> {
@@ -32,5 +37,6 @@ enum class MessageType {
     User,
     Assistant,
     Final,
-    Loading
+    Loading,
+    AutoRefine
 }

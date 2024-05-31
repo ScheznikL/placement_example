@@ -20,12 +20,12 @@ import androidx.navigation.NavController
 import com.endofjanuary.placement_example.R
 
 @Composable
-fun BottomBar(navController: NavController) {
+fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
     BottomAppBar(
         windowInsets = BottomAppBarDefaults.windowInsets,
         actions = {
             Row(
-                Modifier.fillMaxWidth(),
+                modifier.fillMaxWidth(),
                 // verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {

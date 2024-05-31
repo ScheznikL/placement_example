@@ -17,6 +17,10 @@ import com.endofjanuary.placement_example.repo.AuthenticationRepo
 import com.endofjanuary.placement_example.repo.AuthenticationRepoImpl
 import com.endofjanuary.placement_example.repo.ChatRepo
 import com.endofjanuary.placement_example.repo.ChatRepoImpl
+import com.endofjanuary.placement_example.repo.DownloaderRepo
+import com.endofjanuary.placement_example.repo.DownloaderRepoImpl
+import com.endofjanuary.placement_example.repo.FireStoreDBImpl
+import com.endofjanuary.placement_example.repo.FireStoreDBRepo
 import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.repo.MeshyRepoImpl
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
@@ -25,6 +29,7 @@ import com.endofjanuary.placement_example.user_cabinet.UserProfileViewModel
 import com.example.jetcaster.ui.home.HomeViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
@@ -68,8 +73,14 @@ val appModule = module {
     single {
         androidApplication().applicationContext.appStartupParamsDataStore
     }
+    single {
+        Firebase.firestore
+    }
     single<MeshyRepo> {
         MeshyRepoImpl(get())
+    }
+    single<FireStoreDBRepo> {
+        FireStoreDBImpl(get())
     }
     single<ChatRepo> {
         ChatRepoImpl(get())
@@ -78,10 +89,13 @@ val appModule = module {
         AWStorageRepoImpl()
     }
     single<AuthenticationRepo> {
-        AuthenticationRepoImpl(get())
+        AuthenticationRepoImpl(get(), get())
+    }
+    single<DownloaderRepo> {
+        DownloaderRepoImpl(androidContext().applicationContext)
     }
     viewModel {
-        HomeViewModel(get(),get())
+        HomeViewModel(get(), get())
     }
     viewModel {
         UserProfileViewModel(get())
@@ -93,7 +107,7 @@ val appModule = module {
         ARScreenViewModel(get())
     }
     viewModel {
-        ThreeDScreenViewModel(get())
+        ThreeDScreenViewModel(get(), get())
     }
     viewModel {
         ChatScreenViewModel(get(), get())
@@ -108,7 +122,12 @@ val appModule = module {
         UploadImageViewModel(get())
     }
     viewModel {
-        MainViewModel(context = androidContext(), meshyRepository = get(), modelRoom = get())
+        MainViewModel(
+            context = androidContext(),
+            meshyRepository = get(),
+            modelRoom = get(),
+            authenticationRepo = get()
+        )
     }
     //   viewModel { (prompt: String) -> ARScreenViewModel(prompt, get()) }
 //    viewModelOf(::ChatScreenViewModel)

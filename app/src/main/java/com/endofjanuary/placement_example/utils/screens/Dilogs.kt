@@ -1,5 +1,6 @@
 package com.endofjanuary.placement_example.utils.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
@@ -27,6 +31,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -41,7 +46,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.endofjanuary.placement_example.DownloaderImpl
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
 
@@ -126,17 +130,7 @@ fun SpecifyRefineOptions(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                        //.wrapContentSize(Alignment.TopStart)
                     ) {
-//                        Row {
-//                            Text(text = selectedRichness.value.toString())
-//                            IconButton(onClick = { expanded = true }) {
-//                                Icon(
-//                                    Icons.Default.KeyboardArrowDown,
-//                                    contentDescription = "Localized description"
-//                                )
-//                            }
-//                        }
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2)
                         ) {
@@ -144,19 +138,15 @@ fun SpecifyRefineOptions(
                                 val selected = selectedRichness.value == it
                                 Card(
                                     colors = if (!selected) CardDefaults.cardColors() else CardDefaults.cardColors(
-                                        //contentColor = Color.Green,
                                         containerColor = Color.Green.copy(0.4f)
                                     ),
                                     onClick = {
                                         selectedRichness.value = it
                                     },
-                                    //border = if (!selected) CardDefaults.outlinedShape else CardDefaults.shape,
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(50.dp)
                                         .padding(vertical = 5.dp)
-                                    //      .align(Center),
-
                                 ) {
                                     Column(
                                         modifier = Modifier
@@ -172,81 +162,6 @@ fun SpecifyRefineOptions(
                                 }
                             }
                         }
-
-//                        richnessOptions.forEach {
-//                            val selected = selectedRichness.value == it
-//                            val interactionSource = remember { MutableInteractionSource() }
-//                            //val isPressed by interactionSource.collectIsPressedAsState()
-//
-//                            Card(
-//                                colors = if (!selected) CardDefaults.cardColors() else CardDefaults.cardColors(
-//                                    //contentColor = Color.Green,
-//                                    containerColor = Color.Green
-//                                ),
-//                                onClick = {
-//                                    selectedRichness.value = it
-//                                },
-//                                //border = if (!selected) CardDefaults.outlinedShape else CardDefaults.shape,
-//                                modifier = Modifier
-//                                    .weight(1f)
-//                                    .height(50.dp)
-//                                    .padding(vertical = 5.dp),
-//
-//                                ) {
-//                                Text(text = it.toString(), textAlign = TextAlign.Center)
-//                            }
-//                        }
-
-
-//                        DropdownMenu(
-//                            expanded = expanded,
-//                            onDismissRequest = { expanded = false }
-//                        ) {
-//                            DropdownMenuItem(
-//                                text = { Text("High") },
-//                                onClick = {
-//                                    selectedRichness.value = MainViewModel.TextureRichness.High
-//                                },
-//                                leadingIcon = {
-//                                    Icon(
-//                                        Icons.Filled.Star,
-//                                        contentDescription = null
-//                                    )
-//                                })
-//                            DropdownMenuItem(
-//                                text = { Text("Medium") },
-//                                onClick = {
-//                                    selectedRichness.value = MainViewModel.TextureRichness.Medium
-//                                },
-//                                /*                leadingIcon = {
-//                                                    Icon(
-//                                                        Icons.Outlined.Star,
-//                                                        contentDescription = null
-//                                                    )
-//                                                }*/
-//                            )
-//                            DropdownMenuItem(
-//                                text = { Text("Low") },
-//                                onClick = {
-//                                    selectedRichness.value = MainViewModel.TextureRichness.Low
-//                                },
-////                                leadingIcon = {
-////                                    Icon(
-////                                        Icons.Outlined.,
-////                                        contentDescription = null
-////                                    )
-////                                },
-//                                //  trailingIcon = { Text("F11", textAlign = TextAlign.Center) }
-//                            )
-//                            DropdownMenuItem(
-//                                text = { Text("None") },
-//                                onClick = {
-//                                    selectedRichness.value = MainViewModel.TextureRichness.None
-//                                },
-//                                //trailingIcon = { Text("F11", textAlign = TextAlign.Center) }
-//                            )
-//                        }
-//
                     }
                     Spacer(modifier = Modifier.height(22.dp))
                     Row {
@@ -303,18 +218,18 @@ fun SpecifyRefineOptions(
 
 }
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoDownload(
     openDialog: MutableState<Boolean>,
     confirm: MutableState<Boolean>,
-    path: String?,
-    downloader: DownloaderImpl,
-    modelDescription: String
+    onDownload: (String) -> Unit,
+    modelFileName: String?
 ) {
-    val modelName = modelDescription.split(' ')
-
+    val name = mutableStateOf(modelFileName ?: "model")
     val helpText = remember { mutableStateOf("Save to downloads") }
+
+    val enableEdit = mutableStateOf(false)
 
     if (openDialog.value) {
         AlertDialog(onDismissRequest = {
@@ -322,19 +237,37 @@ fun DoDownload(
         }, title = {
             Text(text = "Download")
         }, text = {
-            Text(
-                helpText.value
-            )
+            Column {
+                Text(
+                    helpText.value
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (!enableEdit.value) {
+                        Text(
+                            name.value
+                        )
+                    } else {
+                        TextField(
+                            value = name.value,
+                            onValueChange = { name.value = it },
+                        )
+                    }
+                    Icon(imageVector = if (enableEdit.value) Icons.Default.Edit else Icons.Outlined.Edit,
+                        contentDescription = "edit name",
+                        modifier = Modifier.clickable {
+                            enableEdit.value = !enableEdit.value
+                        })
+                }
+            }
         }, confirmButton = {
             TextButton(onClick = {
-                if (path != null) {
-                    confirm.value = true
-                    openDialog.value = false
-                    downloader.downloadFile(path, modelName = "model")
-                } //"${modelName[0]} ${modelName[1]}"
-                else {
-                    helpText.value = "There is no link or it is wrong :("
-                }
+                onDownload(name.value)
+                confirm.value = true
+                openDialog.value = false
             }) {
                 Text("Confirm")
             }

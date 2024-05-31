@@ -29,10 +29,9 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
 class ModelsListViewModel(
-    private val modelsRoom: ModelsRepo,
+    private val modelsRoomRepo: ModelsRepo,
     private val dataStore: DataStore<LastModelsParam>,
 ) : ViewModel() {
-
 
     val deletedModel = mutableStateOf<Resource<Int>>(Resource.None())
 
@@ -40,10 +39,12 @@ class ModelsListViewModel(
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
 
+    private var isSearchStarting = true
     var isSearching = mutableStateOf(false)
 
     private val selectedCategory = MutableStateFlow(Category.FromText)
     private val categories = MutableStateFlow(Category.entries.toList())
+
 
     // Holds our view state which the UI collects via [state]
     private val _state = MutableStateFlow(ModelListViewState())
@@ -53,6 +54,8 @@ class ModelsListViewModel(
     fun onCategorySelected(category: Category) {
         selectedCategory.value = category
     }
+
+    private var cachedModelsList = listOf<ModelEntry>()
 
     private val _textModelsListState = MutableStateFlow<List<ModelEntry>>(emptyList())
     val textModelsListState: StateFlow<List<ModelEntry>> = _textModelsListState
@@ -95,8 +98,7 @@ class ModelsListViewModel(
                     selectedCategory,
                 ->
                 ModelListViewState(
-                    selectedCategory,
-                    categories
+                    selectedCategory, categories
                 )
             }.catch { throwable ->
                 // TODO: emit a UI error here.
@@ -120,28 +122,20 @@ class ModelsListViewModel(
                     Log.d("modelList calc _rewrite", "start ${_rewriteIndex.value}")
                     if (currentSettings.lastModelsCount >= 10) {
                         Log.d("modelList calc _rewrite", ">= 10: ${_rewriteIndex.value}")
-                        currentSettings.toBuilder()
-                            .removeLastModels(0).addLastModels(
+                        currentSettings.toBuilder().removeLastModels(0).addLastModels(
                                 //count,
-                                ModelAccessParam.newBuilder()
-                                    .setModelId(modelId)
-                                    .setId(id)
+                                ModelAccessParam.newBuilder().setModelId(modelId).setId(id)
                                     .setModelImage(modelImageUrl)
                                     .setUnixTimestamp(System.currentTimeMillis())
-                            )
-                            .build()
+                            ).build()
                     } else {
                         _rewriteIndex.value = 0
-                        currentSettings.toBuilder()
-                            .addLastModels(
+                        currentSettings.toBuilder().addLastModels(
                                 currentSettings.lastModelsCount,
-                                ModelAccessParam.newBuilder()
-                                    .setModelId(modelId)
-                                    .setId(id)
+                                ModelAccessParam.newBuilder().setModelId(modelId).setId(id)
                                     .setModelImage(modelImageUrl)
                                     .setUnixTimestamp(System.currentTimeMillis())
-                            )
-                            .build()
+                            ).build()
                     }
                 }
             }
@@ -150,13 +144,42 @@ class ModelsListViewModel(
         }
     }
 
+    fun onSearch(query: String, isFromImage: Boolean) {
+        val listToSearch = if (isSearchStarting) {
+            if (!isFromImage) _textModelsListState.value else _imageModelsListState.value //
+        } else {
+            cachedModelsList
+        }
+        viewModelScope.launch(Dispatchers.Default) {
+            if (query.isEmpty()) {
+
+                if (!isFromImage) _textModelsListState.value =
+                    cachedModelsList else _imageModelsListState.value = cachedModelsList
+                isSearching.value = false
+                isSearchStarting = true
+                return@launch
+            }
+            val results = listToSearch.filter {
+                it.modelDescription.contains(query.trim(), ignoreCase = true)
+            }
+            if (isSearchStarting) {
+                cachedModelsList =
+                    if (!isFromImage) _textModelsListState.value else _imageModelsListState.value //
+                isSearchStarting = false
+            }
+            if (!isFromImage) _textModelsListState.value =
+                results else _imageModelsListState.value = results
+            isSearching.value = true
+        }
+    }
+
     fun loadModels() {
         isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
 
             //todo ConvertModelEntityToModelEntry
-            try{
-                val result = modelsRoom.getAllModelsFlow().mapNotNull { models ->
+            try {
+                val result = modelsRoomRepo.getAllModelsFlow().mapNotNull { models ->
                     models.map { model ->
                         ModelEntry(
                             id = model.id,
@@ -175,7 +198,7 @@ class ModelsListViewModel(
                     _imageModelsListState.value = it.filter { model -> !(model.isFromText) }
                 }
 
-            }catch (e : Exception){
+            } catch (e: Exception) {
                 isLoading.value = false
                 loadError.value = e.message.toString()
             }
@@ -238,7 +261,7 @@ class ModelsListViewModel(
     fun insetModel() { // todo TEMP
 
         viewModelScope.launch(context = Dispatchers.IO) {
-            modelsRoom.saveModel(
+            modelsRoomRepo.saveModel(
                 ModelEntity(
                     modelInstance = ByteArray(1), // TEMP
                     modelPath = "_textModelsListState.value.first().modelPath",
@@ -268,7 +291,7 @@ class ModelsListViewModel(
             viewModelScope.launch(Dispatchers.IO) {
                 val result: MutableList<Resource<Int>> = mutableListOf()
 
-                selectedIds.value.forEach { result += modelsRoom.deleteModelById(it) }
+                selectedIds.value.forEach { result += modelsRoomRepo.deleteModelById(it) }
 
                 //TODO Loading - try - ...
 
@@ -288,7 +311,7 @@ class ModelsListViewModel(
             }
 
             viewModelScope.launch(Dispatchers.IO) {
-                val result = modelsRoom.deleteModelById(model.meshyId)
+                val result = modelsRoomRepo.deleteModelById(model.meshyId)
                 when (result) {
                     is Resource.Success -> {
                         deletedModel.value = result

@@ -1,9 +1,6 @@
 package com.endofjanuary.placement_example.chat
 
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -38,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +56,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
-import com.endofjanuary.placement_example.upload_image.UploadImageViewModel
 import com.endofjanuary.placement_example.utils.ChatTopBar
 import org.koin.androidx.compose.getViewModel
 
@@ -70,19 +68,25 @@ fun ChatScreenNew(
     val viewModel = getViewModel<ChatScreenViewModel>()
     val mainViewModel = getViewModel<MainViewModel>()
 
-    val uploadImageviewModel = getViewModel<UploadImageViewModel>()
-
     val scrollState = rememberLazyListState()
     val isKeyboardOpen by keyboardAsState()
     val focusManager = LocalFocusManager.current
 
+
     val messagesListState by remember { viewModel.messagesListState }
     val isLoading by remember { viewModel.isLoading }
     val isError by remember { viewModel.loadError }
-    //val modelId by remember { viewModel.modelId } // VIA  ChatScreenViewModel
-    val meshyId by remember { mainViewModel.isSuccess }// VIA  MainViewModel
+    val loadError by remember { mainViewModel.loadError }
+
+
+    val modelToRefine by remember { mainViewModel.model }
+    val autoRefine by remember { mainViewModel.autoRefine }
+
+    val modelIds by remember { mainViewModel.isSuccess }// VIA  MainViewModel
     val textInput by remember { viewModel.inputValueState }
     var isTextFieldEnabled = remember { true }
+    val openCancelRefineDialog = remember { mutableStateOf(false) }
+    val cancelRefineDialogConfirm = remember { mutableStateOf(false) }
 
     LaunchedEffect(messagesListState) {
         if (messagesListState.isNotEmpty()) scrollState.animateScrollToItem(messagesListState.size - 1)
@@ -94,19 +98,12 @@ fun ChatScreenNew(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val pickImage = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia(),
-        viewModel::onPhotoPickerSelect
-    )
 
     Scaffold(
         topBar = {
-            ChatTopBar(navController = navController)
+            ChatTopBar(navController = navController, autoRefineEnabled = autoRefine)
         },
         modifier = Modifier.fillMaxSize(),
-//        bottomBar = {
-//            BottomBar(navController = navController)
-//        }
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         }
@@ -163,30 +160,60 @@ fun ChatScreenNew(
                                             viewModel.description!!
                                         )
                                         Log.d("description", viewModel.description ?: "null")
+                                    },
+                                    onGetRefineOptions = {
+                                        viewModel.loadingModel()
+                                        mainViewModel.autoRefine(it)
+                                    },
+                                    onRefineCancel = {
+                                        openCancelRefineDialog.value = true
                                     }
                                 )
                             })
+
                     })
             }
-            LaunchedEffect(meshyId) {
+            LaunchedEffect(openCancelRefineDialog.value) {
+                Log.d("cancelRefineDialogConfirm", "${cancelRefineDialogConfirm.value}")
+                if (cancelRefineDialogConfirm.value) {// 1111 initial value
+                    mainViewModel.saveByteInstancedModel(isFromText = true, isRefine = false)
+                }
+            }
 
-                if (meshyId != null) { // means model was uploaded to room
+            LaunchedEffect(modelToRefine) {
+                Log.d("modelIdToRefine", "auto - $autoRefine")
+                if (modelToRefine.meshyId != "1111" && autoRefine) {// 1111 initial value
+                    viewModel.isAutoRefineEnabled.value = autoRefine
+                    viewModel.addAutoRefineMessage()
+                }
+            }
+
+            LaunchedEffect(modelIds) {
+
+                if (modelIds != null) { // means model was uploaded to room
                     Log.d(
                         "loadingModel UI meshyId",
-                        "enter  ${meshyId?.first} - ${meshyId?.second}"
+                        "enter  ${modelIds?.first} - ${modelIds?.second}"
                     )
                     //viewModel.getId()
                     //if (modelId.data != 0)
-                    navController.navigate("transit_dialog/${meshyId?.second}/${meshyId?.first}")
+
+                    navController.navigate("transit_dialog/${modelIds?.second}/${modelIds?.first}")
                 }
             }
             if (isLoading) LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.Green
             )
-            if (isError != null) {
-                ErrorMessageBubble(isError!!)
+            val openErrorDialog = mutableStateOf((isError != null) || (loadError != null))
+
+            LaunchedEffect(isError, loadError) {
+                openErrorDialog.value = (isError != null) || (loadError != null)
             }
+            ErrorDialog(
+                openDialog = openErrorDialog,
+                errorMessage = isError ?: loadError.toString()
+            )
             Row(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.secondaryContainer)
@@ -198,16 +225,9 @@ fun ChatScreenNew(
                     modifier = Modifier
                         .padding(16.dp)
                         .clickable {
-                            if (isTextFieldEnabled)
-                                pickImage
-                                    .launch(
-                                        PickVisualMediaRequest(
-                                            ActivityResultContracts
-                                                .PickVisualMedia.ImageOnly
-                                        )
-                                    )
+                            navController.navigate("upload_image/${false}")
                         },
-                    contentDescription = "open camera",
+                    contentDescription = "camera",
                 )
                 BasicTextField(
                     enabled = isTextFieldEnabled,
@@ -236,40 +256,29 @@ fun ChatScreenNew(
                     modifier = Modifier
                         .padding(16.dp)
                         .clickable {
-                            if (isTextFieldEnabled)
-                                pickImage
-                                    .launch(
-                                        PickVisualMediaRequest(
-                                            ActivityResultContracts
-                                                .PickVisualMedia.ImageOnly
-                                        )
-                                    )
+                            navController.navigate("upload_image/${true}")
                         },
                     contentDescription = "gallery",
                 )
-                /*                Icon(
-                                    Icons.Default.Done,
-                                    modifier = Modifier
-                                        .padding(16.dp)
-                                        .clickable {
-                                            if (viewModel.description == null && textInput.isBlank()) {
-                                                viewModel.viewModelScope.launch {
-                                                    snackbarHostState.showSnackbar(
-                                                        message = "Write description of desirable model and press send.",
-                                                        actionLabel = "Info"
-                                                    )
-                                                }
-                                            } else {
-                                                mainViewModel.loadModelEntryFromText(
-                                                    viewModel.description!!
-                                                )
-                                            }
-                                            //if (textInput.isNotBlank()) navController.navigate("loading_screen/${viewModel.description}")
-                                            Log.d("description", viewModel.description ?: "null")
-                                        }
-                                        .alpha(if (textInput.isNotBlank()) 1.0f else 0.5f),
-                                    contentDescription = "final",
-                                )*/
+                // todo temp
+                Icon(
+                    Icons.Default.Done,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .clickable {
+
+                            //          Log.d("description", viewModel.description ?: "null")
+                            viewModel.send(textInput)
+                            mainViewModel.loadModelEntryFromText(
+                                viewModel.description ?: textInput
+                            )
+
+                            //if (textInput.isNotBlank()) navController.navigate("loading_screen/${viewModel.description}")
+                        }
+                        .alpha(if (textInput.isNotBlank()) 1.0f else 0.5f),
+                    contentDescription = "final",
+                )
+                /**///
                 Icon(
                     Icons.AutoMirrored.Filled.Send,
                     modifier = Modifier
@@ -286,4 +295,9 @@ fun ChatScreenNew(
             }
         }
     }
+    CancelDialog(
+        openDialog = openCancelRefineDialog,
+        title = "Cancel Refine",
+        confirm = cancelRefineDialogConfirm
+    )
 }

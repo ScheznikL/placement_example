@@ -25,12 +25,14 @@ import com.endofjanuary.placement_example.data.remote.meshy.responses.PostId
 import com.endofjanuary.placement_example.data.remote.meshy.responses.Refine3dModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
 import com.endofjanuary.placement_example.data.room.ModelEntity
+import com.endofjanuary.placement_example.repo.AuthenticationRepo
 import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import io.github.sceneview.loaders.ModelLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
@@ -40,18 +42,30 @@ import java.net.URL
 class MainViewModel(
     private val meshyRepository: MeshyRepo,
     private val modelRoom: ModelsRepo,
+    private val authenticationRepo: AuthenticationRepo,
     private val context: Context
 ) : ViewModel() {
-    //    init {
-//        loadModelEntry()
-//    }
+
+    val currentUser = authenticationRepo.currentUser(viewModelScope)
+
+    val textureRichness = mutableStateOf(TextureRichness.None)
+
     companion object {
         const val CHANNEL_NEW_MODEL = "model_success"
         const val NOTIFICATION_ID = 100
     }
 
+    val autoRefine = mutableStateOf(false)
+    val autoSave = mutableStateOf(false)
+
     init {
         createNotificationChannel()
+        viewModelScope.launch(Dispatchers.IO) {
+            currentUser.collectLatest {
+                autoRefine.value = it!!.autoRefineModel
+                autoSave.value = it.autoSaveModel
+            }
+        }
     }
 
 
@@ -61,7 +75,7 @@ class MainViewModel(
         get() = _byteArrayState
 
     var model = mutableStateOf(ModelEntry())
-    var postId : MutableState<PostId?> = mutableStateOf(PostId(""))
+    var postId: MutableState<PostId?> = mutableStateOf(PostId(""))
 
     val isLoading = mutableStateOf(false) //todo change to percentage
     val isSuccess = mutableStateOf<Pair<String, Long>?>(null)
@@ -99,6 +113,16 @@ class MainViewModel(
         Medium,
         Low,
         None
+    }
+
+    fun autoRefine(textureRichness: TextureRichness) {
+        if (autoRefine.value) {
+            loadRefineModel(
+                model.value.meshyId,
+                textureRichness,
+                false
+            ) // false cause then it's just save
+        }
     }
 
     fun loadRefineModel(id: String, textureRichness: TextureRichness, overwrite: Boolean) {
@@ -143,7 +167,6 @@ class MainViewModel(
                                     if (refine is Resource.Error) {
                                         isLoading.value = false
                                         loadError.value = refine.message!!
-                                        throw Exception(refine.message)
                                     }
 
                                 }
@@ -155,8 +178,6 @@ class MainViewModel(
                                         )
                                     if (!overwrite) {
                                         saveByteInstancedModel(
-                                        //    context = context,
-                                            //1,
                                             isFromText = true,
                                             isRefine = true,
                                         )
@@ -171,8 +192,12 @@ class MainViewModel(
                                     }
                                 }
                                 if (refine.data!!.status == "FAILED" || refine.data!!.status == "EXPIRED") {
-                                    loadError.value = "Model loading is ${refine.data!!.status}"
+                                    loadError.value = "Model loading is ${refine.data!!.status} with ${refine.data!!.task_error}"
                                     isLoading.value = false
+                                    showNotification(
+                                        NotificationType.ERROR,
+                                        refine.data!!.task_error.toString()
+                                    )
                                 }
                             }
 
@@ -249,15 +274,20 @@ class MainViewModel(
                                     )
                                 }
                                 if (image3d.data!!.status == "FAILED" || image3d.data!!.status == "EXPIRED") {
-                                    loadError.value = image3d.data!!.status
+                                    loadError.value = "Model loading is ${image3d.data!!.status} with ${image3d.data!!.task_error}"
+
                                     isLoading.value = false
                                     model.value =
                                         ResponseToModelEntryConverter().toModelEntry(image3d.data)
+                                    showNotification(
+                                        NotificationType.ERROR,
+                                        image3d.data!!.task_error.toString()
+                                    )
                                 }
                             }
 
                             else -> {
-                             //   isLoading.value = true
+                                //   isLoading.value = true
                             }
                         }
                     }
@@ -307,10 +337,13 @@ class MainViewModel(
                                         "loadModel while",
                                         "while entered with status ${eventualApiRes.data!!.status} ${eventualApiRes.data!!.progress}%"
                                     )
-                                    delay(30000)
+                                    delay(20000)
                                     eventualApiRes = getTextTo3D(result.data.result)
                                     if (eventualApiRes is Resource.Error) {
-                                        showNotification(NotificationType.ERROR, result.message!!)
+                                        showNotification(
+                                            NotificationType.ERROR,
+                                            result.message ?: "error occurred"
+                                        )
                                         break
                                     }
                                     // return Resource.Loading()
@@ -321,16 +354,15 @@ class MainViewModel(
                                         ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
 
                                     // All main prop - MESHYid set in saveByteInstancedModel
-                                    saveByteInstancedModel(
-                                     //   context = context,
-                                //        1,
-                                        isFromText = true,
-                                        isRefine = false,
-                                    )
-
+                                    if (!autoRefine.value) {
+                                        saveByteInstancedModel(
+                                            isFromText = true,
+                                            isRefine = false,
+                                        )
+                                    }
                                 }
                                 if (eventualApiRes.data!!.status == "FAILED" || eventualApiRes.data!!.status == "EXPIRED") {
-                                    loadError.value = eventualApiRes.data!!.status
+                                    loadError.value = "Model loading is ${eventualApiRes.data!!.status}"
                                     isLoading.value = false
                                     model.value =
                                         ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
@@ -412,67 +444,72 @@ class MainViewModel(
     fun saveByteInstancedModel(
         isFromText: Boolean,
         isRefine: Boolean,
-/*        resourceResolver: (resourceFileName: String) -> String = {
-            ModelLoader.getFolderPath(
-                model.value.modelPath,
-                it
-            )
-        },*/
+        /*        resourceResolver: (resourceFileName: String) -> String = {
+                    ModelLoader.getFolderPath(
+                        model.value.modelPath,
+                        it
+                    )
+                },*/
         imageDescription: String? = null
     ) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
-                URL(model.value.modelImageUrl).openStream().use { inputStream: InputStream -> // TODO change to model
-                    val inStream = BufferedInputStream(inputStream)
-                    val output = ByteArrayOutputStream()
-                    inStream.copyTo(output)
+                URL(model.value.modelImageUrl).openStream()
+                    .use { inputStream: InputStream -> // TODO change to model
+                        val inStream = BufferedInputStream(inputStream)
+                        val output = ByteArrayOutputStream()
+                        inStream.copyTo(output)
 
 //                        .use { output ->
 //                        inStream.copyTo(output)
 //                        val byteArr = output.toByteArray()
 //                        val byteBuffer = ByteBuffer.wrap(byteArr)
 //                        val rewound = byteBuffer.rewind()
-                    isSavedSuccess.value = modelRoom.saveModel(
-                        ModelEntity(
-                            modelInstance = output.toByteArray(),
-                            modelPath = model.value.modelPath,
-                            modelDescription = imageDescription ?: model.value.modelDescription,
-                            modelImageUrl = model.value.modelImageUrl,
-                            isFromText = isFromText,
-                            isRefine = isRefine,
-                            meshyId = model.value.meshyId
-                        )
-                    )
-
-                    when (isSavedSuccess.value) {
-                        is Resource.Success -> {
-                            isLoading.value = false
-                            modelImageUrl.value = model.value.modelImageUrl // TODO Pair?
-                            modelPath.value = model.value.modelPath
-
-                            isSuccess.value = Pair(model.value.meshyId, isSavedSuccess.value.data!!)
-                            showNotification(NotificationType.SUCCESS, model.value.modelDescription)
-                        }
-
-                        is Resource.Loading -> {
-                            //isLoading.value = true
-                        }
-
-                        is Resource.None -> {}
-                        is Resource.Error -> {
-                            isLoading.value = false
-                            loadError.value = "Saving Model Error"
-                            showNotification(
-                                NotificationType.ERROR,
-                                "Saving Model Error"
+                        isSavedSuccess.value = modelRoom.saveModel(
+                            ModelEntity(
+                                modelInstance = output.toByteArray(),
+                                modelPath = model.value.modelPath,
+                                modelDescription = imageDescription ?: model.value.modelDescription,
+                                modelImageUrl = model.value.modelImageUrl,
+                                isFromText = isFromText,
+                                isRefine = isRefine,
+                                meshyId = model.value.meshyId
                             )
+                        )
+
+                        when (isSavedSuccess.value) {
+                            is Resource.Success -> {
+                                isLoading.value = false
+                                modelImageUrl.value = model.value.modelImageUrl // TODO Pair?
+                                modelPath.value = model.value.modelPath
+
+                                isSuccess.value =
+                                    Pair(model.value.meshyId, isSavedSuccess.value.data!!)
+                                showNotification(
+                                    NotificationType.SUCCESS,
+                                    model.value.modelDescription
+                                )
+                            }
+
+                            is Resource.Loading -> {
+                                //isLoading.value = true
+                            }
+
+                            is Resource.None -> {}
+                            is Resource.Error -> {
+                                isLoading.value = false
+                                loadError.value = "Saving Model Error"
+                                showNotification(
+                                    NotificationType.ERROR,
+                                    "Saving Model Error"
+                                )
+                            }
                         }
-                    }
 
-                    Log.d("loadModel in S", "isSavedSuccess id= ${isSavedSuccess.value.data} ")
+                        Log.d("loadModel in S", "isSavedSuccess id= ${isSavedSuccess.value.data} ")
 
-                    output.close()
-                    inputStream.close()
+                        output.close()
+                        inputStream.close()
 
 //                val byteBuffer = ByteBuffer.wrap(byteArr)
 //                val rewound = byteBuffer.rewind()
@@ -496,8 +533,8 @@ class MainViewModel(
 //                            modelImageUrl = model.value.modelImageUrl
 //                        )
 //                    )
-                    //          }
-                }
+                        //          }
+                    }
             }
             _byteArrayState.value = Resource.Success(true)
             showNotification(NotificationType.SUCCESS, model.value.modelDescription)
@@ -509,6 +546,7 @@ class MainViewModel(
 //                    }
         } catch (e: Exception) {
             _byteArrayState.value = Resource.Error(e.message.toString())
+            loadError.value = e.message
         }
     }
 

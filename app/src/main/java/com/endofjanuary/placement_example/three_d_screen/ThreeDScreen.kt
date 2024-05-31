@@ -6,38 +6,40 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.endofjanuary.placement_example.DownloaderImpl
 import com.endofjanuary.placement_example.MainViewModel
+import com.endofjanuary.placement_example.chat.CancelDialog
 import com.endofjanuary.placement_example.chat.LottieDotsFlashing
+import com.endofjanuary.placement_example.repo.DownloaderRepoImpl
 import com.endofjanuary.placement_example.utils.BottomBar
 import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.ThreeDScreenTopBar
+import com.endofjanuary.placement_example.utils.screens.DoDownload
 import com.google.android.filament.gltfio.ResourceLoader
 import io.github.sceneview.Scene
 import io.github.sceneview.math.Position
@@ -63,7 +65,7 @@ fun ThreeDScreen(
     meshyId: String?,
 ) {
     val viewModel = getViewModel<ThreeDScreenViewModel>()
-    val downloader = DownloaderImpl(LocalContext.current)
+    val downloader = DownloaderRepoImpl(LocalContext.current)
 
     ThreeDMain(
         viewModel = viewModel,
@@ -81,8 +83,9 @@ fun ThreeDMain(
     modelId: Int,
     meshyId: String,
     navController: NavController,
-    downloader: DownloaderImpl
+    downloader: DownloaderRepoImpl
 ) {
+
     val mainViewModel = getViewModel<MainViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -105,18 +108,39 @@ fun ThreeDMain(
     }
     val modelPath = mutableStateOf(viewModel.modelFromRoom.value.data?.modelPath)
     val isFromText = mutableStateOf(viewModel.modelFromRoom.value.data?.isFromText)
+    val isRefined = mutableStateOf(viewModel.modelFromRoom.value.data?.isRefine)
 
-    val modelDescription: String? =
-        remember { viewModel.modelFromRoom.value.data?.modelDescription }
+    val isAutoSaveEnabled by remember { mainViewModel.autoSave }
+    val openDownloadDialog = remember { mutableStateOf(false) }
+    val confirmDownload = remember { mutableStateOf(false) }
+
+    val modelShortDescription: String? by
+    remember { viewModel.modelDescriptionShorten }
 
     val deleteSuccess = remember { viewModel.modelDeleted }
+    val downloadError by remember {
+        viewModel.downloadError
+    }
+
+    LaunchedEffect(downloadError) {
+        if (downloadError != null) {
+            snackbarHostState.showSnackbar(
+                message = downloadError.toString(),
+                actionLabel = "understood"
+            )
+        }
+    }
+
 
     LaunchedEffect(true) {
-        //  viewModel.loadInstanceNone()
-        //  viewModel.loadModelLocal(modelLoader,/*engine,*/ modelLoader.assetLoader, assetManager, resourceLoader)
         viewModel.loadModelRemote(modelLoader, modelId)
     }
 
+    LaunchedEffect(instanceState) {
+        if (instanceState is Resource.Success && isAutoSaveEnabled) {
+            openDownloadDialog.value = isAutoSaveEnabled
+        }
+    }
     Scaffold(
         bottomBar = { BottomBar(navController = navController) },
         snackbarHost = {
@@ -125,15 +149,15 @@ fun ThreeDMain(
         topBar = {
             ThreeDScreenTopBar(
                 modelId = modelId,
-                modelDescription = modelDescription,
+                modelDescriptionShorten = modelShortDescription.toString(),
                 navController = navController,
                 mainViewModel = mainViewModel,
                 meshyId = meshyId,
                 modelPath = modelPath,
                 overwrite = overwriteRefine,
                 viewModel = viewModel,
-                downloader = downloader,
-                isFromText = isFromText
+                isFromText = isFromText.value ?: false,
+                isRefined = isRefined.value ?: false
             )
         }
     ) { padding ->
@@ -223,6 +247,11 @@ fun ThreeDMain(
                         environment = environmentLoader.createHDREnvironment(
                             assetFileLocation = "environments/sky_2k.hdr" //todo user choice ?*
                         )!!,
+                        onViewUpdated = {
+                            if (currentNodes.toList().size >= 2) {
+                                cameraNode.setShift(xShift = 2.0, 0.0)
+                            }
+                        }
 //                        onFrame = {
 //                         //   centerNode.rotation = cameraRotation
 //                            cameraNode.lookAt(centerNode)
@@ -250,7 +279,7 @@ fun ThreeDMain(
                      **/
                     if (refineIsLoading.value /*&& !overwriteRefine.value*/) {
                         Box {
-                            Text(text = "Refining is in process ...")
+                            Text(text = "Refining is in process DO NOT leave the page ...")
                             LottieDotsFlashing(
                                 modifier = Modifier
                                     .size(100.dp)
@@ -333,32 +362,11 @@ fun ThreeDMain(
 
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun WarningDialog(
-    modelId: Int
-) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Dialog(onDismissRequest = { /* Handle dismiss if needed */ }) {
-            Column(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.error)
-                    .padding(16.dp)
-            ) {
-                Text(
-                    "There is no model with $modelId",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                )
-                Button(onClick = { /* Handle button click */ }) {
-                    Text("OK")
-                }
-            }
-        }
-    }
+    DoDownload(
+        openDialog = openDownloadDialog,
+        confirm = confirmDownload,
+        modelFileName = modelShortDescription,
+        onDownload = viewModel::onDownload
+    )
 }

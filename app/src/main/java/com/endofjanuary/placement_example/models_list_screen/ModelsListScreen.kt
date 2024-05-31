@@ -3,8 +3,8 @@ package com.endofjanuary.placement_example.models_list_screen
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,10 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -47,11 +44,9 @@ import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,7 +62,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,7 +70,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.data.models.ModelEntry
 import com.endofjanuary.placement_example.utils.BottomBar
 import org.koin.androidx.compose.getViewModel
@@ -100,109 +94,68 @@ fun ModelsListScreen(
     }
     val snackbarHostState = remember { SnackbarHostState() }
 
-//    LaunchedEffect(deleted.value) {
-//        when (deleted.value) {
-//            is Resource.Error -> {
-//                viewModel.selectedIds.value = emptySet()
-//                snackbarHostState.showSnackbar(
-//                    message = "Error when deleting model...",
-//                )
-//            }
-//
-//            is Resource.Success -> {
-//                // viewModel.selectedIds.value -= viewModel.selectedIds.value.last()
-//                snackbarHostState.showSnackbar(
-//                    message = "Model deleted successfully",
-//                )
-//            }
-//
-//            else -> {}
-//        }
-//    }
+    val textModelsListState by viewModel.textModelsListState.collectAsState()
+    val imageModelsListState by viewModel.imageModelsListState.collectAsState()
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
-        bottomBar = { BottomBar(navController = navController) },
-        floatingActionButton = {
-            if (!viewModel.selectionMode.value) {
-                FloatingActionButton(onClick = {
-                    viewModel.insetModel()
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
-                }
-                /**
-                 * Todo under save
+    val loadError by remember { viewModel.loadError }
+    val isLoading by remember { viewModel.isLoading }
+    val isSearching by remember { viewModel.isSearching }
 
-                FloatingActionButton(onClick = {
-                navController.navigate("new_model")
-                //                    when (viewState.selectedCategory) {new_model
-                //                        Category.FromText -> navController.navigate("chat_screen")
-                //                        Category.FromImage -> navController.navigate("image_uploading")
-                //                    }
-
-                }) {
+    Scaffold(snackbarHost = {
+        SnackbarHost(hostState = snackbarHostState)
+    }, bottomBar = { BottomBar(navController = navController) }, floatingActionButton = {
+        if (!viewModel.selectionMode.value) {
+            FloatingActionButton(onClick = {
+                viewModel.insetModel()
+            }) {
                 Icon(Icons.Default.Add, contentDescription = "Add")
-                }*/
-            } else {
-                FloatingActionButton(onClick = {
-                    viewModel.deleteModels()
-                }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                }
+            }
+        } else {
+            FloatingActionButton(onClick = {
+                viewModel.deleteModels()
+            }) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
             }
         }
-    ) { padding ->
-        Surface(
-            color = MaterialTheme.colorScheme.background,
+    }) { padding ->
+        Surface(color = MaterialTheme.colorScheme.background,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .clickable {
                     viewModel.deactivateSelectionMode()
-                }
-        ) {
+                }) {
             Column {
                 CategoryTabs(
                     categories = viewState.categories,
                     selectedCategory = viewState.selectedCategory,
                     onCategorySelected = viewModel::onCategorySelected,
                 )
+                Spacer(modifier = Modifier.height(20.dp))
                 when (viewState.selectedCategory) {
                     Category.FromText -> {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        SearchBar(
-                            hint = "Search...",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(10.dp)
-                        ) {
-                            // viewModel.searchPokemonList(it)
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        ModelsFromTextList(navController = navController, viewModel = viewModel)
-                    }
-
-                    Category.FromImage -> {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_blur),
-                            contentDescription = "Model",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(CenterHorizontally)
+                        ModelsListContent(
+                            navController = navController,
+                            modelsListState = textModelsListState,
+                            isFromImage = false,
+                            loadError = loadError,
+                            isLoading = isLoading,
+                            //   isSearching = isSearching,
+                            viewModel = viewModel,
+                            onSearch = viewModel::onSearch
                         )
-                        SearchBar(
-                            hint = "Search in models from image...",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(10.dp)
-                        ) {
-                            // viewModel.searchPokemonList(it)
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        ModelsFromImageList(navController = navController, viewModel = viewModel)
+                    }
+                    Category.FromImage -> {
+                        ModelsListContent(
+                            navController = navController,
+                            modelsListState = imageModelsListState,
+                            isFromImage = true,
+                            loadError = loadError,
+                            isLoading = isLoading,
+                            // isSearching = isSearching,
+                            viewModel = viewModel,
+                            onSearch = viewModel::onSearch
+                        )
                     }
                 }
             }
@@ -211,6 +164,36 @@ fun ModelsListScreen(
 }
 
 @Composable
+fun ModelsListContent(
+    navController: NavController,
+    modelsListState: List<ModelEntry>,
+    isFromImage: Boolean,
+    loadError: String,
+    isLoading: Boolean,
+    // isSearching: Boolean,
+    viewModel: ModelsListViewModel,
+    onSearch: (String, Boolean) -> Unit
+) {
+    SearchBar(
+        hint = "Search...", modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+    ) {
+        onSearch(it, isFromImage)
+    }
+    Spacer(modifier = Modifier.height(12.dp))
+    ModelsFromList(
+        navController = navController,
+        modelListState = modelsListState,
+        loadError = loadError,
+        isLoading = isLoading,
+        //  isSearching = isSearching,
+        viewModel = viewModel
+    )
+}
+
+
+/*@Composable
 fun ModelsFromTextList(
     navController: NavController,
     viewModel: ModelsListViewModel,
@@ -241,7 +224,7 @@ fun ModelsFromTextList(
         NoDataSection("It appears you have no model...") { navController.navigate("home_screen") }
     }
     Box(
-        contentAlignment = Alignment.Center,
+        contentAlignment = Center,
         modifier = Modifier.fillMaxSize()
     ) {
         if (isLoading) {
@@ -253,18 +236,17 @@ fun ModelsFromTextList(
             }
         }
     }
-}
+}*/
 
 @Composable
-fun ModelsFromImageList(
-    navController: NavController, viewModel: ModelsListViewModel,
+fun ModelsFromList(
+    navController: NavController,
+    modelListState: List<ModelEntry>,
+    loadError: String,
+    isLoading: Boolean,
+    //  isSearching: Boolean,
+    viewModel: ModelsListViewModel
 ) {
-    //val modelsList by remember { viewModel.modelsList }
-    val modelListState by viewModel.imageModelsListState.collectAsState()
-    val loadError by remember { viewModel.loadError }
-    val isLoading by remember { viewModel.isLoading }
-    val isSearching by remember { viewModel.isSearching }
-
     if (modelListState.isNotEmpty()) {
         LazyColumn(
             contentPadding = PaddingValues(16.dp)
@@ -286,11 +268,13 @@ fun ModelsFromImageList(
             }
         }
     } else {
-        NoDataSection("It appears you have no image model...") { navController.navigate("home_screen") }
+        NoDataSection(
+            error = "It appears you have no image model...",
+            modifier = Modifier.fillMaxSize(),
+        ) { navController.navigate("home_screen") }
     }
     Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()
     ) {
         if (isLoading) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -316,8 +300,7 @@ fun ModelsInRow(
             ModelInRowEntry(
                 entry = entries[rowIndex * 2],
                 navController = navController,
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.weight(1f),
                 viewModel = viewModel,
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -345,14 +328,25 @@ fun ModelInRowEntry(
     viewModel: ModelsListViewModel,
 ) {
     val defaultDominantColor = MaterialTheme.colorScheme.surface
-    val deletedDominantColor = MaterialTheme.colorScheme.error
+    val deletedDominantColor = Color.LightGray
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
     val selectedIds by remember { viewModel.selectedIds }
-    val selectedMode  by remember { viewModel.selectionMode }
+    val selectedMode by remember { viewModel.selectionMode }
 
     val interactionSource = remember { MutableInteractionSource() }
+
+    val border = if (selectedIds.contains(entry.meshyId) && selectedMode) {
+        BorderStroke(
+            3.dp, Color.Black
+        )
+    } else {
+        BorderStroke(
+            0.dp,
+            Color.White,
+        )
+    }
 
     Box(
         contentAlignment = Center,
@@ -369,6 +363,7 @@ fun ModelInRowEntry(
                     )
                 )
             )
+            .border(border, RoundedCornerShape(10.dp))
             .combinedClickable(
                 onClick = {
                     if (!viewModel.selectionMode.value) {
@@ -385,38 +380,14 @@ fun ModelInRowEntry(
                     Log.d("onLongClick", "${entry.meshyId} - ${entry.modelDescription}")
                     viewModel.selectModel(entry)
                     Log.d("onLongClick", viewModel.selectedIds.value.toString())
-//                    else
-//                        Modifier.toggleable(
-//                            value = selected,
-//                            interactionSource = interactionSource,
-//                            indication = null, // do not show a ripple
-//                            onValueChange = {
-//                                if (it) {
-//                                    selectedIds.value += entry.meshyId
-//                                } else {
-//                                    selectedIds.value -= entry.meshyId
-//                                }
-//                            }
-//                        )
                 },
             )
 
     ) {
-//        if (dialogRes.value != null && dialogRes.value!!) {
-//            navController.navigate(
-//                "ar_screen/${entry.id}"
-//            )
-//        } else if (dialogRes.value != null) {
-//            navController.navigate(
-//                "threed_screen/${entry.id}"
-//            )
-//        }
         Column {// SubcomposeAsyncImage
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(entry.modelImageUrl)
-                    .crossfade(true)
-                    .build(),
+                model = ImageRequest.Builder(LocalContext.current).data(entry.modelImageUrl)
+                    .crossfade(true).build(),
                 contentDescription = entry.modelDescription,
                 onSuccess = {
                     viewModel.calcDominantColor(it.result.drawable) { color ->
@@ -436,21 +407,6 @@ fun ModelInRowEntry(
             )
         }
     }
-//    if (inSelectionMode) {
-//        if (selected) {
-//            val bgColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-//            Icon(
-//                Icons.Filled.CheckCircle,
-//                tint = MaterialTheme.colorScheme.primary,
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .padding(4.dp)
-//                    .border(2.dp, bgColor, CircleShape)
-//                    .clip(CircleShape)
-//                    .background(bgColor)
-//            )
-//        }
-//    }
 }
 
 @Composable
@@ -462,8 +418,7 @@ fun RetrySection(
         Text(error, color = Color.Red, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = { onRetry() },
-            modifier = Modifier.align(CenterHorizontally)
+            onClick = { onRetry() }, modifier = Modifier.align(CenterHorizontally)
         ) {
             Text(text = "Retry")
         }
@@ -473,19 +428,20 @@ fun RetrySection(
 @Composable
 fun NoDataSection(
     error: String,
+    modifier: Modifier = Modifier,
     onGoHome: () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = CenterHorizontally
+        horizontalAlignment = CenterHorizontally,
+        modifier = modifier
     ) {
         Text(error, color = Color.Red, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = { onGoHome() },
-            modifier = Modifier.align(CenterHorizontally)
+            onClick = { onGoHome() }, modifier = Modifier.align(CenterHorizontally)
         ) {
-            Text(text = "Request model")
+            Text(text = "Request model") // todo go to chat
         }
     }
 }
@@ -517,33 +473,26 @@ private fun CategoryTabs(
         )
     }
     TabRow(
-        selectedTabIndex = selectedIndex,
-        indicator = indicator,
-        modifier = modifier
+        selectedTabIndex = selectedIndex, indicator = indicator, modifier = modifier
     ) {
         categories.forEachIndexed { index, category ->
-            Tab(
-                selected = index == selectedIndex,
+            Tab(selected = index == selectedIndex,
                 onClick = { onCategorySelected(category) },
                 text = {
                     Text(
                         text = when (category) {
                             Category.FromText -> "Models from text"
                             Category.FromImage -> "Models from image"
-                        },
-                        style = MaterialTheme.typography.bodySmall
+                        }, style = MaterialTheme.typography.bodySmall
                     )
-                }
-            )
+                })
         }
     }
 }
 
 @Composable
 fun SearchBar(
-    modifier: Modifier = Modifier,
-    hint: String = "",
-    onSearch: (String) -> Unit = {},
+    modifier: Modifier = Modifier, hint: String = "", onSearch: (String) -> Unit = {}
 ) {
     var text by remember {
         mutableStateOf("")
@@ -553,29 +502,27 @@ fun SearchBar(
     }
 
     Box(modifier = modifier) {
-        BasicTextField(
-            value = text,
+        BasicTextField(value = text,
             onValueChange = {
                 text = it
                 onSearch(it)
             },
             maxLines = 1,
             singleLine = true,
+            textStyle = TextStyle(color = Color.Black),
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(5.dp, CircleShape)
                 .background(Color.White, CircleShape)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
                 .onFocusChanged {
-                    // isHintDisplayed = it !=   && text.isEmpty()
-                }
-        )
+                    isHintDisplayed = !it.isFocused && text.isEmpty()
+                })
         if (isHintDisplayed) {
             Text(
                 text = hint,
                 color = Color.LightGray,
-                modifier = Modifier
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
             )
         }
     }
