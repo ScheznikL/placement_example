@@ -98,7 +98,7 @@ val appModule = module {
         HomeViewModel(get(), get())
     }
     viewModel {
-        UserProfileViewModel(get())
+        UserProfileViewModel(get(),get(),get())
     }
     viewModel {
         RegistrationViewModel(get())

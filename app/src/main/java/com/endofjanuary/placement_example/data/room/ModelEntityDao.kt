@@ -37,4 +37,6 @@ interface ModelEntityDao {
 
     @Delete
     fun delete(model: ModelEntity)
+    @Query("DELETE FROM models")
+    fun deleteAll()
 }

@@ -33,7 +33,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.endofjanuary.placement_example.MainViewModel
-import com.endofjanuary.placement_example.chat.CancelDialog
 import com.endofjanuary.placement_example.chat.LottieDotsFlashing
 import com.endofjanuary.placement_example.repo.DownloaderRepoImpl
 import com.endofjanuary.placement_example.utils.BottomBar
@@ -245,7 +244,7 @@ fun ThreeDMain(
                         cameraNode = cameraNode,
                         childNodes = currentNodes.toList(),
                         environment = environmentLoader.createHDREnvironment(
-                            assetFileLocation = "environments/sky_2k.hdr" //todo user choice ?*
+                            assetFileLocation = "environments/neutral.hdr" //todo sky_2k
                         )!!,
                         onViewUpdated = {
                             if (currentNodes.toList().size >= 2) {
@@ -257,7 +256,6 @@ fun ThreeDMain(
 //                            cameraNode.lookAt(centerNode)
 //                        },
                     )
-
                     /**
                      *     Button(
                      *                         modifier = Modifier.align(Alignment.TopStart),
@@ -370,3 +368,4 @@ fun ThreeDMain(
         onDownload = viewModel::onDownload
     )
 }
+

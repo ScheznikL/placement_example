@@ -98,8 +98,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("io.github.sceneview:sceneview:2.0.3")
-    implementation ("io.github.sceneview:arsceneview:2.0.3")
+    implementation("io.github.sceneview:sceneview:2.0.4")
+    implementation ("io.github.sceneview:arsceneview:2.0.4")
     implementation("com.google.ar:core:1.41.0")
     implementation("androidx.palette:palette-ktx:1.0.0")
 
@@ -152,17 +152,17 @@ dependencies {
     implementation ("io.coil-kt:coil:2.5.0")
     implementation ("com.google.accompanist:accompanist-coil:0.15.0")
 
-  //  implementation("io.insert-koin:koin-annotations:$koin_ksp_version")
-   // com.google.devtools.ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version")
+    //  implementation("io.insert-koin:koin-annotations:$koin_ksp_version")
+    // com.google.devtools.ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version")
 
-  //  ksp("com.google.dagger:hilt-android-compiler:2.33-beta")
-  //  implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
+    //  ksp("com.google.dagger:hilt-android-compiler:2.33-beta")
+    //  implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
 //    ksp("androidx.hilt:hilt-compiler:1.0.0-beta01")
     val nav_version = "2.7.6"
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
-  //  implementation ('com.android.support:palette-v7:28.0.0')
+    //  implementation ('com.android.support:palette-v7:28.0.0')
 
     //room
     val room_version = "2.6.1"

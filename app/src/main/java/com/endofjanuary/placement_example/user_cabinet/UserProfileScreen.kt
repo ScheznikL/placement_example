@@ -1,5 +1,6 @@
 package com.endofjanuary.placement_example.user_cabinet
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -60,10 +61,13 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.endofjanuary.placement_example.chat.ErrorDialog
 import com.endofjanuary.placement_example.data.models.User
 import com.endofjanuary.placement_example.repo.SignInState
 import com.endofjanuary.placement_example.utils.BottomBar
+import com.endofjanuary.placement_example.utils.screens.DeleteDialog
 import org.koin.androidx.compose.getViewModel
+
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -76,31 +80,13 @@ fun UserProfileScreen(
 
     val viewState by viewModel.state.collectAsStateWithLifecycle()
 
-    /*
-        var displayNameInput by remember { mutableStateOf(viewModel.displayNameInput.value) }
-        var isAutoSaveModels by remember { mutableStateOf(currentUser?.autoSaveModel) }
-        var isAutoRefine by remember { mutableStateOf(currentUser?.autoRefineModel) }
-    */
-
-    /*
-        val isAutoSaveModels by viewModel.autoSaveModel.collectAsStateWithLifecycle()
-        val isAutoRefine by viewModel.autoRefineModel.collectAsStateWithLifecycle()
-    */
-
     val nameEditEnabled = mutableStateOf(false)
 
-    /*
-        val decorationText = mutableStateOf(
-            if (currentUser?.displayName?.trim()
-                    .isNullOrEmpty()
-            ) "Add name" else currentUser?.displayName.toString()
-        )
-    */
-    val decorationText = mutableStateOf(
+    var decorationText =
         if (viewState.displayName.trim()
                 .isEmpty()
         ) "Add name" else viewState.displayName
-    )
+
 
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
@@ -108,9 +94,20 @@ fun UserProfileScreen(
 
     var textInput by remember { mutableStateOf(viewState.displayName) }
 
+    val confirmOut = mutableStateOf(false)
+    val openSignOutDialog = mutableStateOf(false)
+    val openErrorDialog: MutableState<Boolean> = mutableStateOf(false)
+    val clearDataError by viewModel.clearDataError.collectAsStateWithLifecycle()
+
     LaunchedEffect(viewState.displayName) {
         if (viewState.displayName != textInput) {
             textInput = viewState.displayName
+        }
+    }
+    LaunchedEffect(clearDataError) {
+        Log.d("TAG", viewModel.clearDataError.value)
+        if (viewModel.clearDataError.value.isNotEmpty()) {
+         openErrorDialog.value = true
         }
     }
 
@@ -118,10 +115,7 @@ fun UserProfileScreen(
 
     Scaffold(bottomBar = { BottomBar(navController) }) { padding ->
         if (authState == SignInState.NOT_SIGNED_IN || currentUser == null) {
-            Text(text = "You logged out successfully")
-            Button(onClick = { navController.navigate("reg_screen") }) {
-                Text(text = "To Welcome Screen")
-            }
+            SignOutContent(navController)
         } else if (currentUser != null) {
             Column(
                 modifier = Modifier
@@ -178,9 +172,6 @@ fun UserProfileScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        // if (currentUser!!.displayName.isNullOrEmpty()) {
-
-
                         BasicTextField(
                             enabled = nameEditEnabled.value,
                             modifier = Modifier
@@ -204,28 +195,12 @@ fun UserProfileScreen(
                                 textAlign = TextAlign.Center,
                                 fontWeight = FontWeight.W500,
                             ),
-                            value = /*viewState.displayName.uppercase(),*/textInput.uppercase(),
+                            value = textInput.uppercase(),
                             onValueChange = {
                                 textInput = it
-                                //  displayNameInput = it
-                               // viewModel.onNameChange(it)
-                                decorationText.value = ""
+                                decorationText = ""
                             },
                             singleLine = true,
-                            /*               decorationBox = { innerTextField ->
-                                               Row(
-                                                   horizontalArrangement = Arrangement.Center,
-                                                   verticalAlignment = Alignment.CenterVertically,
-                                                   // modifier = Modifier.fillMaxWidth()
-                                               ) {
-                                                   Text(
-                                                       decorationText.value.uppercase(),
-                                                       fontWeight = FontWeight.W500,
-                                                       textAlign = TextAlign.Center
-                                                   )
-                                                   innerTextField()
-                                               }
-                                           },*/
                         )
                         IconButton(onClick = {
                             nameEditEnabled.value = !nameEditEnabled.value
@@ -315,7 +290,6 @@ fun UserProfileScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            //    .background(Color.LightGray, RoundedCornerShape(8.dp))
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -342,34 +316,29 @@ fun UserProfileScreen(
                             .wrapContentWidth()
                             .padding(26.dp)
                     ) {
-                        Button(
-                            onClick = {
-                                viewModel.onSinghOut()
-                            }, modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(text = "Sing Out")
-                        }
-                        if (currentUser?.isEmailVerified == false) {
-                            Button(
-                                onClick = {
-                                    viewModel.verifyEmail()
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(text = "verify Email")
-                            }
-                            if (authState == SignInState.VERIFY_FAILED) {
-                                Text(text = "You logged out successfully")
-                            } else if (authState == SignInState.VERIFYING_EMAIL) {
-                                Text(text = "Verifying email \r\n check your email box")
-                            }
-                        }
+                        EndSection(
+                            openSignOutDialog = openSignOutDialog,
+                            isEmailVerified = currentUser?.isEmailVerified!!,
+                            onVerifyEmail = viewModel::verifyEmail,
+                            authState = authState
+                        )
                     }
                 }
             }
         }
     }
 
+    DeleteDialog(
+        title = "Sing Out Request",
+        text = "Are you sure want to continue\r\nAll unsaved models will be lost",
+        openDialog = openSignOutDialog, confirm = confirmOut
+    ) {
+        viewModel.onSignOut()
+    }
+    ErrorDialog(
+        errorMessage = clearDataError,
+        openDialog = openErrorDialog
+    )
 }
 
 @Preview
@@ -431,7 +400,10 @@ fun UserProfilePreview() {
                         .border(
                             1.dp, Color.LightGray, RoundedCornerShape(8.dp)
                         )
-                        .background(Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .background(
+                            Color.LightGray.copy(alpha = 0.5f),
+                            RoundedCornerShape(8.dp)
+                        )
                         .padding(horizontal = 16.dp, vertical = 5.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -451,10 +423,13 @@ fun UserProfilePreview() {
                         .border(
                             1.dp, Color.LightGray, RoundedCornerShape(8.dp)
                         )
-                        .background(Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .background(
+                            Color.LightGray.copy(alpha = 0.5f),
+                            RoundedCornerShape(8.dp)
+                        )
                         .padding(19.dp)
                         .clickable {
-// TODO
+// TODO change password
                         },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -545,3 +520,5 @@ fun UserProfilePreview() {
         }
     }
 }
+
+

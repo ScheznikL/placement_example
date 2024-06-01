@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.register_screen
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,10 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.R
@@ -66,14 +68,18 @@ fun RegistrationScreen(
 
     val currentUser by viewModel.currentUser.collectAsState()
     val signInError by viewModel.signInError.collectAsStateWithLifecycle(initialValue = null)
+    //val signInError = ""
+
     val authState by viewModel.signInState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(currentUser) {
+    val headingText = if (register) "Sign Up" else "Sign In"
+
+/*    LaunchedEffect(currentUser) {
         Log.d("email stat", "Verified: ${currentUser?.isEmailVerified}")
-        if (authState == SignInState.AUTHORIZED /*&& currentUser?.isEmailVerified == true*/) {
+        if (authState == SignInState.AUTHORIZED *//*&& currentUser?.isEmailVerified == true*//*) {
             navController.navigate("home_screen")
         }
-    }
+    }*/
 
     Surface(
         modifier = modifier
@@ -87,6 +93,8 @@ fun RegistrationScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            HeadingTextComponent(heading = headingText)
+            Spacer(modifier = Modifier.height(20.dp))
             OutlinedTextField(
                 modifier = Modifier
                     .padding(5.dp),
@@ -226,17 +234,12 @@ fun RegistrationScreen(
             }
             when (authState) {
                 SignInState.AUTHORIZED -> {
-                    Toast.makeText(
-                        LocalContext.current,
-                        "Authentication is successful!",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                    //navController.navigate("home_screen")
+                    navController.navigate("home_screen")
                 }
 
                 SignInState.CREDENTIAL_ERROR -> Toast.makeText(
                     LocalContext.current,
-                    "Authentication failed.",
+                    "Authentication failed cause of credential error",
                     Toast.LENGTH_SHORT,
                 ).show()
 
@@ -270,4 +273,73 @@ fun RegistrationScreen(
 
     }
 
+}
+
+@Composable
+fun HeadingTextComponent(heading: String) {
+    Text(
+        text = heading,
+        modifier = Modifier.fillMaxWidth(),
+        fontSize = 39.sp,
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
+fun PasswordField(
+    hint: String,
+    modifier: Modifier = Modifier,
+    isConfirmPasswordError: Boolean,
+    confirmPassword: String,
+    viewModel: RegistrationViewModel,
+    register: Boolean,
+) {
+
+    var hidePassword by remember { mutableStateOf(true) } // todo hide one more
+    var passwordVisualTransformation by remember { mutableStateOf(VisualTransformation.None) }
+
+    passwordVisualTransformation = if (hidePassword) {
+        PasswordVisualTransformation()
+    } else {
+        VisualTransformation.None
+    }
+
+    OutlinedTextField(
+        modifier = modifier
+            .padding(5.dp),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password
+        ),
+        isError = isConfirmPasswordError,
+        value = confirmPassword,
+        onValueChange = {
+            /*viewModel.confirmPasswordValueState.value = it
+            viewModel.onTextValueChanged(register)*/
+        },
+        label = { Text(text = hint) },//conf pas vs entr pas
+        supportingText = {
+            if (isConfirmPasswordError)
+                Text(text = "Password doesn't match")
+        },
+        //   keyboardOptions =  KeyboardOptions(keyboardType = KeyboardType.Password),
+        singleLine = true,
+        visualTransformation = passwordVisualTransformation,
+        trailingIcon = {
+            IconButton(onClick = {
+                hidePassword = !hidePassword
+            }) {
+                if (hidePassword)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_eye_filled),
+                        contentDescription = "show password"
+                    )
+                else
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_eye_outlined),
+                        contentDescription = "hide password"
+                    )
+            }
+        }
+    )
 }

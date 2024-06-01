@@ -26,25 +26,25 @@ class AuthenticationRepoImpl(
 
     private lateinit var userDoc: DocumentReference
     private lateinit var user: FirebaseUser
-    private lateinit var docStateListener: ListenerRegistration
+    private var docStateListener: ListenerRegistration? = null
 
 
     override val signInError = MutableStateFlow<String?>(null)
     override val signInState = MutableStateFlow(SignInState.NOT_SIGNED_IN)
 
 
-/*    override val currentUser: User?
-        get() = firebaseAuth.currentUser?.let {
-            Log.d("user", "${it.isEmailVerified}")
+    /*    override val currentUser: User?
+            get() = firebaseAuth.currentUser?.let {
+                Log.d("user", "${it.isEmailVerified}")
 
-            User(
-                email = it.email!!,
-                displayName = it.displayName,
-                profileUrl = it.photoUrl?.path,
-                phoneNumber = it.phoneNumber,
-                isEmailVerified = it.isEmailVerified
-            )
-        }*/
+                User(
+                    email = it.email!!,
+                    displayName = it.displayName,
+                    profileUrl = it.photoUrl?.path,
+                    phoneNumber = it.phoneNumber,
+                    isEmailVerified = it.isEmailVerified
+                )
+            }*/
 
     override fun currentUser(scope: CoroutineScope): Flow<User?> = callbackFlow {
         val authStateListener = FirebaseAuth.AuthStateListener { auth ->
@@ -136,7 +136,7 @@ class AuthenticationRepoImpl(
 
     override suspend fun signUp(email: String, password: String) {
         try {
-            firebaseAuth.createUserWithEmailAndPassword(email, password)
+            val result = firebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         // Sign in success, update UI with the signed-in user's information
@@ -150,6 +150,16 @@ class AuthenticationRepoImpl(
                 }.await()
 
             verifyEmail()
+            if (result.user != null) {
+                updateUserProfileData(
+                    userName = "",
+                    userAuthID = result.user!!.uid,
+                    refine = false,
+                    save = false
+                )
+            } else {
+                signInState.value = SignInState.NOT_SIGNED_IN
+            }
 //            val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
 //            user = authResult.user!!
 //            signInState.value = SignInState.VERIFYING_EMAIL
@@ -196,7 +206,7 @@ class AuthenticationRepoImpl(
 
     override suspend fun signOut() {
         signInState.value = SignInState.NOT_SIGNED_IN
-        docStateListener.remove()
+        docStateListener?.remove()
         firebaseAuth.signOut()
     }
 
@@ -240,8 +250,10 @@ class AuthenticationRepoImpl(
             )
             userDoc.set(user).addOnSuccessListener {
                 Log.d("FIRESTORE upd", "Document has been updated!")
+                signInState.value = SignInState.AUTHORIZED
                 def.complete(Resource.Success("Document has been saved!"))
             }.addOnFailureListener { e ->
+                signInState.value = SignInState.NOT_SIGNED_IN
                 Log.w("FIRESTORE upd", "Error adding document", e)
                 throw Exception(e.message)
             }
