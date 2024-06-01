@@ -17,6 +17,8 @@ import com.endofjanuary.placement_example.repo.AuthenticationRepo
 import com.endofjanuary.placement_example.repo.AuthenticationRepoImpl
 import com.endofjanuary.placement_example.repo.ChatRepo
 import com.endofjanuary.placement_example.repo.ChatRepoImpl
+import com.endofjanuary.placement_example.repo.DataStoreRepo
+import com.endofjanuary.placement_example.repo.DataStoreRepoImpl
 import com.endofjanuary.placement_example.repo.DownloaderRepo
 import com.endofjanuary.placement_example.repo.DownloaderRepoImpl
 import com.endofjanuary.placement_example.repo.FireStoreDBImpl
@@ -93,6 +95,9 @@ val appModule = module {
     }
     single<DownloaderRepo> {
         DownloaderRepoImpl(androidContext().applicationContext)
+    }
+    single<DataStoreRepo> {
+        DataStoreRepoImpl(get())
     }
     viewModel {
         HomeViewModel(get(), get())

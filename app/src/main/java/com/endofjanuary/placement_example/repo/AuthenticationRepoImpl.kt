@@ -3,6 +3,9 @@ package com.endofjanuary.placement_example.repo
 import android.util.Log
 import com.endofjanuary.placement_example.data.models.User
 import com.endofjanuary.placement_example.utils.Resource
+import com.google.firebase.auth.ActionCodeSettings
+import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -19,6 +22,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class AuthenticationRepoImpl(
     private val firebaseAuth: FirebaseAuth, private val fireStoreDB: FirebaseFirestore
@@ -136,26 +142,25 @@ class AuthenticationRepoImpl(
 
     override suspend fun signUp(email: String, password: String) {
         try {
-            val result = firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // Sign in success, update UI with the signed-in user's information
-                        Log.d("signUp", "createUserWithEmail:success")
-                        user = firebaseAuth.currentUser!!
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        Log.w("signUp", "createUserWithEmail:failure", task.exception)
-                        throw Exception(task.exception)
+            val result = suspendCoroutine<AuthResult> { continuation ->
+                firebaseAuth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Log.d("signUp", "createUserWithEmail:success")
+                            continuation.resume(task.result)
+                        } else {
+                            Log.w("signUp", "createUserWithEmail:failure", task.exception)
+                            continuation.resumeWithException(
+                                task.exception ?: Exception("Unknown error")
+                            )
+                        }
                     }
-                }.await()
+            }
 
             verifyEmail()
             if (result.user != null) {
                 updateUserProfileData(
-                    userName = "",
-                    userAuthID = result.user!!.uid,
-                    refine = false,
-                    save = false
+                    userName = "", userAuthID = result.user!!.uid, refine = false, save = false
                 )
             } else {
                 signInState.value = SignInState.NOT_SIGNED_IN
@@ -171,6 +176,9 @@ class AuthenticationRepoImpl(
                 is FirebaseAuthInvalidUserException -> signInState.value =
                     SignInState.USER_NOT_FOUND
 
+                is FirebaseAuthUserCollisionException -> signInState.value =
+                    SignInState.USER_COLLISION
+
                 is FirebaseAuthInvalidCredentialsException -> signInState.value =
                     SignInState.CREDENTIAL_ERROR
 
@@ -182,20 +190,20 @@ class AuthenticationRepoImpl(
 
     override suspend fun verifyEmail() {
         try {
-//            val actionCodeSettings = actionCodeSettings {
-//                url = "https://github.com/santansarah"
-//                handleCodeInApp
-//            }
-            firebaseAuth.currentUser!!.sendEmailVerification().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d("email verify", "Email sent.")
-                    signInState.value = SignInState.VERIFYING_EMAIL
-                    // signInState.value = SignInState.AUTHORIZED
-                } else {
-                    throw Exception(task.exception)
+            val result = suspendCoroutine { continuation ->
+                firebaseAuth.currentUser!!.sendEmailVerification().addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d("email verify", "Email sent.")
+                        signInState.value = SignInState.VERIFYING_EMAIL
+                        continuation.resume(task.result)
+                    } else {
+                        Log.w("email verify", "sendEmailVerification:failure", task.exception)
+                        continuation.resumeWithException(
+                            task.exception ?: Exception("Unknown error")
+                        )
+                    }
                 }
             }
-
             //  firebaseAuth.currentUser?.sendEmailVerification()?.await()
         } catch (e: Exception) {
             Log.e("email verify", "error: ${e.message}")
@@ -223,20 +231,6 @@ class AuthenticationRepoImpl(
         }
     }
 
-    private fun getUserProfileData() {
-        userDoc.addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                Log.w("FIRESTORE get User", "Listen failed.", e)
-                return@addSnapshotListener
-            }
-
-            if (snapshot != null && snapshot.exists()) {
-                Log.d("FIRESTORE get User", "Current data: ${snapshot.data to FireStoreUser}")
-            } else {
-                Log.d("FIRESTORE get User", "Current data: null")
-            }
-        }
-    }
 
     override suspend fun updateUserProfileData(
         userName: String, refine: Boolean, save: Boolean, userAuthID: String
@@ -263,6 +257,123 @@ class AuthenticationRepoImpl(
         }
     }
 
+    override suspend fun reAuthenticateUser(email: String, password: String) {
+        val user = firebaseAuth.currentUser!!
+
+        val credential = EmailAuthProvider.getCredential(email, password)
+
+        try {
+            user.reauthenticate(credential)
+                .addOnCompleteListener { Log.d("FIREBASE reauth", "User re-authenticated.") }
+            signInState.value = SignInState.REAUTHORIZED
+        } catch (e: Exception) {
+            signInError.value = e.message
+
+            when (e) {
+                is FirebaseAuthInvalidUserException -> signInState.value =
+                    SignInState.USER_NOT_FOUND
+
+                is FirebaseAuthInvalidCredentialsException -> signInState.value =
+                    SignInState.CREDENTIAL_ERROR
+
+                else -> signInState.value = SignInState.CREDENTIALS_RESET_ERR
+            }
+        }
+    }
+
+    override suspend fun changePassword(email: String, newPassword: String, oldPassword: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun verifyChangePassword(
+        email: String,
+        newPassword: String,
+        actionCode: String
+    ) {
+        try {
+            // Localize the UI to the selected language as determined by the lang parameter.
+            // Verify the password reset code is valid.
+            firebaseAuth.verifyPasswordResetCode(actionCode).await()
+            // Save the new password.
+            firebaseAuth.confirmPasswordReset(actionCode, newPassword).await()
+            // Password reset has been confirmed and new password updated.
+
+            // TODO: Display a link back to the app, or sign-in the user directly if the page belongs to the same domain as the app:
+//            signIn(email, newPassword)
+
+            // TODO: If a continue URL is available, display a button which on click redirects the user back to the app via continueUrl with additional state determined from that URL's parameters.
+
+        } catch (e: Exception) {
+            signInError.value = e.message
+            signInState.value = SignInState.CREDENTIALS_RESET_ERR
+        }
+
+    }
+
+    override suspend fun sendPasswordResetEmail(email: String) {
+        val actionCodeSettings = ActionCodeSettings.newBuilder()
+            .setAndroidPackageName("com.endofjanuary.placement_example", true, null)
+            .setHandleCodeInApp(true)
+            // The default for this is populated with the current android package name.
+            .build()
+        /*
+             var actionCodeSettingss = {
+                 // URL you want to redirect back to. The domain (www.example.com) for this
+                 // URL must be whitelisted in the Firebase Console.
+                 url: 'https://www.example.com/finishSignUp?cartId=1234',
+                 // This must be true.
+                 handleCodeInApp: true,
+                 iOS: {
+                     bundleId: 'com.example.ios'
+             },
+                 android: {
+                     packageName: 'com.example.android',
+                     installApp: true,
+                     minimumVersion: '12'
+             }
+             };*/
+
+        try {
+            suspendCoroutine<Unit> { continuation ->
+                firebaseAuth.sendPasswordResetEmail(email, actionCodeSettings)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            signInState.value = SignInState.CREDENTIALS_RESET_REQ
+                            Log.d("FIREBASE changePassword", "Email sent.")
+                        } else {
+                            Log.w("FIREBASE", "changePassword:failure", task.exception)
+                            continuation.resumeWithException(
+                                task.exception ?: Exception("Unknown error")
+                            )
+                        }
+                    }
+            }
+        } catch (e: Exception) {
+            signInState.value = SignInState.CREDENTIALS_RESET_ERR
+            signInError.value = e.message
+        }
+    }
+
+
+    override suspend fun askForChangePassword(
+        email: String,
+        oldPassword: String
+    ) {
+        //  try {
+
+        reAuthenticateUser(email, oldPassword)
+        if (signInState.value == SignInState.REAUTHORIZED) {
+            sendPasswordResetEmail(email)
+        } else {
+            return
+        }
+        //  firebaseAuth.currentUser?.sendEmailVerification()?.await()
+        /*    } catch (e: Exception) {
+                Log.e("email verify", "error: ${e.message}")
+                signInState.value = SignInState.CREDENTIALS_RESET_ERR
+                signInError.value = e.message
+            }*/
+    }
 }
 
 object FireStoreUser {

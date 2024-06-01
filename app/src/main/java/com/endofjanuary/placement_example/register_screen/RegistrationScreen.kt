@@ -18,7 +18,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,23 +59,22 @@ fun RegistrationScreen(
     var register by remember { mutableStateOf(false) }
 
     var passwordVisualTransformation by remember { mutableStateOf(VisualTransformation.None) }
-    if (hidePassword) {
-        passwordVisualTransformation = PasswordVisualTransformation()
+    passwordVisualTransformation = if (hidePassword) {
+        PasswordVisualTransformation()
     } else {
-        passwordVisualTransformation = VisualTransformation.None
+        VisualTransformation.None
     }
 
-    val currentUser by viewModel.currentUser.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState() // to initialize user
     val signInError by viewModel.signInError.collectAsStateWithLifecycle(initialValue = null)
-    //val signInError = ""
 
     val authState by viewModel.signInState.collectAsStateWithLifecycle()
 
     val headingText = if (register) "Sign Up" else "Sign In"
 
-/*    LaunchedEffect(currentUser) {
-        Log.d("email stat", "Verified: ${currentUser?.isEmailVerified}")
-        if (authState == SignInState.AUTHORIZED *//*&& currentUser?.isEmailVerified == true*//*) {
+    /*    LaunchedEffect(currentUser) {
+            Log.d("email stat", "Verified: ${currentUser?.isEmailVerified}")
+            if (authState == SignInState.AUTHORIZED *//*&& currentUser?.isEmailVerified == true*//*) {
             navController.navigate("home_screen")
         }
     }*/
@@ -102,7 +100,7 @@ fun RegistrationScreen(
                 value = email,
                 onValueChange = {
                     viewModel.emailValueState.value = it
-                    viewModel.onTextValueChanged(register)
+                    viewModel.onEmailValueChanged()
                 },
                 label = { Text(text = "Enter email") },
                 supportingText = {
@@ -121,7 +119,7 @@ fun RegistrationScreen(
                 value = password,
                 onValueChange = {
                     viewModel.passwordValueState.value = it
-                    viewModel.onTextValueChanged(register)
+                    viewModel.onPasswordValueChanged()
                 },
                 supportingText = {
                     if (isPasswordError)
@@ -160,7 +158,7 @@ fun RegistrationScreen(
                     value = confirmPassword,
                     onValueChange = {
                         viewModel.confirmPasswordValueState.value = it
-                        viewModel.onTextValueChanged(register)
+                        viewModel.onConfirmPasswordChanged()
                     },
                     label = { Text(text = "Confirm password") },
                     supportingText = {
@@ -223,7 +221,7 @@ fun RegistrationScreen(
             }
 
             val context = LocalContext.current
-            LaunchedEffect(signInError) {
+/*            LaunchedEffect(signInError) {
                 if (signInError != null) {
                     Toast.makeText(
                         context,
@@ -231,39 +229,44 @@ fun RegistrationScreen(
                         Toast.LENGTH_LONG,
                     ).show()
                 }
-            }
+            }*/
             when (authState) {
                 SignInState.AUTHORIZED -> {
                     navController.navigate("home_screen")
                 }
 
-                SignInState.CREDENTIAL_ERROR -> Toast.makeText(
-                    LocalContext.current,
-                    "Authentication failed cause of credential error",
+                SignInState.CREDENTIAL_ERROR -> Toast.makeText( // todo scaffold & snackbar
+                    context,
+                    "Authentication failed cause of credential error."+
+                            if (!signInError.isNullOrEmpty()) "Details: $signInError" else "",
                     Toast.LENGTH_SHORT,
                 ).show()
 
                 SignInState.USER_NOT_FOUND -> Toast.makeText(
-                    LocalContext.current,
-                    "No such user exist",
+                    context,
+                    "No such user exist" +
+                            if (!signInError.isNullOrEmpty()) "\r\nDetails: $signInError" else "",
                     Toast.LENGTH_SHORT,
                 ).show()
 
                 SignInState.VERIFY_FAILED -> Toast.makeText(
-                    LocalContext.current,
-                    "Email verification failed :(",
+                   context,
+                    "Email verification failed :("+
+                            if (!signInError.isNullOrEmpty()) "\r\nDetails: $signInError" else "",
                     Toast.LENGTH_SHORT,
                 ).show()
 
                 SignInState.VERIFYING_EMAIL -> Toast.makeText(
-                    LocalContext.current,
+                    context,
                     "Verification email was sent",
                     Toast.LENGTH_SHORT,
                 ).show()
 
                 SignInState.USER_COLLISION -> Toast.makeText(
-                    LocalContext.current,
-                    "$email already exist",
+                    context,
+                    "$email already exist"+
+                            if (!signInError.isNullOrEmpty()) "\r\nDetails: $signInError" else "",
+
                     Toast.LENGTH_SHORT,
                 ).show()
 

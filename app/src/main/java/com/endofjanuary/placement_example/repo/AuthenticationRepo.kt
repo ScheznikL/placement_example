@@ -22,6 +22,14 @@ interface AuthenticationRepo {
         save: Boolean,
         userAuthID: String,
     ): Resource<String>
+
+    suspend fun reAuthenticateUser(email: String, password: String)
+    suspend fun changePassword(email: String, newPassword: String, oldPassword: String)
+
+    suspend fun verifyChangePassword(email: String, newPassword: String, actionCode: String)
+
+    suspend fun sendPasswordResetEmail(email: String)
+    suspend fun askForChangePassword(email: String, oldPassword: String)
 }
 
 enum class SignInState {
@@ -30,7 +38,10 @@ enum class SignInState {
     CREDENTIAL_ERROR,
     USER_NOT_FOUND,
     USER_COLLISION,
+    CREDENTIALS_RESET_REQ,
+    CREDENTIALS_RESET_ERR,
     CREDENTIALS_RESET,
+    REAUTHORIZED,
     VERIFY_FAILED,
     VERIFYING_EMAIL,
 }

@@ -46,31 +46,28 @@ class RegistrationViewModel(
     private val passwordPattern =
         Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$")
 
-    fun onTextValueChanged(register: Boolean) { // TODO split password and email
+    fun onPasswordValueChanged() {
         isPasswordError.value =
             !passwordPattern.matches(passwordValueState.value) || passwordValueState.value.isBlank()
-        isEmailError.value = !Patterns.EMAIL_ADDRESS.matcher(emailValueState.value)
-            .matches() || emailValueState.value.isBlank()
-
-        if (register) {
-            isConfirmPasswordError.value =
-                confirmPasswordValueState.value != passwordValueState.value
-        }
     }
 
-//    private fun onVerifyEmail() {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            authenticationRepo.verifyEmail()
-//        }
-//    }
+    fun onEmailValueChanged() {
+        isEmailError.value = !Patterns.EMAIL_ADDRESS.matcher(emailValueState.value)
+            .matches() || emailValueState.value.isBlank()
+    }
+
+    fun onConfirmPasswordChanged() {
+        isConfirmPasswordError.value =
+            confirmPasswordValueState.value != passwordValueState.value
+    }
 
     private fun validateSignIn(): Boolean { //todo
         return Patterns.EMAIL_ADDRESS.matcher(emailValueState.value)
             .matches() && passwordPattern.matches(
             passwordValueState.value
         )
-
     }
+
 }
 
 
