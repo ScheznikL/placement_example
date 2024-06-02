@@ -21,6 +21,8 @@ class UserProfileViewModel(
 ) : ViewModel() {
 
     val signInState = authenticationRepo.signInState
+    val authError = authenticationRepo.signInError
+
     val currentUser = authenticationRepo.currentUser(viewModelScope)
 
     private val _clearDataError = modelRoomRepo.clearModelsTableError
@@ -41,6 +43,20 @@ class UserProfileViewModel(
         val autoRefineModel = MutableStateFlow<Boolean?>(false)*/
 
     val error = mutableStateOf("")
+
+    val isEmailError = mutableStateOf(false)
+    val isPasswordError = mutableStateOf(false)
+    val isNewPasswordError = mutableStateOf(false)
+    val isConfirmPasswordError = mutableStateOf(false)
+
+
+    private val passwordPattern =
+        Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$")
+
+    var emailValueState = mutableStateOf("")
+    var passwordValueState = mutableStateOf("")
+    var newPasswordValueState = mutableStateOf("")
+    var confirmNewPasswordValueState = mutableStateOf("")
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -73,10 +89,11 @@ class UserProfileViewModel(
             }
         }
     }
-/*
+
+    /*
 
 
-* */
+    * */
     fun onSignOut() {
         viewModelScope.launch(Dispatchers.IO) {
             modelRoomRepo.deleteAll()
@@ -91,33 +108,30 @@ class UserProfileViewModel(
             authenticationRepo.signOut()
         }
     }
+  fun onTempSignOut() {
+        viewModelScope.launch(Dispatchers.IO) {
+            authenticationRepo.signOut()
+        }
+    }
 
     fun verifyEmail() {
         viewModelScope.launch { authenticationRepo.verifyEmail() }
     }
-
-
-    private fun changePassword(email: String, newPassword: String, oldPassword: String) {
+    fun askForChangePassword() {
         viewModelScope.launch(Dispatchers.IO) {
-            authenticationRepo.askForChangePassword(
-                email,
-                oldPassword
+            authenticationRepo.forChangePassword(
+                _state.value.email,
+                passwordValueState.value
             )
         }
     }
 
-    fun updateUserData(refine: Boolean = false, save: Boolean = false) {
+    fun updateUserData() {
         viewModelScope.launch(Dispatchers.IO) {
-            //currentUser.collectLatest {
             val result = authenticationRepo.updateUserProfileData(
-                //userName = displayNameInput.value ?: "",
                 userName = _state.value.displayName.lowercase().replaceFirstChar(Char::titlecase),
                 save = _state.value.autoSaveModel,
                 refine = _state.value.autoRefineModel,
-                /*save = autoSaveModel.value!!,
-                refine = autoRefineModel.value!!,*/
-                /*     save = save,
-                     refine = refine,*/
                 userAuthID = _state.value.id,
             )
             when (result) {
@@ -127,8 +141,6 @@ class UserProfileViewModel(
 
                 else -> {}
             }
-            // }
-
         }
     }
 
@@ -154,6 +166,11 @@ class UserProfileViewModel(
             displayName = name
         )
         //  updateUserData()
+    }
+    fun onPasswordValueChanged(value: String) {
+        passwordValueState.value = value
+        isPasswordError.value =
+            !passwordPattern.matches(value) || value.isBlank()
     }
 }
 

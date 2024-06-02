@@ -3,7 +3,6 @@ package com.endofjanuary.placement_example.repo
 import android.util.Log
 import com.endofjanuary.placement_example.data.models.User
 import com.endofjanuary.placement_example.utils.Resource
-import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -263,10 +262,28 @@ class AuthenticationRepoImpl(
         val credential = EmailAuthProvider.getCredential(email, password)
 
         try {
-            user.reauthenticate(credential)
-                .addOnCompleteListener { Log.d("FIREBASE reauth", "User re-authenticated.") }
-            signInState.value = SignInState.REAUTHORIZED
+            suspendCoroutine<Unit> { continuation ->
+                user.reauthenticate(credential)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Log.d(
+                                "FIREBASE reauth",
+                                "User re-authenticated. Pas:$password"
+                            )
+                            signInState.value = SignInState.REAUTHORIZED
+                            continuation.resume(Unit)
+
+                        } else {
+                            continuation.resumeWithException(
+                                task.exception ?: Exception("Unknown error")
+                            )
+                        }
+                    }
+            }
+            if (signInState.value == SignInState.REAUTHORIZED)
+                sendPasswordResetEmail(email)
         } catch (e: Exception) {
+            Log.d("FIRESTORE reauth ex", e.message.toString())
             signInError.value = e.message
 
             when (e) {
@@ -281,61 +298,10 @@ class AuthenticationRepoImpl(
         }
     }
 
-    override suspend fun changePassword(email: String, newPassword: String, oldPassword: String) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun verifyChangePassword(
-        email: String,
-        newPassword: String,
-        actionCode: String
-    ) {
-        try {
-            // Localize the UI to the selected language as determined by the lang parameter.
-            // Verify the password reset code is valid.
-            firebaseAuth.verifyPasswordResetCode(actionCode).await()
-            // Save the new password.
-            firebaseAuth.confirmPasswordReset(actionCode, newPassword).await()
-            // Password reset has been confirmed and new password updated.
-
-            // TODO: Display a link back to the app, or sign-in the user directly if the page belongs to the same domain as the app:
-//            signIn(email, newPassword)
-
-            // TODO: If a continue URL is available, display a button which on click redirects the user back to the app via continueUrl with additional state determined from that URL's parameters.
-
-        } catch (e: Exception) {
-            signInError.value = e.message
-            signInState.value = SignInState.CREDENTIALS_RESET_ERR
-        }
-
-    }
-
     override suspend fun sendPasswordResetEmail(email: String) {
-        val actionCodeSettings = ActionCodeSettings.newBuilder()
-            .setAndroidPackageName("com.endofjanuary.placement_example", true, null)
-            .setHandleCodeInApp(true)
-            // The default for this is populated with the current android package name.
-            .build()
-        /*
-             var actionCodeSettingss = {
-                 // URL you want to redirect back to. The domain (www.example.com) for this
-                 // URL must be whitelisted in the Firebase Console.
-                 url: 'https://www.example.com/finishSignUp?cartId=1234',
-                 // This must be true.
-                 handleCodeInApp: true,
-                 iOS: {
-                     bundleId: 'com.example.ios'
-             },
-                 android: {
-                     packageName: 'com.example.android',
-                     installApp: true,
-                     minimumVersion: '12'
-             }
-             };*/
-
         try {
             suspendCoroutine<Unit> { continuation ->
-                firebaseAuth.sendPasswordResetEmail(email, actionCodeSettings)
+                firebaseAuth.sendPasswordResetEmail(email)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             signInState.value = SignInState.CREDENTIALS_RESET_REQ
@@ -349,30 +315,23 @@ class AuthenticationRepoImpl(
                     }
             }
         } catch (e: Exception) {
-            signInState.value = SignInState.CREDENTIALS_RESET_ERR
+            Log.d("FIREBASE ex changePassword", e.message.toString())
             signInError.value = e.message
+            signInState.value = SignInState.CREDENTIALS_RESET_ERR
         }
     }
 
-
-    override suspend fun askForChangePassword(
+    override suspend fun forChangePassword(
         email: String,
         oldPassword: String
     ) {
-        //  try {
-
         reAuthenticateUser(email, oldPassword)
-        if (signInState.value == SignInState.REAUTHORIZED) {
+     /*   if (signInState.value == SignInState.REAUTHORIZED) {
             sendPasswordResetEmail(email)
         } else {
+            Log.w("FIREBASE forChangePassword", "else")
             return
-        }
-        //  firebaseAuth.currentUser?.sendEmailVerification()?.await()
-        /*    } catch (e: Exception) {
-                Log.e("email verify", "error: ${e.message}")
-                signInState.value = SignInState.CREDENTIALS_RESET_ERR
-                signInError.value = e.message
-            }*/
+        }*/
     }
 }
 

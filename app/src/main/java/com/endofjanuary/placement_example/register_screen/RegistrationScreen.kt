@@ -123,7 +123,7 @@ fun RegistrationScreen(
                 },
                 supportingText = {
                     if (isPasswordError)
-                        Text(text = "Password has to contain special characters and .. ") //todo password
+                        Text(text = "Password has to contain special characters and at least one big letter ") //todo password
                 },
                 label = { Text(text = "Enter password") },
                 singleLine = true,

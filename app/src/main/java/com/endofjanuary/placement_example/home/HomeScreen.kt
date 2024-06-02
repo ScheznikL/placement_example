@@ -80,18 +80,7 @@ fun HomeScreen(
                 BottomBar(navController)
             },
         ) { innerPadding ->
-            // Column{
-            /*   IconButton(
-                   onClick = { *//*VM_T.deleteModel() *//*},
-                    enabled = !viewState.lastModels.isNullOrEmpty()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "delete all last viewed"
-                    )
-                }*/
             val context = LocalContext.current
-
             HomeContent(
                 modifier = Modifier.padding(innerPadding),
                 navController = navController,
@@ -99,7 +88,6 @@ fun HomeScreen(
                 onClearLastModels = viewModel::clearLastModelPreview,
                 calcDominantColor = viewModel::calcDominantColor
             )
-            //}
         }
     }
 }
@@ -160,7 +148,7 @@ fun HomeContent(
                 .fillMaxWidth()
                 .padding(15.dp)
         ) {
-            Text(//
+            Text(
                 "Last Models:", style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
@@ -200,13 +188,14 @@ fun HomeContent(
             }
         } else {
             EmptyModelItem(
-                message = viewState.errorMessage ?: "You haven't viewed any model yet"
+                message = viewState.errorMessage ?: "You haven't viewed any model yet",
+                modifier = Modifier.size(190.dp)
             )
         }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 35.dp)
+                .padding(top = 15.dp)
         ) {
             Button(
                 onClick = {
@@ -225,7 +214,6 @@ fun HomeContent(
                 Text(text = "Model from Image")
             }
         }
-
     }
     UploadImageBottomSheet(
         navController = navController,

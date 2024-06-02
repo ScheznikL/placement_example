@@ -213,7 +213,9 @@ fun UploadImageContent(
                         //  alpha = 0.5f,
                         model = image,
                         contentDescription = null,
-                        modifier = Modifier.padding(end = 15.dp).clip(RoundedCornerShape(10.dp)),
+                        modifier = Modifier
+                            .padding(end = 15.dp)
+                            .clip(RoundedCornerShape(10.dp)),
                         contentScale = ContentScale.Crop
                     )
                 } else {
@@ -221,7 +223,9 @@ fun UploadImageContent(
                         //  alpha = 0.5f,
                         bitmap = photo!!.asImageBitmap(),
                         contentDescription = null,
-                        modifier = Modifier.padding(end = 15.dp).clip(RoundedCornerShape(10.dp)),
+                        modifier = Modifier
+                            .padding(end = 15.dp)
+                            .clip(RoundedCornerShape(10.dp)),
                         contentScale = ContentScale.Crop
                     )
                 }

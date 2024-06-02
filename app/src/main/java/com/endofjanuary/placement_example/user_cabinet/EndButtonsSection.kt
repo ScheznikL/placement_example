@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import com.endofjanuary.placement_example.repo.SignInState
 
 @Composable
-fun EndSection(
+fun EndButtonsSection(
     openSignOutDialog: MutableState<Boolean>,
     isEmailVerified: Boolean,
     onVerifyEmail: () -> Unit,

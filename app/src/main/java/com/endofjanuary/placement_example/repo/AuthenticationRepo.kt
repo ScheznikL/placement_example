@@ -22,14 +22,9 @@ interface AuthenticationRepo {
         save: Boolean,
         userAuthID: String,
     ): Resource<String>
-
     suspend fun reAuthenticateUser(email: String, password: String)
-    suspend fun changePassword(email: String, newPassword: String, oldPassword: String)
-
-    suspend fun verifyChangePassword(email: String, newPassword: String, actionCode: String)
-
     suspend fun sendPasswordResetEmail(email: String)
-    suspend fun askForChangePassword(email: String, oldPassword: String)
+    suspend fun forChangePassword(email: String, oldPassword: String)
 }
 
 enum class SignInState {

@@ -98,7 +98,6 @@ fun ChatScreenNew(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-
     Scaffold(
         topBar = {
             ChatTopBar(navController = navController, autoRefineEnabled = autoRefine)
