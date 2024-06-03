@@ -55,7 +55,7 @@ fun RegistrationScreen(
     val isEmailError by remember { viewModel.isEmailError }
     val isConfirmPasswordError by remember { viewModel.isConfirmPasswordError }
 
-    var hidePassword by remember { mutableStateOf(true) } // todo hide one more
+    var hidePassword by remember { mutableStateOf(true) }
     var register by remember { mutableStateOf(false) }
 
     var passwordVisualTransformation by remember { mutableStateOf(VisualTransformation.None) }
@@ -105,7 +105,7 @@ fun RegistrationScreen(
                 label = { Text(text = "Enter email") },
                 supportingText = {
                     if (isEmailError)
-                        Text(text = "Invalid Email") //todo password
+                        Text(text = "Invalid Email")
                 },
                 singleLine = true
             )
@@ -123,7 +123,7 @@ fun RegistrationScreen(
                 },
                 supportingText = {
                     if (isPasswordError)
-                        Text(text = "Password has to contain special characters and at least one big letter ") //todo password
+                        Text(text = "Password has to contain special characters, one big letter and be at least 8 characters.")
                 },
                 label = { Text(text = "Enter password") },
                 singleLine = true,
@@ -286,63 +286,5 @@ fun HeadingTextComponent(heading: String) {
         fontSize = 39.sp,
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Bold
-    )
-}
-
-@Composable
-fun PasswordField(
-    hint: String,
-    modifier: Modifier = Modifier,
-    isConfirmPasswordError: Boolean,
-    confirmPassword: String,
-    viewModel: RegistrationViewModel,
-    register: Boolean,
-) {
-
-    var hidePassword by remember { mutableStateOf(true) } // todo hide one more
-    var passwordVisualTransformation by remember { mutableStateOf(VisualTransformation.None) }
-
-    passwordVisualTransformation = if (hidePassword) {
-        PasswordVisualTransformation()
-    } else {
-        VisualTransformation.None
-    }
-
-    OutlinedTextField(
-        modifier = modifier
-            .padding(5.dp),
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Password
-        ),
-        isError = isConfirmPasswordError,
-        value = confirmPassword,
-        onValueChange = {
-            /*viewModel.confirmPasswordValueState.value = it
-            viewModel.onTextValueChanged(register)*/
-        },
-        label = { Text(text = hint) },//conf pas vs entr pas
-        supportingText = {
-            if (isConfirmPasswordError)
-                Text(text = "Password doesn't match")
-        },
-        //   keyboardOptions =  KeyboardOptions(keyboardType = KeyboardType.Password),
-        singleLine = true,
-        visualTransformation = passwordVisualTransformation,
-        trailingIcon = {
-            IconButton(onClick = {
-                hidePassword = !hidePassword
-            }) {
-                if (hidePassword)
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_eye_filled),
-                        contentDescription = "show password"
-                    )
-                else
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_eye_outlined),
-                        contentDescription = "hide password"
-                    )
-            }
-        }
     )
 }

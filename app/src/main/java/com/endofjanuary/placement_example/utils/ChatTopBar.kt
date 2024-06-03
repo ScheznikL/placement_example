@@ -31,10 +31,9 @@ fun ChatTopBar(navController: NavController, autoRefineEnabled: Boolean) {
             }
         },
         actions = {
-            if (autoRefineEnabled) {//Text(" Auto Refine mode enabled")
+            if (autoRefineEnabled) {
                 IconButton(onClick = {
                     navController.navigate("user_profile")
-                    // todo add explanation dilog
                 }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_awesome_filled),

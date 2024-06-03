@@ -61,12 +61,6 @@ class RegistrationViewModel(
             confirmPasswordValueState.value != passwordValueState.value
     }
 
-    private fun validateSignIn(): Boolean { //todo
-        return Patterns.EMAIL_ADDRESS.matcher(emailValueState.value)
-            .matches() && passwordPattern.matches(
-            passwordValueState.value
-        )
-    }
 
 }
 

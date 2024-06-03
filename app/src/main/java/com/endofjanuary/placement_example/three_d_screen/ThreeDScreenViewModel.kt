@@ -13,20 +13,17 @@ import com.endofjanuary.placement_example.repo.DownloaderRepo
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import com.google.android.filament.Engine
-import com.google.android.filament.gltfio.ResourceLoader
 import com.google.ar.core.Anchor
 import io.github.sceneview.ar.node.AnchorNode
 import io.github.sceneview.loaders.MaterialLoader
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.math.Position
-import io.github.sceneview.model.Model
 import io.github.sceneview.model.ModelInstance
 import io.github.sceneview.model.model
 import io.github.sceneview.node.CubeNode
 import io.github.sceneview.node.ModelNode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.nio.Buffer
 
 
 class ThreeDScreenViewModel(
@@ -67,14 +64,12 @@ class ThreeDScreenViewModel(
                 }
             }
         } catch (e: Exception) {
-            _loadedInstancesState.value =
-                Resource.Error(e.message.toString())
+            _loadedInstancesState.value = Resource.Error(e.message.toString())
         }
     }
 
     suspend fun loadModelRemote(
-        modelLoader: ModelLoader,
-        localId: Int
+        modelLoader: ModelLoader, localId: Int
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -96,8 +91,7 @@ class ThreeDScreenViewModel(
                         if (result != null) {
                             currentNodes = mutableStateListOf(
                                 ModelNode(
-                                    modelInstance = result,
-                                    scaleToUnits = 1.0f
+                                    modelInstance = result, scaleToUnits = 1.0f
                                 )
                             )
                             _loadedInstancesState.value = Resource.Success(result)
@@ -110,8 +104,7 @@ class ThreeDScreenViewModel(
                     else -> {}
                 }
             } catch (e: Exception) {
-                _loadedInstancesState.value =
-                    Resource.Error(e.message.toString())
+                _loadedInstancesState.value = Resource.Error(e.message.toString())
             }
         }
 
@@ -132,10 +125,10 @@ class ThreeDScreenViewModel(
                         modelDeleted.value = result
                     }
 
-                    else -> {} // TODO something
+                    else -> {}
                 }
             }
-        } catch (e: Exception) { // TODO are two try bad
+        } catch (e: Exception) {
             modelDeleted.value = Resource.Error(message = e.message.toString())
         }
     }
@@ -146,10 +139,7 @@ class ThreeDScreenViewModel(
     var currentNodes = mutableStateListOf<ModelNode>()
 
     fun loadModelFromPath(
-        modelLoader: ModelLoader,
-        modelPath: String,
-        modelImageUrl: String,
-        overwrite: Boolean
+        modelLoader: ModelLoader, modelPath: String, modelImageUrl: String, overwrite: Boolean
     ) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
@@ -163,23 +153,20 @@ class ThreeDScreenViewModel(
                     // _loadedInstancesState.value = Resource.Success(result)
                     //newNode.value =
                     if (overwrite) {
-                        currentNodes.removeLast() // TODO is it fine
+                        currentNodes.removeLast()
                         currentNodes += mutableStateListOf(
                             ModelNode(
-                                modelInstance = result,
-                                scaleToUnits = 1.0f
+                                modelInstance = result, scaleToUnits = 1.0f
                             )
                         )
                     } else {
-                        currentNodes +=
-                            ModelNode(
-                                modelInstance = result,
+                        currentNodes += ModelNode(
+                            modelInstance = result,
 //                        modelInstance = modelLoader.createModelInstance(
 //                            assetFileLocation = "models/damaged_helmet.glb"
 //                        ),
-                                centerOrigin = Position(1f, 0f, 0f),
-                                scaleToUnits = 1.0f
-                            )
+                            centerOrigin = Position(1f, 0f, 0f), scaleToUnits = 1.0f
+                        )
                     }
 
                     modelImgUrl.value = modelImageUrl
@@ -191,47 +178,10 @@ class ThreeDScreenViewModel(
             }
 
         } catch (e: Exception) {
-            _loadedInstancesState.value =
-                Resource.Error(e.message.toString())
+            _loadedInstancesState.value = Resource.Error(e.message.toString())
         }
     }
 
-    private fun loadResources(
-        model: Model,
-        resourceLoader: ResourceLoader,
-        resourceResolver: (String) -> Buffer?,
-        buf: Buffer?
-    ) {
-        for (uri in model.resourceUris) {
-            buf?.let {
-                viewModelScope.launch(Dispatchers.Main) {
-                    resourceLoader.addResourceData(uri, it)
-                }
-            }
-        }
-//        for (uri in model.resourceUris) {
-//            resourceResolver(uri)?.let { resourceLoader.addResourceData(uri, it) }
-//        }
-        //resourceLoader.loadResources(model)
-        viewModelScope.launch(Dispatchers.Main) { resourceLoader.loadResources(model) }
-//        resourceLoader.asyncBeginLoad(model)
-//        resourceLoader.evictResourceData()
-    }
-
-    //    private fun loadResource(uri: String, assetManager: AssetManager): Buffer {
-//        //TODO("Load your asset here (e.g. using Android's AssetManager API)")
-//        val buffer: InputStream?
-//        return try {
-//            buffer = assetManager.open(uri)
-//            val bytes = ByteArray(buffer.available())
-//            buffer.read(bytes)
-//            val byteB = ByteBuffer.wrap(bytes)
-//            byteB
-//        } catch (e: IOException) {
-//            e.printStackTrace()
-//            throw e
-//        }
-//    }
     fun createAnchorNode(
         engine: Engine,
         modelLoader: ModelLoader,
@@ -239,49 +189,12 @@ class ThreeDScreenViewModel(
         anchor: Anchor,
         modelInstances: ModelInstance,
     ): AnchorNode {
-
-//    Log.d("createAnchorNode", modelPath) // todo
-
         val anchorNode = AnchorNode(engine = engine, anchor = anchor)
         val modelNode = ModelNode(
-            modelInstance = modelInstances,
-            // Scale to fit in a 0.5 meters cube
-            scaleToUnits = 0.5f
+            modelInstance = modelInstances, scaleToUnits = 0.5f
         ).apply {
-            // Model Node needs to be editable for independent rotation from the anchor rotation
             isEditable = true
-            //todo true init
         }
-        /*
-                modelInstance = modelInstances.apply {
-                    //if (isEmpty()) {
-                    if (isNotEmpty()) {
-                        this.removeAt(0)
-                    }
-                    //this += loadedInstances!!
-
-                    this += _loadedInstancesState.value.data!!
-                    Log.d("createAnchorNode _loadedInstancesState added", _loadedInstancesState.value.data.toString())
-                    /* this += modelLoader.createInstancedModel(
-                         "models/model_v2_chair.glb",
-                         MainActivity.kMaxModelInstances
-                     )*/
-                    // var i = loadedInstances!!
-
-                    Log.d("createAnchorNode createInstancedModel", this[0].toString())
-                    // MainActivity.Companion.kMaxModelInstances
-        //                this += modelLoader.createInstancedModel(kModelFile, kMaxModelInstances)
-                    //  }
-                }.removeLast(),
-                //modelInstance = modelLoader.createInstancedModel(modelFile, 1)[0],
-                // Scale to fit in a 0.5 meters cube
-                scaleToUnits = 0.5f
-                ).apply {
-                    // Model Node needs to be editable for independent rotation from the anchor rotation
-                    isEditable = false
-                    //todo true init
-                }
-        */
 
         val boundingBoxNode = CubeNode(
             engine,

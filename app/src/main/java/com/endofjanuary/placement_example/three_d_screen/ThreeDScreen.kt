@@ -35,9 +35,9 @@ import coil.request.ImageRequest
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.chat.LottieDotsFlashing
 import com.endofjanuary.placement_example.repo.DownloaderRepoImpl
-import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.ThreeDScreenTopBar
+import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.screens.DoDownload
 import com.google.android.filament.gltfio.ResourceLoader
 import io.github.sceneview.Scene
@@ -227,7 +227,7 @@ fun ThreeDMain(
                         cameraNode = cameraNode,
                         childNodes = currentNodes.toList(),
                         environment = environmentLoader.createHDREnvironment(
-                            assetFileLocation = "environments/neutral.hdr" //todo sky_2k
+                            assetFileLocation = "environments/neutral.hdr"
                         )!!,
                         onViewUpdated = {
                             if (currentNodes.toList().size >= 2) {
