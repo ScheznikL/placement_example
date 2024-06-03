@@ -22,11 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -52,7 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.endofjanuary.placement_example.MainViewModel
-import com.endofjanuary.placement_example.utils.BottomBar
+import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.screens.DefaultTopAppBar
 import org.koin.androidx.compose.getViewModel
 
@@ -124,8 +120,6 @@ fun UploadImageScreen(
                         top = 15.dp + contentPadding.calculateTopPadding(),
                         bottom = 20.dp + contentPadding.calculateBottomPadding(),
                         start = 10.dp,
-                        //end = 10.dp,
-                        /*contentPadding.plus(PaddingValues(top = 15.dp))*/
                     ),
                     isActionEnabled = !isUploading && !isLoading,
                     image = image,
@@ -133,10 +127,8 @@ fun UploadImageScreen(
                     modelName = textInput,
                     onNameChange = { viewModel.inputValueState.value = it },
                     onProceedClick = {
-                        viewModel.getPresignedUrl(context) /*viewModel.getPresignedUrl(context)*/
+                        viewModel.getPresignedUrl(context)
                     },
-                    onRedo = { navController.popBackStack() },
-                    isRedoEnabled = !isUploading && !isLoading,
                     scrollState = scrollState
                 )
                 OnDataLoading(
@@ -150,8 +142,7 @@ fun UploadImageScreen(
             }
         }
 
-    }
-    /*   if (false) {
+    }/*   if (false) {
            Row(verticalAlignment = Alignment.Bottom) {
                Icon(
                    modifier = Modifier
@@ -193,8 +184,6 @@ fun UploadImageContent(
     modelName: String,
     onNameChange: (String) -> Unit,
     onProceedClick: () -> Unit,
-    onRedo: () -> Unit,
-    isRedoEnabled: Boolean,
     scrollState: ScrollState,
 ) {
 
@@ -205,33 +194,27 @@ fun UploadImageContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-
-        DismissPictureButton(
-            picture = {
-                if (image != null) {
-                    AsyncImage(
-                        //  alpha = 0.5f,
-                        model = image,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(end = 15.dp)
-                            .clip(RoundedCornerShape(10.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Image(
-                        //  alpha = 0.5f,
-                        bitmap = photo!!.asImageBitmap(),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(end = 15.dp)
-                            .clip(RoundedCornerShape(10.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            },
-            onClick = onRedo // TODO change
-        )
+        if (image != null) {
+            AsyncImage(
+                //  alpha = 0.5f,
+                model = image,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(end = 15.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Image(
+                //  alpha = 0.5f,
+                bitmap = photo!!.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(end = 15.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                contentScale = ContentScale.Crop
+            )
+        }
         Spacer(modifier = Modifier.height(5.dp))
         OutlinedTextField(
             modifier = Modifier
@@ -241,8 +224,7 @@ fun UploadImageContent(
             value = modelName,
             onValueChange = onNameChange,
             textStyle = TextStyle(
-                lineHeight = 1.5.em,
-                fontSize = 16.sp
+                lineHeight = 1.5.em, fontSize = 16.sp
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
@@ -257,8 +239,7 @@ fun UploadImageContent(
         Spacer(modifier = Modifier.height(35.dp))
         Column(
             horizontalAlignment = Alignment.End,
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             // .padding(horizontal = 15.dp),
         ) {
             Button(
@@ -267,15 +248,11 @@ fun UploadImageContent(
                 modifier = Modifier.size(width = 206.dp, height = 55.dp),
                 contentPadding = PaddingValues(8.dp),
                 shape = RoundedCornerShape(
-                    topStart = 43.dp,
-                    bottomStart = 43.dp,
-                    topEnd = 0.dp,
-                    bottomEnd = 0.dp
+                    topStart = 43.dp, bottomStart = 43.dp, topEnd = 0.dp, bottomEnd = 0.dp
                 )
             ) {
                 Text("Proceed")
-            }
-            /*      Spacer(modifier = Modifier.height(10.dp))
+            }/*      Spacer(modifier = Modifier.height(10.dp))
                   Button(
                       enabled = isRedoEnabled,
                       onClick = onRedo,
@@ -286,25 +263,5 @@ fun UploadImageContent(
                   }*/
         }
 
-    }
-}
-
-@Composable
-fun DismissPictureButton(
-    modifier: Modifier = Modifier,
-    picture: @Composable (() -> Unit),
-    onClick: () -> Unit
-) {
-    Box(contentAlignment = Alignment.TopEnd, modifier = modifier) {
-        picture()
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.padding(end = 15.dp)
-        ) {
-            Icon(
-                Icons.Default.Close,
-                contentDescription = "dismissImage"
-            )
-        }
     }
 }

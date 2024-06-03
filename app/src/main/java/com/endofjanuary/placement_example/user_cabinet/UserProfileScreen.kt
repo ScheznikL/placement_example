@@ -80,7 +80,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.endofjanuary.placement_example.chat.ErrorDialog
 import com.endofjanuary.placement_example.repo.SignInState
-import com.endofjanuary.placement_example.utils.BottomBar
+import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.screens.DeleteDialog
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.getViewModel

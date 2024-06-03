@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.three_d_screen
 
-import android.content.res.AssetManager
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -14,7 +13,6 @@ import com.endofjanuary.placement_example.repo.DownloaderRepo
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import com.google.android.filament.Engine
-import com.google.android.filament.gltfio.AssetLoader
 import com.google.android.filament.gltfio.ResourceLoader
 import com.google.ar.core.Anchor
 import io.github.sceneview.ar.node.AnchorNode
@@ -29,7 +27,6 @@ import io.github.sceneview.node.ModelNode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.nio.Buffer
-import java.nio.ByteBuffer
 
 
 class ThreeDScreenViewModel(
@@ -37,7 +34,6 @@ class ThreeDScreenViewModel(
     private val modelRoom: ModelsRepo,
     private val downloader: DownloaderRepo,
 ) : ViewModel() {
-
 
 
     private val _loadedInstancesState: MutableState<Resource<ModelInstance>> =
@@ -78,11 +74,10 @@ class ThreeDScreenViewModel(
 
     suspend fun loadModelRemote(
         modelLoader: ModelLoader,
-        //modelPath: String,
         localId: Int
     ) {
-        try {
-            viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
                 modelFromRoom.value = modelRoom.getModelById(localId)
                 when (modelFromRoom.value) {
                     is Resource.Success -> {
@@ -95,13 +90,9 @@ class ThreeDScreenViewModel(
                         }
 
                         modelImgUrl.value = modelFromRoom.value.data!!.modelImageUrl
-//                        val result1 = modelLoader.loadModel(
-//                            modelFromRoom.value.data.modelPath
-//                        )
                         val result = modelLoader.loadModelInstance(
                             modelFromRoom.value.data!!.modelPath
                         )
-                        //val temp = result1?.resourceUris
                         if (result != null) {
                             currentNodes = mutableStateListOf(
                                 ModelNode(
@@ -116,13 +107,14 @@ class ThreeDScreenViewModel(
                     }
 
                     is Resource.Error -> throw IllegalArgumentException(modelFromRoom.value.message)
-                    else -> {} //TODO something
+                    else -> {}
                 }
+            } catch (e: Exception) {
+                _loadedInstancesState.value =
+                    Resource.Error(e.message.toString())
             }
-        } catch (e: Exception) {
-            _loadedInstancesState.value =
-                Resource.Error(e.message.toString())
         }
+
     }
 
     fun deleteModel(
@@ -202,105 +194,6 @@ class ThreeDScreenViewModel(
             _loadedInstancesState.value =
                 Resource.Error(e.message.toString())
         }
-    }
-
-
-    private val models = mutableListOf<Model>()
-
-    fun loadModelLocal(
-        modelLoader: ModelLoader,
-        //engine: Engine,
-        assetLoader: AssetLoader,
-        assetManager: AssetManager,
-        resourceLoader: ResourceLoader,
-//        resourceResolver: (resourceFileName: String) -> String = {
-//            ModelLoader.getFolderPath(
-//                model.value.modelPath,
-//                it
-//            )
-//        }
-        resourceResolver: (resourceFileName: String) -> Buffer? = { null }
-    ) {
-        //  val materialProvider = UbershaderProvider(engine)
-
-        //val assetLoader = AssetLoader(engine, materialProvider, EntityManager.get())
-
-        try {
-            viewModelScope.launch(Dispatchers.IO) {
-                val result = modelRoom.getAllModels()
-                if (result.data != null) {
-
-                    val asset = result.data.last().modelInstance.let { buffer ->
-                        assetLoader.createAsset(ByteBuffer.wrap(buffer)).also { model ->
-                            models += model!!
-                            loadResources(
-                                model = model as Model,
-                                resourceResolver = { ByteBuffer.wrap(buffer) },
-                                resourceLoader = resourceLoader,
-                                buf = ByteBuffer.wrap(buffer)
-                            )
-                        }
-                    }
-
-                    //  val mod = assetLoader.createInstance(asset!!)
-                    val mod = asset!!.instance
-
-//                    val resBuf = ByteBuffer.wrap(result.data[1].modelInstance)
-//                    val rewound = resBuf.rewind()
-//                    val asset = assetLoader.createAsset(resBuf)?.instance //TODO
-                    // val instance = assetLoader.createInstance(asset!!)
-
-//                    val instance = asset.also { model ->
-//                        models += model
-//                        loadResources(model, resourceResolver)
-//                    }?.instance
-                    val temp = mod!!.model.engine.nativeObject
-                    try {
-                        //  val inst = modelLoader.createModel(buffer = rewound).instance
-                        _loadedInstancesState.value = Resource.Success(
-                            //  instance!!
-                            //inst
-                            mod!!
-                        )
-                    } catch (e: Exception) {
-                        _loadedInstancesState.value = Resource.Error(
-//                            "Empty instance"
-                            e.message.toString()
-                        )
-                    }
-//                    resBuf.let { buffer ->
-//                            arrayOfNulls<ModelInstance>(1).apply {
-//                                assetLoader.createInstancedAsset(buffer, this)!!.also { model ->
-//                                    models += model
-//                                    loadResourcesSuspended(model) { resourceFileName: String ->
-//                                        context.loadFileBuffer(resourceResolver(resourceFileName))
-//                                    }
-//                                    // Release model since it will not be re-instantiated
-////                model.releaseSourceData()
-//                                }
-//                            }.filterNotNull()
-//                        }
-//                    _loadedInstancesState.value = Resource.Success(
-//                        modelLoader.createInstancedModel(
-//                            buffer = resBuf,
-//                            count = 1
-//                        ).first()
-//                    )
-//
-//                    _loadedInstancesState.value =
-//                        Resource.Success(result.data.first().modelInstance)
-                } else {
-                    _loadedInstancesState.value = Resource.Error("Model data is empty")
-                }
-            }
-        } catch (e: Exception) {
-            _loadedInstancesState.value =
-                Resource.Error(e.message.toString())
-        }
-    }
-
-    fun loadInstanceNone() {
-        _loadedInstancesState.value = Resource.None()
     }
 
     private fun loadResources(

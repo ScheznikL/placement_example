@@ -218,7 +218,6 @@ fun SpecifyRefineOptions(
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoDownload(
     openDialog: MutableState<Boolean>,
@@ -281,3 +280,4 @@ fun DoDownload(
         })
     }
 }
+

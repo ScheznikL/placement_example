@@ -27,6 +27,7 @@ data class ModelEntity(
     val modelDescription: String,
     val isFromText: Boolean,
     val isRefine: Boolean,
+    val creationTime:Long,
 
     ) : Parcelable {
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -39,6 +40,7 @@ data class ModelEntity(
         parcel.readString()!!,
         parcel.readBoolean(),
         parcel.readBoolean(),
+        parcel.readLong()
     ) {
     }
 
@@ -52,6 +54,7 @@ data class ModelEntity(
         parcel.writeString(meshyId)
         parcel.writeBoolean(isFromText)
         parcel.writeBoolean(isRefine)
+        parcel.writeLong(creationTime)
     }
 
     override fun describeContents(): Int {

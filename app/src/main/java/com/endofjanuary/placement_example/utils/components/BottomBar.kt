@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.utils
+package com.endofjanuary.placement_example.utils.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

@@ -2,7 +2,6 @@ package com.endofjanuary.placement_example.home
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -59,11 +59,11 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.endofjanuary.placement_example.R
+import com.endofjanuary.placement_example.ui.theme.MeshyBlack
 import com.endofjanuary.placement_example.upload_image.UploadImageBottomSheet
-import com.endofjanuary.placement_example.utils.BottomBar
-import com.example.jetcaster.ui.home.HomeScreenModel
-import com.example.jetcaster.ui.home.HomeViewModel
-import com.example.jetcaster.ui.home.HomeViewState
+import com.endofjanuary.placement_example.utils.components.BottomBar
+import com.endofjanuary.placement_example.utils.components.ImageWithExpiredLabel
+import com.endofjanuary.placement_example.utils.screens.ModelExpiredDialog
 import org.koin.androidx.compose.getViewModel
 
 
@@ -86,7 +86,8 @@ fun HomeScreen(
                 navController = navController,
                 viewState = viewState,
                 onClearLastModels = viewModel::clearLastModelPreview,
-                calcDominantColor = viewModel::calcDominantColor
+                calcDominantColor = viewModel::calcDominantColor,
+                onDeleteExpired = viewModel::deleteModel
             )
         }
     }
@@ -98,7 +99,8 @@ fun HomeContent(
     navController: NavController,
     viewState: HomeViewState,
     onClearLastModels: (Context) -> Unit,
-    calcDominantColor: (drawable: Drawable, onFinish: (Color) -> Unit) -> Unit
+    calcDominantColor: (drawable: Drawable, onFinish: (Color) -> Unit) -> Unit,
+    onDeleteExpired: (String?) -> Unit
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
     val appBarColor = surfaceColor.copy(alpha = 0.87f)
@@ -110,8 +112,7 @@ fun HomeContent(
     val context = LocalContext.current
 
     LaunchedEffect(viewState.lastModels) {
-        if (!viewState.lastModels.isNullOrEmpty())
-            scrollState.scrollToItem(viewState.lastModels.size - 1)
+        if (!viewState.lastModels.isNullOrEmpty()) scrollState.scrollToItem(viewState.lastModels.size - 1)
     }
 
     LaunchedEffect(viewState.errorMessage) {
@@ -157,8 +158,7 @@ fun HomeContent(
             IconButton(
                 onClick = {
                     onClearLastModels(context)
-                },
-                enabled = !viewState.lastModels.isNullOrEmpty()
+                }, enabled = !viewState.lastModels.isNullOrEmpty()
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
@@ -168,8 +168,7 @@ fun HomeContent(
         }
         if (!viewState.lastModels.isNullOrEmpty()) {
             LazyRow(
-                reverseLayout = true,
-                state = scrollState
+                reverseLayout = true, state = scrollState
             ) {
                 items(viewState.lastModels.size) {
                     Box(
@@ -181,7 +180,10 @@ fun HomeContent(
                             modelItem = viewState.lastModels[it],
                             navController = navController,
                             calcDominantColor = calcDominantColor,
-                            index = it
+                            index = it,
+                            onDelete = {
+                                onDeleteExpired(viewState.lastModels[it].modelId)
+                            }
                         )
                     }
                 }
@@ -189,7 +191,10 @@ fun HomeContent(
         } else {
             EmptyModelItem(
                 message = viewState.errorMessage ?: "You haven't viewed any model yet",
-                modifier = Modifier.size(190.dp)
+                modifier = Modifier
+                    .padding(10.dp)
+                    .height(190.dp)
+                    .fillMaxWidth()
             )
         }
         Column(
@@ -200,16 +205,14 @@ fun HomeContent(
             Button(
                 onClick = {
                     navController.navigate("chat_screen")
-                },
-                modifier = Modifier.fillMaxWidth()
+                }, modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Begin chat to create unique model")
             }
             Button(
                 onClick = {
                     showBottomSheet.value = true
-                },
-                modifier = Modifier.fillMaxWidth()
+                }, modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Model from Image")
             }
@@ -228,8 +231,13 @@ fun ModelItem(
     modelItem: HomeScreenModel,
     navController: NavController,
     index: Int,
-    calcDominantColor: (drawable: Drawable, onFinish: (Color) -> Unit) -> Unit
+    calcDominantColor: (drawable: Drawable, onFinish: (Color) -> Unit) -> Unit,
+    onDelete: () -> Unit
 ) {
+    val openExpiredDialog = remember { mutableStateOf(false) }
+    val confirmDelete = remember { mutableStateOf(false) }
+
+
     val surfaceColor = MaterialTheme.colorScheme.surface
     var defaultDominantColor by remember {
         mutableStateOf(surfaceColor)
@@ -254,28 +262,14 @@ fun ModelItem(
                 )
             )
             .clickable {
-                if (modelItem.id != null)
+                if (modelItem.id != null && modelItem.isExpired != true) {
                     navController.navigate(
                         "transit_dialog/${modelItem.id}/${modelItem.modelId}"
                     )
-            }) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
-                .crossfade(true).build(), contentDescription = "last model", onSuccess = {
-                calcDominantColor(it.result.drawable) { color ->
-                    if (color != Color(0.09411765f, 0.09411765f, 0.09411765f, 1.0f)) {
-                        Log.d("Color is", "$color black is ${Color.Black}")
-                        dominantColor = color
-                    } else {
-                        dominantColor = color
-                        defaultDominantColor = Color(0.09411765f, 0.09411765f, 0.09411765f, 1.0f)
-                        textColor = Color.LightGray
-                    }
-                    Log.d("Color is", "$color black is ${Color.Black}")
+                } else {
+                    openExpiredDialog.value = true
                 }
-            }, contentScale = ContentScale.Crop, modifier = Modifier.size(190.dp)
-            //.align(Alignment.CenterHorizontally)
-        )
+            }) {
         Text(
             text = "$index ${modelItem.timeStep}", // todo get rid of indexes
             fontSize = 20.sp,
@@ -286,8 +280,55 @@ fun ModelItem(
             color = textColor
         )
 
+        if (modelItem.isExpired == false) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
+                    .crossfade(true).build(),
+                contentDescription = "last model",
+                onSuccess = {
+                    calcDominantColor(it.result.drawable) { color ->
+                        if (color != Color(0.09411765f, 0.09411765f, 0.09411765f, 1.0f)) {
+                            dominantColor = color
+                        } else {
+                            dominantColor = color
+                            defaultDominantColor =
+                                Color(0.09411765f, 0.09411765f, 0.09411765f, 1.0f)
+                            textColor = Color.LightGray
+                        }
+                    }
+                },
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(190.dp)
+            )
+        } else {
+            ImageWithExpiredLabel(
+                picture = {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
+                            .crossfade(true).build(),
+                        contentDescription = "last model",
+                        onSuccess = {
+                            calcDominantColor(it.result.drawable) { color ->
+                                if (color != MeshyBlack) {
+                                    dominantColor = color
+                                } else {
+                                    dominantColor = color
+                                    defaultDominantColor = MeshyBlack
+                                    textColor = Color.LightGray
+                                }
+                            }
+                        },
+                        contentScale = ContentScale.Crop,
+                        //modifier = Modifier.size(190.dp)
+                    )
+                })
+        }
     }
-
+    ModelExpiredDialog(
+        openDialog = openExpiredDialog,
+        confirm = confirmDelete,
+        onConfirm = onDelete
+    )
 }
 
 @Composable
@@ -296,8 +337,7 @@ fun EmptyModelItem(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
+        contentAlignment = Alignment.Center, modifier = modifier
             // .shadow(5.dp, RoundedCornerShape(10.dp))
             .aspectRatio(2f)
             .border(1.dp, Color.LightGray, RoundedCornerShape(10.dp))

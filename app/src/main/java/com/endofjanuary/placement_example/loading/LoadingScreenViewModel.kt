@@ -1,3 +1,4 @@
+/*
 package com.endofjanuary.placement_example.loading
 
 import android.content.Context
@@ -51,8 +52,10 @@ class LoadingScreenViewModel(
         val result = meshyRepository.postTextTo3D(PostFromText(prompt, "preview"))
         when (result) {
             is Resource.Success -> {
-                /* loadError.value = ""
-                 isLoading.value = false*/
+                */
+/* loadError.value = ""
+                 isLoading.value = false*//*
+
                 postId.value = result.data ?: PostId("")
                 if (result.data != null) {
                     Log.d("loadModelEntry_result Success id:", result.data.result)
@@ -60,8 +63,10 @@ class LoadingScreenViewModel(
                     when (eventualApiRes) {
                         is Resource.Error -> {
                             Log.d("eventualApiRes Error", eventualApiRes.toString())
-                            /* loadError.value = eventualApiRes.message!!
-                             isLoading.value = false*/
+                            */
+/* loadError.value = eventualApiRes.message!!
+                             isLoading.value = false*//*
+
                             return Resource.Error(eventualApiRes.message!!)
                         }
 
@@ -80,8 +85,10 @@ class LoadingScreenViewModel(
                                 // return Resource.Loading()
                             }
                             if (eventualApiRes.data!!.status == "SUCCEEDED") {
-                                /* loadError.value = ""
-                                 isLoading.value = false*/
+                                */
+/* loadError.value = ""
+                                 isLoading.value = false*//*
+
 
                                 model.value =
                                     ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
@@ -92,8 +99,10 @@ class LoadingScreenViewModel(
                                 )
                             }
                             if (eventualApiRes.data!!.status == "FAILED" || eventualApiRes.data!!.status == "EXPIRED") {
-                                /* loadError.value = eventualApiRes.data!!.status
-                                 isLoading.value = false*/
+                                */
+/* loadError.value = eventualApiRes.data!!.status
+                                 isLoading.value = false*//*
+
                                 model.value =
                                     ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
                                 return Resource.Error(eventualApiRes.data!!.status)
@@ -145,7 +154,8 @@ class LoadingScreenViewModel(
                         modelImageUrl = model.value.modelImageUrl,
                         isRefine = false,
                         isFromText = true,
-                        meshyId = model.value.meshyId
+                        meshyId = model.value.meshyId,
+                        creationTime = model.value.
                     )
                 )
             }
@@ -167,7 +177,9 @@ class LoadingScreenViewModel(
                 it
             )
         }
-    )/*: Resource<Boolean>*/ {
+    )*/
+/*: Resource<Boolean>*//*
+ {
         // viewModelScope.launch {
         try {
 
@@ -232,6 +244,7 @@ class LoadingScreenViewModel(
     }
 }
 
+*/
 /*
 * to use
 *

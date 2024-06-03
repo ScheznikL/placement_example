@@ -9,28 +9,26 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
-import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
-import com.endofjanuary.placement_example.LastModelsParam
-import com.endofjanuary.placement_example.ModelAccessParam
 import com.endofjanuary.placement_example.data.models.ModelEntry
 import com.endofjanuary.placement_example.data.room.ModelEntity
+import com.endofjanuary.placement_example.repo.DataStoreRepo
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
+import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
 class ModelsListViewModel(
     private val modelsRoomRepo: ModelsRepo,
-    private val dataStore: DataStore<LastModelsParam>,
+    private val dataStoreRepo: DataStoreRepo,
 ) : ViewModel() {
 
     val deletedModel = mutableStateOf<Resource<Int>>(Resource.None())
@@ -88,8 +86,6 @@ class ModelsListViewModel(
 
     init {
         viewModelScope.launch {
-            // Combines the latest value from each of the flows, allowing us to generate a
-            // view state instance which only contains the latest values.
             combine(
                 categories,
                 selectedCategory,
@@ -101,46 +97,10 @@ class ModelsListViewModel(
                     selectedCategory, categories
                 )
             }.catch { throwable ->
-                // TODO: emit a UI error here.
-                throw throwable
+                loadError.value = throwable.message.toString()
             }.collect {
                 _state.value = it
             }
-        }
-    }
-
-    private val _rewriteIndex = MutableStateFlow(-1) // TODO get rid of
-
-    fun saveLastModel(modelId: String, id: Int, modelImageUrl: String) {
-        try {
-            viewModelScope.launch(Dispatchers.IO) {
-                Log.d(
-                    "modelList dataStore model _rewrite",
-                    "start start ${dataStore.data.map { it.lastModelsList }}"
-                )
-                dataStore.updateData { currentSettings ->
-                    Log.d("modelList calc _rewrite", "start ${_rewriteIndex.value}")
-                    if (currentSettings.lastModelsCount >= 10) {
-                        Log.d("modelList calc _rewrite", ">= 10: ${_rewriteIndex.value}")
-                        currentSettings.toBuilder().removeLastModels(0).addLastModels(
-                                //count,
-                                ModelAccessParam.newBuilder().setModelId(modelId).setId(id)
-                                    .setModelImage(modelImageUrl)
-                                    .setUnixTimestamp(System.currentTimeMillis())
-                            ).build()
-                    } else {
-                        _rewriteIndex.value = 0
-                        currentSettings.toBuilder().addLastModels(
-                                currentSettings.lastModelsCount,
-                                ModelAccessParam.newBuilder().setModelId(modelId).setId(id)
-                                    .setModelImage(modelImageUrl)
-                                    .setUnixTimestamp(System.currentTimeMillis())
-                            ).build()
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            throw e
         }
     }
 
@@ -187,13 +147,13 @@ class ModelsListViewModel(
                             modelImageUrl = model.modelImageUrl,
                             modelDescription = model.modelDescription,
                             meshyId = model.meshyId,
-                            isFromText = model.isFromText
+                            isFromText = model.isFromText,
+                            isExpired = hasThreeDaysPassed(model.creationTime)
                         )
                     }
                 }
                 isLoading.value = false
                 result.collect {
-                    Log.d("modelsRoom.getAllModelsFlow()", " ->>>  ${it.size}")
                     _textModelsListState.value = it.filter { model -> model.isFromText }
                     _imageModelsListState.value = it.filter { model -> !(model.isFromText) }
                 }
@@ -203,56 +163,6 @@ class ModelsListViewModel(
                 loadError.value = e.message.toString()
             }
         }
-//            when (result) {
-//                is Resource.Success -> {
-//
-//                    loadError.value = ""
-//                    isLoading.value = false
-//
-//                    if (!result.data.isNullOrEmpty()) {
-//                        result.data!!.forEach { //TODO converter ?
-////                            modelsList.value += ModelEntry(
-////                                id = it.id,
-////                                modelPath = it.modelPath,
-////                                modelImageUrl = it.modelImageUrl,
-////                                modelDescription = it.modelDescription
-////                            )
-//                            if (it.isFromText) {
-//                                _textModelsListState.value += ModelEntry(
-//                                    id = it.id,
-//                                    modelPath = it.modelPath,
-//                                    modelImageUrl = it.modelImageUrl,
-//                                    modelDescription = it.modelDescription,
-//                                    meshyId = it.meshyId
-//                                )
-//                            } else {
-//                                _imageModelsListState.value += ModelEntry(
-//                                    id = it.id,
-//                                    modelPath = it.modelPath,
-//                                    modelImageUrl = it.modelImageUrl,
-//                                    modelDescription = it.modelDescription,
-//                                    meshyId = it.meshyId
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                is Resource.Error -> {
-//                    loadError.value = result.message!!
-//                    isLoading.value = false
-//                }
-//
-//                is Resource.Loading -> {
-//                    loadError.value = ""
-//                    isLoading.value = true
-//                }
-//
-//                is Resource.None -> {
-//                    loadError.value = ""
-//                    isLoading.value = false
-//                }
-//            }
     }
 
     private var integer = 1
@@ -270,6 +180,7 @@ class ModelsListViewModel(
                     isFromText = true,
                     isRefine = false,
                     meshyId = "new${integer++}",
+                    creationTime = System.currentTimeMillis()
                 )
             )
         }
@@ -277,17 +188,7 @@ class ModelsListViewModel(
     }
 
     fun deleteModels() {
-        // val id = selectedIds.value.first()
         try {
-//            if (isFromText) {
-//                val indexToDelete = _textModelsListState.value.indexOfFirst { it.meshyId == id }
-//                _textModelsListState.value -= _textModelsListState.value.elementAt(indexToDelete)
-//            } else {
-//                val indexToDelete = _imageModelsListState.value.indexOfFirst { it.meshyId == id }
-//                _imageModelsListState.value -= _imageModelsListState.value.elementAt(indexToDelete)
-//            }
-
-
             viewModelScope.launch(Dispatchers.IO) {
                 val result: MutableList<Resource<Int>> = mutableListOf()
 
@@ -302,30 +203,19 @@ class ModelsListViewModel(
         }
     }
 
-    fun deleteModel(model: ModelEntry) { // todo unused
-        try {
-            if (model.isFromText) {
-                _textModelsListState.value -= _textModelsListState.value.first { it.meshyId == model.meshyId }
-            } else {
-                _imageModelsListState.value -= _imageModelsListState.value.first { it.meshyId == model.meshyId }
-            }
+    fun deleteModel(model: ModelEntry) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = modelsRoomRepo.deleteModelById(model.meshyId)
 
-            viewModelScope.launch(Dispatchers.IO) {
-                val result = modelsRoomRepo.deleteModelById(model.meshyId)
-                when (result) {
-                    is Resource.Success -> {
-                        deletedModel.value = result
-                    }
+            when (result) {
+                is Resource.Error -> {
+                    _state.value = _state.value.copy(errorMessage = result.message.toString())
+                }
 
-                    is Resource.Error -> {
-                        deletedModel.value = result
-                    }
-
-                    else -> {}
+                else -> {
+                    dataStoreRepo.removeModelById(model.meshyId)
                 }
             }
-        } catch (e: Exception) {
-            deletedModel.value = Resource.Error(message = e.message.toString())
         }
     }
 

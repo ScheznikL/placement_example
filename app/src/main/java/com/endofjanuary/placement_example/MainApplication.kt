@@ -20,7 +20,7 @@ class MainApplication : Application() {
             applicationContext,
             ARAppDatabase::class.java,
             "models.db"
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
     }
 
     override fun onCreate() {
@@ -70,4 +70,10 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("ALTER TABLE models ADD COLUMN meshyId TEXT DEFAULT '' NOT NULL")
     }
 }
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE models ADD COLUMN creationTime INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
 

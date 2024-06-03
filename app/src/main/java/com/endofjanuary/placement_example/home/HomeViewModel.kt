@@ -1,39 +1,24 @@
-/*
- * Copyright 2020 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package com.example.jetcaster.ui.home
+package com.endofjanuary.placement_example.home
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_LONG
 import androidx.compose.ui.graphics.Color
-import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.endofjanuary.placement_example.LastModelsParam
 import com.endofjanuary.placement_example.ModelAccessParam
+import com.endofjanuary.placement_example.repo.DataStoreRepo
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
+import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,8 +32,10 @@ private const val DEFAULT_TIMESTAMP = 0
 
 class HomeViewModel(
     private val modelsRoomRepo: ModelsRepo,
-    private val dataStore: DataStore<LastModelsParam>, // todo repo
+    private val dataStoreRepo: DataStoreRepo,
 ) : ViewModel() {
+
+    val _dataStoreData: Flow<LastModelsParam> = dataStoreRepo.dataStoreData
 
     // Holds our view state which the UI collects via [state]
     private val _state = MutableStateFlow(HomeViewState())
@@ -59,14 +46,14 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            dataStore.data.collectLatest { startupParams: LastModelsParam ->
+            _dataStoreData.collectLatest { startupParams: LastModelsParam ->
                 _state.update { currentState ->
                     currentState.copy(
                         lastModels = startupParams.lastModelsList.toHomeScreenModelList(),
                     )
                 }
             }
-         //   loadLastModels()
+            //   loadLastModels()
         }
 
     }
@@ -82,7 +69,8 @@ class HomeViewModel(
                 modelId = it.modelId,
                 id = it.id,
                 timeStep = convertToReadableFormat(it.unixTimestamp),
-                imageUrl = it.modelImage
+                imageUrl = it.modelImage,
+                isExpired = hasThreeDaysPassed(it.unixTimestamp)
             )
         }
     }
@@ -99,59 +87,12 @@ class HomeViewModel(
     fun clearLastModelPreview(context: Context) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
-                dataStore.updateData { currentSettings ->
-                    currentSettings.toBuilder().clearLastModels().build()
-                }
-                Log.d("home dataStore", "list cleared")
+                dataStoreRepo.clearModelsInDataStore()
             }
-        } catch (e: Exception) { // todo change
+        } catch (e: Exception) {
             Toast.makeText(
-                context,
-                e.message,
-                LENGTH_LONG
+                context, e.message, LENGTH_LONG
             ).show()
-        }
-    }
-
-    suspend fun loadLastModels() { //todo get rid of
-        if (_state.value.lastModels.isNullOrEmpty()) {
-            Log.d("home", "Enter load Model")
-            viewModelScope.launch(Dispatchers.IO)
-            {
-                val result =
-                    modelsRoomRepo.getModelsById(*_state.value.lastModels!!.mapNotNull { it.modelId }
-                        .toTypedArray())
-                when (result) {
-                    is Resource.Error -> {
-                        _state.update { currentState ->
-                            currentState.copy(
-                                errorMessage = result.message,
-                            )
-                        }
-                    }
-
-                    is Resource.Loading -> TODO()
-                    is Resource.None -> TODO()
-                    is Resource.Success -> {
-                        Log.d("home", "get Model success")
-                        _state.update { currentState ->
-                            currentState.copy(
-                                lastModels = currentState.lastModels!!.map { model ->
-                                    val correspondingEntity =
-                                        result.data!!.find { entity -> entity.meshyId == model.modelId }
-                                    if (correspondingEntity != null) {
-                                        model.copy(
-                                            imageUrl = correspondingEntity.modelImageUrl,
-                                            id = correspondingEntity.id
-                                        )
-                                    } else {
-                                        model
-                                    }
-                                })
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -161,6 +102,28 @@ class HomeViewModel(
         Palette.from(bmp).generate { palette ->
             palette?.dominantSwatch?.rgb?.let { colorValue ->
                 onFinish(Color(colorValue))
+            }
+        }
+    }
+
+    fun deleteModel(meshyId: String?) {
+        if (meshyId != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = modelsRoomRepo.deleteModelById(meshyId)
+
+                when (result) {
+                    is Resource.Error -> {
+                        _state.value = _state.value.copy(errorMessage = result.message.toString())
+                    }
+
+                    else -> {
+                        val list = _state.value.lastModels?.filter { it.modelId != meshyId }
+                        _state.value = _state.value.copy(
+                            lastModels = list
+                        )
+                        dataStoreRepo.removeModelById(meshyId)
+                    }
+                }
             }
         }
     }
@@ -175,6 +138,7 @@ data class HomeScreenModel(
     val imageUrl: String? = null,
     val modelId: String? = null,
     val id: Int? = null,
-    val timeStep: String? = null
+    val timeStep: String? = null,
+    val isExpired: Boolean? = null
 )
 

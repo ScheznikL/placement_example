@@ -8,7 +8,7 @@ import com.endofjanuary.placement_example.data.remote.gpt.AuthTokenGptIntersepto
 import com.endofjanuary.placement_example.data.remote.gpt.ChatComplitionApi
 import com.endofjanuary.placement_example.data.remote.meshy.AuthTokenInterceptor
 import com.endofjanuary.placement_example.data.remote.meshy.MeshyApi
-import com.endofjanuary.placement_example.loading.LoadingScreenViewModel
+import com.endofjanuary.placement_example.home.HomeViewModel
 import com.endofjanuary.placement_example.models_list_screen.ModelsListViewModel
 import com.endofjanuary.placement_example.register_screen.RegistrationViewModel
 import com.endofjanuary.placement_example.repo.AWStorageRepo
@@ -28,7 +28,6 @@ import com.endofjanuary.placement_example.repo.MeshyRepoImpl
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
 import com.endofjanuary.placement_example.upload_image.UploadImageViewModel
 import com.endofjanuary.placement_example.user_cabinet.UserProfileViewModel
-import com.example.jetcaster.ui.home.HomeViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
@@ -118,9 +117,6 @@ val appModule = module {
         ChatScreenViewModel(get(), get())
     }
     viewModel {
-        LoadingScreenViewModel(get(), get())
-    }
-    viewModel {
         ModelsListViewModel(get(), get())
     }
     viewModel {
@@ -131,7 +127,8 @@ val appModule = module {
             context = androidContext(),
             meshyRepository = get(),
             modelRoom = get(),
-            authenticationRepo = get()
+            authenticationRepo = get(),
+            dataStoreRepo = get()
         )
     }
     //   viewModel { (prompt: String) -> ARScreenViewModel(prompt, get()) }

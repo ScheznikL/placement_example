@@ -1,3 +1,4 @@
+/*
 package com.endofjanuary.placement_example.loading
 
 import androidx.compose.foundation.layout.Box
@@ -109,4 +110,4 @@ fun LoadingScreen(
             }
         }
     }
-}
+}*/

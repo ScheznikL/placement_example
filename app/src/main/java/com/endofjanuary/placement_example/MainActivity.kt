@@ -19,7 +19,6 @@ import androidx.navigation.navArgument
 import com.endofjanuary.placement_example.ar_screen.ARScreen
 import com.endofjanuary.placement_example.chat.ChatScreenNew
 import com.endofjanuary.placement_example.home.HomeScreen
-import com.endofjanuary.placement_example.loading.LoadingScreen
 import com.endofjanuary.placement_example.models_list_screen.ModelsListScreen
 import com.endofjanuary.placement_example.register_screen.RegistrationScreen
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
@@ -96,19 +95,6 @@ class MainActivity : ComponentActivity() {
                             modelId = modelId,
                             meshyId = meshyId,
                         )
-                    }
-                    composable(
-                        "loading_screen/{prompt}",
-                        arguments = listOf(
-                            navArgument("prompt") {
-                                type = NavType.StringType
-                            }
-                        )
-                    ) {
-                        val model = remember {
-                            it.arguments?.getString("prompt")
-                        }
-                        LoadingScreen(prompt = model ?: "none", navController = navController)
                     }
                     composable(
                         "models_list",

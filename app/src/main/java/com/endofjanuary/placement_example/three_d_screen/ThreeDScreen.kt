@@ -35,7 +35,7 @@ import coil.request.ImageRequest
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.chat.LottieDotsFlashing
 import com.endofjanuary.placement_example.repo.DownloaderRepoImpl
-import com.endofjanuary.placement_example.utils.BottomBar
+import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.ThreeDScreenTopBar
 import com.endofjanuary.placement_example.utils.screens.DoDownload
@@ -43,12 +43,10 @@ import com.google.android.filament.gltfio.ResourceLoader
 import io.github.sceneview.Scene
 import io.github.sceneview.math.Position
 import io.github.sceneview.model.model
-import io.github.sceneview.node.ModelNode
 import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
-import io.github.sceneview.rememberNode
 import org.koin.androidx.compose.getViewModel
 
 
@@ -181,7 +179,6 @@ fun ThreeDMain(
                             modelImageUrl = mainViewModel.modelImageUrl.value!!,
                             overwrite = overwriteRefine.value
                         )
-
                     }
                 }
             }
@@ -214,23 +211,9 @@ fun ThreeDMain(
                     val cameraNode = rememberCameraNode(engine).apply {
                         position = Position(z = 4.0f)
                     }
-                    //TODO try to auto rotate
-                    /**
-                     * Ask to reload page if overwrite not requested
-                     */
 
                     Log.d("loadModel R", "data - ${instanceState.data!!.model.instance}")
 
-
-                    val newNode by remember {
-                        viewModel.newNode
-                    }
-                    val node = rememberNode {
-                        ModelNode(
-                            modelInstance = instanceState.data!!,
-                            scaleToUnits = 1.0f
-                        )
-                    }
                     val currentNodes = remember {
                         viewModel.currentNodes
                     }
@@ -251,10 +234,6 @@ fun ThreeDMain(
                                 cameraNode.setShift(xShift = 2.0, 0.0)
                             }
                         }
-//                        onFrame = {
-//                         //   centerNode.rotation = cameraRotation
-//                            cameraNode.lookAt(centerNode)
-//                        },
                     )
                     /**
                      *     Button(
@@ -318,11 +297,30 @@ fun ThreeDMain(
                     }
                 }
 
-                is Resource.Error -> LaunchedEffect(snackbarHostState) {
-                    snackbarHostState.showSnackbar(
-                        message = "Error: ${instanceState.message}",
-                        actionLabel = "message"
-                    )
+                is Resource.Error -> {
+
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer)
+                    ) {
+                        Text(
+                            style = MaterialTheme.typography.bodyLarge,
+                            text = "Error occurred:",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            style = MaterialTheme.typography.bodyMedium,
+                            text = instanceState.message.toString(),
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    /*LaunchedEffect(snackbarHostState) {
+                        snackbarHostState.showSnackbar(
+                            message = "Error: ${instanceState.message}",
+                            actionLabel = "message"
+                        )
+                    }*/
                 }
 
                 is Resource.Loading -> {

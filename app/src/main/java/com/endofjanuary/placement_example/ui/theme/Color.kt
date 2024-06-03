@@ -13,3 +13,5 @@ val CustomBlue80 = Color(0xFF6EDFC8)
 val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF5D4E80)
+
+val MeshyBlack = Color(0.09411765f, 0.09411765f, 0.09411765f, 1.0f)

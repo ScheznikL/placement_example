@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.utils.screens
+package com.endofjanuary.placement_example.utils.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon

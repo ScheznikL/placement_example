@@ -23,7 +23,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -259,25 +258,6 @@ fun ChatScreenNew(
                         },
                     contentDescription = "gallery",
                 )
-                // todo temp
-                Icon(
-                    Icons.Default.Done,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable {
-
-                            //          Log.d("description", viewModel.description ?: "null")
-                            viewModel.send(textInput)
-                            mainViewModel.loadModelEntryFromText(
-                                viewModel.description ?: textInput
-                            )
-
-                            //if (textInput.isNotBlank()) navController.navigate("loading_screen/${viewModel.description}")
-                        }
-                        .alpha(if (textInput.isNotBlank()) 1.0f else 0.5f),
-                    contentDescription = "final",
-                )
-                /**///
                 Icon(
                     Icons.AutoMirrored.Filled.Send,
                     modifier = Modifier

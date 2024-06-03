@@ -22,7 +22,7 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
-import com.endofjanuary.placement_example.utils.BottomBar
+import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.screens.ErrorScreen
 import com.google.ar.core.Config
@@ -56,7 +56,7 @@ fun ARScreen(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
-        bottomBar = { BottomBar(navController = navController)}
+        bottomBar = { BottomBar(navController = navController) }
     ) { contentPadding ->
         Box(
             contentAlignment = Center,

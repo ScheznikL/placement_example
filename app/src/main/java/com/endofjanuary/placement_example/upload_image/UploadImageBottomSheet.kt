@@ -2,9 +2,12 @@ package com.endofjanuary.placement_example.upload_image
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,7 +29,6 @@ import kotlinx.coroutines.launch
 fun UploadImageBottomSheet(
     navController: NavController,
     showBottomSheet: MutableState<Boolean>,
-    //sheetState: MutableState<SheetState>
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -42,12 +44,19 @@ fun UploadImageBottomSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 25.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .windowInsetsPadding(
+                        WindowInsets.navigationBars/*.only(
+                            WindowInsetsSides.Bottom +
+                        )*/
+                    )
+                    .padding(
+                        horizontal = 25.dp,
+                    ),
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 IconButton(
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(50.dp),
                     onClick = {
                         scope.launch { sheetState.hide() }.invokeOnCompletion {
                             if (!sheetState.isVisible) {
@@ -63,7 +72,7 @@ fun UploadImageBottomSheet(
                 }
                 //Spacer(Modifier.width(20.dp))
                 IconButton(
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(50.dp),
                     onClick = {
                         scope.launch { sheetState.hide() }.invokeOnCompletion {
                             if (!sheetState.isVisible) {

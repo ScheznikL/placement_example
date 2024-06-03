@@ -5,11 +5,11 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -70,8 +71,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.data.models.ModelEntry
-import com.endofjanuary.placement_example.utils.BottomBar
+import com.endofjanuary.placement_example.utils.components.BottomBar
+import com.endofjanuary.placement_example.utils.components.ImageWithExpiredLabel
+import com.endofjanuary.placement_example.utils.screens.ModelExpiredDialog
 import org.koin.androidx.compose.getViewModel
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -145,6 +149,7 @@ fun ModelsListScreen(
                             onSearch = viewModel::onSearch
                         )
                     }
+
                     Category.FromImage -> {
                         ModelsListContent(
                             navController = navController,
@@ -262,7 +267,8 @@ fun ModelsFromList(
                     rowIndex = it,
                     entries = modelListState,
                     navController = navController,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    deleteExpired = viewModel::deleteModel
                 )
             }
         }
@@ -292,8 +298,8 @@ fun ModelsInRow(
     entries: List<ModelEntry>,
     navController: NavController,
     viewModel: ModelsListViewModel,
+    deleteExpired: (ModelEntry) -> Unit
 ) {
-
     Column {
         Row {
             ModelInRowEntry(
@@ -301,6 +307,7 @@ fun ModelsInRow(
                 navController = navController,
                 modifier = Modifier.weight(1f),
                 viewModel = viewModel,
+                onDelete = { deleteExpired(entries[rowIndex * 2]) }
             )
             Spacer(modifier = Modifier.width(16.dp))
             if (entries.size >= rowIndex * 2 + 2) {
@@ -309,6 +316,7 @@ fun ModelsInRow(
                     navController = navController,
                     modifier = Modifier.weight(1f),
                     viewModel = viewModel,
+                    onDelete = { deleteExpired(entries[rowIndex * 2 + 1]) }
                 )
             } else {
                 Spacer(modifier = Modifier.weight(1f))
@@ -325,7 +333,12 @@ fun ModelInRowEntry(
     navController: NavController,
     modifier: Modifier = Modifier,
     viewModel: ModelsListViewModel,
+    onDelete: () -> Unit,
 ) {
+    val openExpiredDialog = remember { mutableStateOf(false) }
+    val confirmDelete = remember { mutableStateOf(false) }
+
+
     val defaultDominantColor = MaterialTheme.colorScheme.surface
     val deletedDominantColor = Color.LightGray
     var dominantColor by remember {
@@ -333,8 +346,6 @@ fun ModelInRowEntry(
     }
     val selectedIds by remember { viewModel.selectedIds }
     val selectedMode by remember { viewModel.selectionMode }
-
-    val interactionSource = remember { MutableInteractionSource() }
 
     val border = if (selectedIds.contains(entry.meshyId) && selectedMode) {
         BorderStroke(
@@ -366,10 +377,13 @@ fun ModelInRowEntry(
             .combinedClickable(
                 onClick = {
                     if (!viewModel.selectionMode.value) {
-                        viewModel.saveLastModel(entry.meshyId, entry.id, entry.modelImageUrl)
-                        navController.navigate(
-                            "transit_dialog/${entry.id}/${entry.meshyId}"
-                        )
+                        if (!entry.isExpired) {
+                            navController.navigate(
+                                "transit_dialog/${entry.id}/${entry.meshyId}"
+                            )
+                        } else {
+                            openExpiredDialog.value = true
+                        }
                     } else {
                         viewModel.selectModel(entry)
                     }
@@ -383,29 +397,63 @@ fun ModelInRowEntry(
             )
 
     ) {
-        Column {// SubcomposeAsyncImage
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current).data(entry.modelImageUrl)
-                    .crossfade(true).build(),
-                contentDescription = entry.modelDescription,
-                onSuccess = {
-                    viewModel.calcDominantColor(it.result.drawable) { color ->
-                        dominantColor = color
-                    }
-                },
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(120.dp)
-                    .align(CenterHorizontally)
-            )
-            Text(
-                text = entry.modelDescription,
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+        if (entry.isExpired == false) {
+            Column {// SubcomposeAsyncImage
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current).data(entry.modelImageUrl)
+                        .crossfade(true).build(),
+                    contentDescription = entry.modelDescription,
+                    onSuccess = {
+                        viewModel.calcDominantColor(it.result.drawable) { color ->
+                            dominantColor = color
+                        }
+                    },
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .align(CenterHorizontally)
+                )
+                Text(
+                    text = entry.modelDescription,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        } else {
+            ImageWithExpiredLabel(picture = {
+                Column {// SubcomposeAsyncImage
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current).data(entry.modelImageUrl)
+                            .crossfade(true).build(),
+                        contentDescription = entry.modelDescription,
+                        onSuccess = {
+                            viewModel.calcDominantColor(it.result.drawable) { color ->
+                                dominantColor = color
+                            }
+                        },
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .align(CenterHorizontally)
+                    )
+                    Text(
+                        text = entry.modelDescription,
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            })
         }
     }
+    ModelExpiredDialog(
+        openDialog = openExpiredDialog,
+        confirm = confirmDelete,
+        onConfirm = onDelete
+    )
 }
 
 @Composable
@@ -435,7 +483,16 @@ fun NoDataSection(
         horizontalAlignment = CenterHorizontally,
         modifier = modifier
     ) {
-        Text(error, color = Color.Red, fontSize = 18.sp)
+        Image(
+            modifier = Modifier
+                .padding(start = 8.dp, end = 9.dp)
+                .size(33.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop,
+            painter = painterResource(R.drawable.glass),
+            contentDescription = "chat image"
+        )
+        Text(error, color = MaterialTheme.colorScheme.secondary, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = { onGoHome() }, modifier = Modifier.align(CenterHorizontally)
