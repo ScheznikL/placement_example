@@ -110,7 +110,8 @@ fun ThreeDScreenTopBar(
     DoDownload(
         openDialog = openDownloadDialog,
         confirm = confirmDownload,
+        onDownload = viewModel::onDownload,
         modelFileName = modelDescriptionShorten,
-        onDownload = viewModel::onDownload
+        refined = refineSuccess.value
     )
 }

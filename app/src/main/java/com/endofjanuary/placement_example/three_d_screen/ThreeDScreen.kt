@@ -39,7 +39,6 @@ import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.ThreeDScreenTopBar
 import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.screens.DoDownload
-import com.google.android.filament.gltfio.ResourceLoader
 import io.github.sceneview.Scene
 import io.github.sceneview.math.Position
 import io.github.sceneview.model.model
@@ -48,12 +47,6 @@ import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
 import org.koin.androidx.compose.getViewModel
-
-
-const val MODEL_PATH =
-    "https://assets.meshy.ai/google-oauth2%7C107069207183755263308/tasks/018eb80f-70d4-7ac0-b540-346a5f83c255/output/model.glb?Expires=4866048000&Signature=QU0jukq87VxKR03eucrlQzvLbULXlX9RbbjSO~4pSwBy2DRp5OLiwn~qvIo7qC-AgUuFh5doENZU15sb6lJxyHmWHadVwI8NxlQaHLKlCDFTFF4t-3exoFyRfIxUqHwHWg0h7~cXtsrFQljqyCLsuX-YzEj7BTbhxEIKXByJaisWHNxR0pThljxD~AtYKrZN5HVJB8Mid2xBHSak48rh7ew1Wox8yxx8PmJgj9mD5u4kBLzDLcBSJ7gvfn~nY-lFKrypXPmNs-k5x0GjBoQL~SKgzoEXczuqGkNCp990uT1n7kQf7hboRgdGhLl7snnHLe1JyREVG9nwc~1ioWA6rw__&Key-Pair-Id=KL5I0C8H7HX83"
-const val IMG_PATH =
-    "https://assets.meshy.ai/google-oauth2%7C107069207183755263308/tasks/018eb80f-70d4-7ac0-b540-346a5f83c255/output/preview.png?Expires=4866048000&Signature=fRovk8~XV3lryrT~zKhpjvMQj45n4oO6jJTgOSvN5IxA3jCe2D80w91dHn~yZgwpYnPelE7dt6peGNrIJL-KYUKCEsLsNuov86K6E0M-aNWAz~1kq0GDmW5trLZHdDkNk6UFueVZgAfXTjpZdYjkZJCJRPTXCasuur2tXuILVIldvkocFRqeU4NZgwnotYhyhDbgxNY7ptJyoe~is8R~FVnfLTGWj5JP5JZjsSoI4LJyPU-A4yUXJVPWpAudTKWIwQRIBJJOscMz~-JhwkZwJAe1y2Pe3n9nIGXbhnn0WvfB4-rHQ4aYtjogt0cJMiETxD9ht-~nRUSAkhv5~IRxnw__&Key-Pair-Id=KL5I0C8H7HX83"
 
 @Composable
 fun ThreeDScreen(
@@ -69,7 +62,6 @@ fun ThreeDScreen(
         modelId = modelId!!,
         navController = navController,
         meshyId = meshyId!!,
-        downloader = downloader
     )
 }
 
@@ -80,7 +72,6 @@ fun ThreeDMain(
     modelId: Int,
     meshyId: String,
     navController: NavController,
-    downloader: DownloaderRepoImpl
 ) {
 
     val mainViewModel = getViewModel<MainViewModel>()
@@ -88,14 +79,11 @@ fun ThreeDMain(
 
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
-    var resourceLoader = ResourceLoader(engine, true)
 
-    var blurOnRefine = remember { 0.dp }
     val refineIsError = remember { mainViewModel.loadError }
     val refineIsLoading = remember { mainViewModel.isLoading }
     val refineSuccess = remember { mainViewModel.isSuccess }
     val overwriteRefine = remember { mutableStateOf(false) }
-    var reloadModel = remember { mutableStateOf(SnackbarResult.Dismissed) }
 
     val instanceState by remember {
         viewModel.loadedInstancesState
@@ -111,8 +99,7 @@ fun ThreeDMain(
     val openDownloadDialog = remember { mutableStateOf(false) }
     val confirmDownload = remember { mutableStateOf(false) }
 
-    val modelShortDescription: String? by
-    remember { viewModel.modelDescriptionShorten }
+    val modelShortDescription: String? by remember { viewModel.modelDescriptionShorten }
 
     val deleteSuccess = remember { viewModel.modelDeleted }
     val downloadError by remember {
@@ -122,12 +109,10 @@ fun ThreeDMain(
     LaunchedEffect(downloadError) {
         if (downloadError != null) {
             snackbarHostState.showSnackbar(
-                message = downloadError.toString(),
-                actionLabel = "understood"
+                message = downloadError.toString(), actionLabel = "understood"
             )
         }
     }
-
 
     LaunchedEffect(true) {
         viewModel.loadModelRemote(modelLoader, modelId)
@@ -138,26 +123,22 @@ fun ThreeDMain(
             openDownloadDialog.value = isAutoSaveEnabled
         }
     }
-    Scaffold(
-        bottomBar = { BottomBar(navController = navController) },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
-        topBar = {
-            ThreeDScreenTopBar(
-                modelId = modelId,
-                modelDescriptionShorten = modelShortDescription.toString(),
-                navController = navController,
-                mainViewModel = mainViewModel,
-                meshyId = meshyId,
-                modelPath = modelPath,
-                overwrite = overwriteRefine,
-                viewModel = viewModel,
-                isFromText = isFromText.value ?: false,
-                isRefined = isRefined.value ?: false
-            )
-        }
-    ) { padding ->
+    Scaffold(bottomBar = { BottomBar(navController = navController) }, snackbarHost = {
+        SnackbarHost(hostState = snackbarHostState)
+    }, topBar = {
+        ThreeDScreenTopBar(
+            modelId = modelId,
+            modelDescriptionShorten = modelShortDescription.toString(),
+            navController = navController,
+            mainViewModel = mainViewModel,
+            meshyId = meshyId,
+            modelPath = modelPath,
+            overwrite = overwriteRefine,
+            viewModel = viewModel,
+            isFromText = isFromText.value ?: false,
+            isRefined = isRefined.value ?: false
+        )
+    }) { padding ->
         Box(
             modifier = modifier
                 .fillMaxSize()
@@ -165,14 +146,11 @@ fun ThreeDMain(
         ) {
             LaunchedEffect(refineSuccess.value) {
                 if (refineSuccess.value != null) {
-                    //    if (!overwriteRefine.value) {
                     if (snackbarHostState.showSnackbar(
                             message = "Refine model is Done\n\r Would you like to reload page ?",
                             actionLabel = "OK"
                         ) == SnackbarResult.ActionPerformed
                     ) {
-                        Log.d("loadModel R", " loadModelFromPath cause success")
-
                         viewModel.loadModelFromPath(
                             modelLoader = modelLoader,
                             modelPath = mainViewModel.modelPath.value!!,
@@ -193,8 +171,7 @@ fun ThreeDMain(
 
                     is Resource.Success -> {
                         if (snackbarHostState.showSnackbar(
-                                message = "Model deleted successfully",
-                                actionLabel = "OK"
+                                message = "Model deleted successfully", actionLabel = "OK"
                             ) == SnackbarResult.ActionPerformed
                         ) {
                             navController.popBackStack()
@@ -218,10 +195,9 @@ fun ThreeDMain(
                         viewModel.currentNodes
                     }
 
-                    Scene(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .blur(200.dp),
+                    Scene(modifier = Modifier
+                        .fillMaxSize()
+                        .blur(200.dp),
                         engine = engine,
                         modelLoader = modelLoader,
                         cameraNode = cameraNode,
@@ -233,8 +209,7 @@ fun ThreeDMain(
                             if (currentNodes.toList().size >= 2) {
                                 cameraNode.setShift(xShift = 2.0, 0.0)
                             }
-                        }
-                    )
+                        })
                     /**
                      *     Button(
                      *                         modifier = Modifier.align(Alignment.TopStart),
@@ -265,10 +240,8 @@ fun ThreeDMain(
                         }
                     }
                     AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(modelUrl)
-                            .crossfade(true)
-                            .build(),
+                        model = ImageRequest.Builder(LocalContext.current).data(modelUrl)
+                            .crossfade(true).build(),
                         contentDescription = "modelDescription",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -280,8 +253,7 @@ fun ThreeDMain(
                             .background(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(
                                     alpha = 0.5f
-                                ),
-                                shape = MaterialTheme.shapes.small
+                                ), shape = MaterialTheme.shapes.small
                             )
                             .padding(8.dp)
                     )
@@ -290,8 +262,7 @@ fun ThreeDMain(
                     if (refineIsError.value != null) {
                         LaunchedEffect(snackbarHostState) {
                             snackbarHostState.showSnackbar(
-                                message = "Error: ${refineIsError.value}",
-                                actionLabel = "message"
+                                message = "Error: ${refineIsError.value}", actionLabel = "message"
                             )
                         }
                     }
@@ -302,7 +273,9 @@ fun ThreeDMain(
                     Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.errorContainer)
                     ) {
                         Text(
                             style = MaterialTheme.typography.bodyLarge,
@@ -314,8 +287,7 @@ fun ThreeDMain(
                             text = instanceState.message.toString(),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
-                    }
-                    /*LaunchedEffect(snackbarHostState) {
+                    }/*LaunchedEffect(snackbarHostState) {
                         snackbarHostState.showSnackbar(
                             message = "Error: ${instanceState.message}",
                             actionLabel = "message"
@@ -363,7 +335,8 @@ fun ThreeDMain(
         openDialog = openDownloadDialog,
         confirm = confirmDownload,
         modelFileName = modelShortDescription,
-        onDownload = viewModel::onDownload
+        onDownload = viewModel::onDownload,
+        refinedUrl = mainViewModel.modelPath.value
     )
 }
 

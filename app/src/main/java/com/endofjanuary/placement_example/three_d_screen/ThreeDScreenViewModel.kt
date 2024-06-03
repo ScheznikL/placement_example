@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.three_d_screen
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
@@ -19,7 +18,6 @@ import io.github.sceneview.loaders.MaterialLoader
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.math.Position
 import io.github.sceneview.model.ModelInstance
-import io.github.sceneview.model.model
 import io.github.sceneview.node.CubeNode
 import io.github.sceneview.node.ModelNode
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +25,6 @@ import kotlinx.coroutines.launch
 
 
 class ThreeDScreenViewModel(
-    //private val meshyRepository: MeshyRepo,
     private val modelRoom: ModelsRepo,
     private val downloader: DownloaderRepo,
 ) : ViewModel() {
@@ -44,29 +41,7 @@ class ThreeDScreenViewModel(
     val modelDescriptionShorten: MutableState<String?> = mutableStateOf(null)
 
     var modelFromRoom = mutableStateOf<Resource<ModelEntity>>(Resource.None())
-
-//       private val _loadedInstancesBufferState: MutableState<Resource<ModelInstance>> =
-//        mutableStateOf(Resource.None())
-//    val loadedInstancesBufferState: State<Resource<ModelInstance>>
-//        get() = _loadedInstancesBufferState
-
     val modelDeleted = mutableStateOf<Resource<Int>>(Resource.None())
-
-    fun loadModelLocalOld() {
-        try {
-            viewModelScope.launch(Dispatchers.IO) {
-                val result = modelRoom.getAllModels()
-                if (result.data != null) {
-//                    _loadedInstancesState.value =
-//                        Resource.Success(result.data.first().modelInstance)
-                } else {
-                    _loadedInstancesState.value = Resource.Error("Model data is empty")
-                }
-            }
-        } catch (e: Exception) {
-            _loadedInstancesState.value = Resource.Error(e.message.toString())
-        }
-    }
 
     suspend fun loadModelRemote(
         modelLoader: ModelLoader, localId: Int
@@ -133,25 +108,18 @@ class ThreeDScreenViewModel(
         }
     }
 
-
-    val newNode = mutableStateOf<ModelNode?>(null)
-
     var currentNodes = mutableStateListOf<ModelNode>()
 
     fun loadModelFromPath(
         modelLoader: ModelLoader, modelPath: String, modelImageUrl: String, overwrite: Boolean
     ) {
-        try {
-            viewModelScope.launch(Dispatchers.IO) {
 
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
                 val result = modelLoader.loadModelInstance(
                     modelPath
                 )
                 if (result != null) {
-                    Log.d("loadModel R File", result.model.toString())
-
-                    // _loadedInstancesState.value = Resource.Success(result)
-                    //newNode.value =
                     if (overwrite) {
                         currentNodes.removeLast()
                         currentNodes += mutableStateListOf(
@@ -162,29 +130,24 @@ class ThreeDScreenViewModel(
                     } else {
                         currentNodes += ModelNode(
                             modelInstance = result,
-//                        modelInstance = modelLoader.createModelInstance(
-//                            assetFileLocation = "models/damaged_helmet.glb"
-//                        ),
-                            centerOrigin = Position(1f, 0f, 0f), scaleToUnits = 1.0f
+                            centerOrigin = Position(1f, 0f, 0f),
+                            scaleToUnits = 1.0f
                         )
                     }
 
                     modelImgUrl.value = modelImageUrl
 
                 } else {
-                    Log.d("loadModel R File", "null")
                     throw IllegalArgumentException("Empty")
                 }
+            } catch (e: Exception) {
+                _loadedInstancesState.value = Resource.Error(e.message.toString())
             }
-
-        } catch (e: Exception) {
-            _loadedInstancesState.value = Resource.Error(e.message.toString())
         }
     }
 
     fun createAnchorNode(
         engine: Engine,
-        modelLoader: ModelLoader,
         materialLoader: MaterialLoader,
         anchor: Anchor,
         modelInstances: ModelInstance,
@@ -215,12 +178,19 @@ class ThreeDScreenViewModel(
         return anchorNode
     }
 
-    fun onDownload(modelName: String?) {
+    fun onDownload(modelName: String?, modelPath: String?) {
 
-        val result = downloader.downloadFile(
-            modelFromRoom.value.data!!.modelPath,
-            modelName = modelName ?: modelDescriptionShorten.value.toString()
-        )
+        val result = if (modelPath == null) {
+            downloader.downloadFile(
+                modelFromRoom.value.data!!.modelPath,
+                modelName = modelName ?: modelDescriptionShorten.value.toString()
+            )
+        } else {
+            downloader.downloadFile(
+                modelPath,
+                modelName = modelName ?: modelDescriptionShorten.value.toString()
+            )
+        }
 
         if (result is Resource.Error) {
             downloadError.value = result.message

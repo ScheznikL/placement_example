@@ -222,8 +222,9 @@ fun SpecifyRefineOptions(
 fun DoDownload(
     openDialog: MutableState<Boolean>,
     confirm: MutableState<Boolean>,
-    onDownload: (String) -> Unit,
-    modelFileName: String?
+    onDownload: (String, String?) -> Unit,
+    modelFileName: String?,
+    refinedUrl: String?
 ) {
     val name = mutableStateOf(modelFileName ?: "model")
     val helpText = remember { mutableStateOf("Save to downloads") }
@@ -264,7 +265,7 @@ fun DoDownload(
             }
         }, confirmButton = {
             TextButton(onClick = {
-                onDownload(name.value)
+                onDownload(name.value, refinedUrl)
                 confirm.value = true
                 openDialog.value = false
             }) {
