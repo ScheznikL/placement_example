@@ -22,8 +22,8 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
-import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.Resource
+import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.screens.ErrorScreen
 import com.google.ar.core.Config
 import com.google.ar.core.Frame
@@ -149,7 +149,6 @@ fun ARSceneDisplay(
                             ?.let { it.createAnchorOrNull(it.centerPose) }?.let { anchor ->
                                 childNodes += viewModel.createAnchorNode(
                                     engine = engine,
-                                    modelLoader = modelLoader,
                                     materialLoader = materialLoader,
                                     modelInstances = instanceState.data!!,
                                     anchor = anchor,
@@ -171,7 +170,6 @@ fun ARSceneDisplay(
                                 planeRenderer = false
                                 childNodes += viewModel.createAnchorNode(
                                     engine = engine,
-                                    modelLoader = modelLoader,
                                     materialLoader = materialLoader,
                                     modelInstances = instanceState.data!!,
                                     anchor = anchor,

@@ -132,7 +132,6 @@ fun ThreeDMain(
             navController = navController,
             mainViewModel = mainViewModel,
             meshyId = meshyId,
-            modelPath = modelPath,
             overwrite = overwriteRefine,
             viewModel = viewModel,
             isFromText = isFromText.value ?: false,

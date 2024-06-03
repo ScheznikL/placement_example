@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.utils
 
-import android.util.Log
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -33,7 +32,6 @@ fun ThreeDScreenTopBar(
     viewModel: ThreeDScreenViewModel,
     navController: NavController,
     overwrite: MutableState<Boolean>,
-    modelPath: MutableState<String?>,
     isFromText: Boolean,
     isRefined: Boolean,
 ) {
@@ -46,8 +44,6 @@ fun ThreeDScreenTopBar(
     val confirmRefine = remember { mutableStateOf(false) }
     val openDetailedDialog = remember { mutableStateOf(false) }
 
-
-    Log.d("modelPath & desc", "${modelPath.value} $modelDescriptionShorten")
     TopAppBar(
         title = {
             Row { }
@@ -112,6 +108,6 @@ fun ThreeDScreenTopBar(
         confirm = confirmDownload,
         onDownload = viewModel::onDownload,
         modelFileName = modelDescriptionShorten,
-        refined = refineSuccess.value
+        refinedUrl = mainViewModel.model.value.modelPath
     )
 }
