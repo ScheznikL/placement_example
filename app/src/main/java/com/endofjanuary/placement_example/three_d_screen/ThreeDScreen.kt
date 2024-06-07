@@ -197,7 +197,7 @@ fun ThreeDMain(
                     Scene(modifier = Modifier
                         .fillMaxSize()
                         .blur(200.dp),
-                       // engine = engine,
+                        engine = engine,
                         modelLoader = modelLoader,
                         cameraNode = cameraNode,
                         childNodes = currentNodes.toList(),
