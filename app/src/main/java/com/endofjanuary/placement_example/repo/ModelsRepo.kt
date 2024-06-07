@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 abstract class ModelsRepo {
-    abstract suspend fun getAllModels(): Resource<List<ModelEntity>>
     abstract suspend fun getAllModelsFlow(): Flow<List<ModelEntity>>
     abstract suspend fun saveModel(modelEntity: ModelEntity): Resource<Long>
     abstract suspend fun update(meshyId: String?, modelImageUrl: String?, modelPath: String?, isRefine: Boolean?): Resource<Int>

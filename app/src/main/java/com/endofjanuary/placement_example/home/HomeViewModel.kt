@@ -15,6 +15,7 @@ import com.endofjanuary.placement_example.ModelAccessParam
 import com.endofjanuary.placement_example.repo.DataStoreRepo
 import com.endofjanuary.placement_example.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
+import com.endofjanuary.placement_example.utils.convertToReadableFormat
 import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,10 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
 
-private const val DEFAULT_TIMESTAMP = 0
 
 class HomeViewModel(
     private val modelsRoomRepo: ModelsRepo,
@@ -37,7 +35,6 @@ class HomeViewModel(
 
     val _dataStoreData: Flow<LastModelsParam> = dataStoreRepo.dataStoreData
 
-    // Holds our view state which the UI collects via [state]
     private val _state = MutableStateFlow(HomeViewState())
     val state: StateFlow<HomeViewState>
         get() = _state.asStateFlow()
@@ -53,7 +50,6 @@ class HomeViewModel(
                     )
                 }
             }
-            //   loadLastModels()
         }
 
     }
@@ -63,7 +59,7 @@ class HomeViewModel(
         super.onCleared()
     }
 
-    private fun List<ModelAccessParam>.toHomeScreenModelList(): List<HomeScreenModel> { // todo separate
+    private fun List<ModelAccessParam>.toHomeScreenModelList(): List<HomeScreenModel> {
         return this.map {
             HomeScreenModel(
                 modelId = it.modelId,
@@ -72,15 +68,6 @@ class HomeViewModel(
                 imageUrl = it.modelImage,
                 isExpired = hasThreeDaysPassed(it.unixTimestamp)
             )
-        }
-    }
-
-    private fun convertToReadableFormat(unixTimestamp: Long): String {
-        return if (unixTimestamp > DEFAULT_TIMESTAMP) {
-            val timestampAsDate = Date(unixTimestamp)
-            SimpleDateFormat.getDateTimeInstance().format(timestampAsDate)
-        } else {
-            "No app opening registered yet."
         }
     }
 

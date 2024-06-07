@@ -8,7 +8,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.endofjanuary.placement_example.R
 
 
 @Composable
@@ -48,7 +50,7 @@ fun DeleteDialog(
                     confirm.value = true
                     openDialog.value = false
                 }) {
-                    Text("Confirm")
+                    Text(stringResource(R.string.confirm))
                 }
             },
             dismissButton = {
@@ -56,7 +58,7 @@ fun DeleteDialog(
                     confirm.value = false
                     openDialog.value = false
                 }) {
-                    Text("Dismiss")
+                    Text(stringResource(R.string.dismiss))
                 }
             })
     }

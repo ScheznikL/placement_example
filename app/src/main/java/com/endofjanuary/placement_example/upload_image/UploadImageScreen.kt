@@ -2,7 +2,6 @@ package com.endofjanuary.placement_example.upload_image
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -38,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.endofjanuary.placement_example.MainViewModel
+import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.screens.DefaultTopAppBar
 import org.koin.androidx.compose.getViewModel
@@ -90,10 +91,8 @@ fun UploadImageScreen(
     }
     LaunchedEffect(isSuccess) {
         if (isSuccess != null) {
-            Log.d("loadModel UI", "isSuccess: ${isSuccess!!.first}:${isSuccess!!.second}")
-
             snackbarHostState.showSnackbar(
-                message = "Loading is successful id is ${isSuccess!!.second} $!" // todo temp ID
+                message = context.getString(R.string.loading_is_successful)
             )
             navController.navigate("transit_dialog/${isSuccess!!.second}/${isSuccess!!.first}")
         }
@@ -141,38 +140,7 @@ fun UploadImageScreen(
 
             }
         }
-
-    }/*   if (false) {
-           Row(verticalAlignment = Alignment.Bottom) {
-               Icon(
-                   modifier = Modifier
-                       .padding(start = 8.dp, end = 9.dp)
-                       .size(35.dp)
-                   //    .clip(CircleShape)
-                   ,
-                   imageVector = Icons.Outlined.Warning,
-                   contentDescription = "warning",
-                   tint = Color(255, 119, 0, 226)
-               )
-               Box(modifier = Modifier.weight(1.0f)) {
-                   Column(horizontalAlignment = Alignment.Start) {
-                       Column(
-                           modifier = Modifier
-                               .background(
-                                   Color.Red.copy(alpha = 0.4f, green = 0.4f),
-                                   RoundedCornerShape(37.dp)
-                               )
-                               .padding(horizontal = 18.dp, vertical = 12.dp)
-                       ) {
-                           Text(
-                               modifier = Modifier.padding(top = 1.dp),
-                               text = "You haven't choose any of the image"
-                           )
-                       }
-                   }
-               }
-           }
-       }*/
+    }
 }
 
 @Composable
@@ -196,7 +164,6 @@ fun UploadImageContent(
     ) {
         if (image != null) {
             AsyncImage(
-                //  alpha = 0.5f,
                 model = image,
                 contentDescription = null,
                 modifier = Modifier
@@ -206,7 +173,6 @@ fun UploadImageContent(
             )
         } else {
             Image(
-                //  alpha = 0.5f,
                 bitmap = photo!!.asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier
@@ -231,7 +197,7 @@ fun UploadImageContent(
                 imeAction = ImeAction.Default,
                 capitalization = KeyboardCapitalization.Sentences
             ),
-            placeholder = { Text(text = "Name the model *optional") },
+            placeholder = { Text(text = stringResource(id = R.string.name_the_model_optional)) },
             enabled = isActionEnabled,
             shape = RoundedCornerShape(9.dp),
             singleLine = true
@@ -240,7 +206,6 @@ fun UploadImageContent(
         Column(
             horizontalAlignment = Alignment.End,
             modifier = Modifier.fillMaxWidth(),
-            // .padding(horizontal = 15.dp),
         ) {
             Button(
                 enabled = isActionEnabled && (photo != null || image != null),
@@ -251,16 +216,8 @@ fun UploadImageContent(
                     topStart = 43.dp, bottomStart = 43.dp, topEnd = 0.dp, bottomEnd = 0.dp
                 )
             ) {
-                Text("Proceed")
-            }/*      Spacer(modifier = Modifier.height(10.dp))
-                  Button(
-                      enabled = isRedoEnabled,
-                      onClick = onRedo,
-                      modifier = Modifier.size(width = 206.dp, height = 45.dp),
-                      contentPadding = PaddingValues(8.dp)
-                  ) {
-                      Text(text = "Redo")
-                  }*/
+                Text(stringResource(id = R.string.proceed))
+            }
         }
 
     }

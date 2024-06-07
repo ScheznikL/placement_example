@@ -27,19 +27,15 @@ class RegistrationViewModel(
 
     val signInError = authenticationRepo.signInError
     val signInState = authenticationRepo.signInState
-
-    //private val selectedCategory = MutableStateFlow(Category.FromText)
     fun onSignIn() {
         viewModelScope.launch(Dispatchers.IO) {
             val result = authenticationRepo.signIn(emailValueState.value, passwordValueState.value)
-            // Log.d("user: ${authenticationRepo.currentUser.toString()}")
         }
     }
 
     fun onSignUp() {
         viewModelScope.launch(Dispatchers.IO) {
             authenticationRepo.signUp(emailValueState.value, passwordValueState.value)
-            // Log.d("user: ${authenticationRepo.currentUser.toString()}")
         }
     }
 
@@ -68,8 +64,4 @@ class RegistrationViewModel(
 data class UserUIState(
     val email: String = "",
     val password: String = "",
-//    val onEmailChanged: (String) -> Unit = {},
-//    val onPasswordChanged: (String) -> Unit = {},
-//    val onVerifyEmail: () -> Unit = {},
-//    val onSignOut: () -> Unit = {}
 )

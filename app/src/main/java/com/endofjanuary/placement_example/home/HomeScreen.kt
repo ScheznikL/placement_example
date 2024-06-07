@@ -80,7 +80,6 @@ fun HomeScreen(
                 BottomBar(navController)
             },
         ) { innerPadding ->
-            val context = LocalContext.current
             HomeContent(
                 modifier = Modifier.padding(innerPadding),
                 navController = navController,
@@ -119,7 +118,7 @@ fun HomeContent(
         if (!viewState.errorMessage.isNullOrEmpty()) {
             Toast.makeText(
                 context,
-                "Error: $viewState.errorMessage",
+                viewState.errorMessage,
                 Toast.LENGTH_LONG,
             ).show()
         }
@@ -140,7 +139,7 @@ fun HomeContent(
                     .windowInsetsTopHeight(WindowInsets.statusBars)
             )
             HomeAppBar(
-                backgroundColor = appBarColor, modifier = Modifier.fillMaxWidth()
+               modifier = Modifier.fillMaxWidth()
             )
         }
         Row(
@@ -150,7 +149,7 @@ fun HomeContent(
                 .padding(15.dp)
         ) {
             Text(
-                "Last Models:", style = MaterialTheme.typography.headlineMedium.copy(
+                stringResource(id = R.string.home_header), style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
                 )
@@ -162,7 +161,7 @@ fun HomeContent(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "delete all last viewed"
+                    contentDescription = stringResource(R.string.delete_all_last_viewed)
                 )
             }
         }
@@ -180,7 +179,6 @@ fun HomeContent(
                             modelItem = viewState.lastModels[it],
                             navController = navController,
                             calcDominantColor = calcDominantColor,
-                            index = it,
                             onDelete = {
                                 onDeleteExpired(viewState.lastModels[it].modelId)
                             }
@@ -190,7 +188,7 @@ fun HomeContent(
             }
         } else {
             EmptyModelItem(
-                message = viewState.errorMessage ?: "You haven't viewed any model yet",
+                message = viewState.errorMessage ?: stringResource(id = R.string.home_empty_text),
                 modifier = Modifier
                     .padding(10.dp)
                     .height(190.dp)
@@ -207,14 +205,14 @@ fun HomeContent(
                     navController.navigate("chat_screen")
                 }, modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Begin chat to create unique model")
+                Text(text = stringResource(id = R.string.home_button_chat))
             }
             Button(
                 onClick = {
                     showBottomSheet.value = true
                 }, modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Model from Image")
+                Text(text = stringResource(id = R.string.home_button_image))
             }
         }
     }
@@ -230,7 +228,6 @@ fun ModelItem(
     modifier: Modifier = Modifier,
     modelItem: HomeScreenModel,
     navController: NavController,
-    index: Int,
     calcDominantColor: (drawable: Drawable, onFinish: (Color) -> Unit) -> Unit,
     onDelete: () -> Unit
 ) {
@@ -271,7 +268,7 @@ fun ModelItem(
                 }
             }) {
         Text(
-            text = "$index ${modelItem.timeStep}", // todo get rid of indexes
+            text = "${modelItem.timeStep}",
             fontSize = 20.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -284,7 +281,7 @@ fun ModelItem(
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
                     .crossfade(true).build(),
-                contentDescription = "last model",
+                contentDescription = stringResource(R.string.last_model_image),
                 onSuccess = {
                     calcDominantColor(it.result.drawable) { color ->
                         if (color != Color(0.09411765f, 0.09411765f, 0.09411765f, 1.0f)) {
@@ -306,7 +303,7 @@ fun ModelItem(
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
                             .crossfade(true).build(),
-                        contentDescription = "last model",
+                        contentDescription =stringResource(R.string.last_model_image),
                         onSuccess = {
                             calcDominantColor(it.result.drawable) { color ->
                                 if (color != MeshyBlack) {
@@ -319,7 +316,6 @@ fun ModelItem(
                             }
                         },
                         contentScale = ContentScale.Crop,
-                        //modifier = Modifier.size(190.dp)
                     )
                 })
         }
@@ -338,11 +334,8 @@ fun EmptyModelItem(
 ) {
     Box(
         contentAlignment = Alignment.Center, modifier = modifier
-            // .shadow(5.dp, RoundedCornerShape(10.dp))
             .aspectRatio(2f)
             .border(1.dp, Color.LightGray, RoundedCornerShape(10.dp))
-        //.clip(RoundedCornerShape(10.dp))
-        //.background(Color.Gray)
     ) {
         Text(
             text = message,
@@ -356,7 +349,7 @@ fun EmptyModelItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeAppBar(
-    backgroundColor: Color, modifier: Modifier = Modifier
+    modifier: Modifier = Modifier
 ) {
     TopAppBar(
         title = {

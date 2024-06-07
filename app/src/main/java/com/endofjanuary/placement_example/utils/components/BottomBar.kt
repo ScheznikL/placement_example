@@ -15,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.R
@@ -26,35 +27,34 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
         actions = {
             Row(
                 modifier.fillMaxWidth(),
-                // verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 IconButton(onClick = { navController.navigate("home_screen") }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
                         imageVector = Icons.Outlined.Home,
-                        contentDescription = "Home"
+                        contentDescription = stringResource(R.string.home_sceeen_icon)
                     )
                 }
                 IconButton(onClick = { navController.navigate("chat_screen") }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
                         painter = painterResource(id = R.drawable.ic_message),
-                        contentDescription = "Chat"
+                        contentDescription = stringResource(R.string.chat_icon)
                     )
                 }
                 IconButton(onClick = { navController.navigate("models_list") }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
                         imageVector = Icons.AutoMirrored.Filled.List,
-                        contentDescription = "Models List"
+                        contentDescription = stringResource(R.string.models_list_icon)
                     )
                 }
                 IconButton(onClick = { navController.navigate("user_profile")  }) {
                     Icon(
                         modifier = Modifier.size(35.dp),
                         imageVector = Icons.Default.Person,
-                        contentDescription = "user profile"
+                        contentDescription = stringResource(R.string.user_profile_icon)
                     )
                 }
             }

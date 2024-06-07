@@ -8,29 +8,27 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.endofjanuary.placement_example.R
 
 @Composable
 fun CancelDialog(
     title: String, openDialog: MutableState<Boolean>, confirm: MutableState<Boolean>, modifier: Modifier = Modifier,
 ) {
-    val proceed = remember {
-        mutableStateOf(false)
-    }
+
     if (openDialog.value) {
         AlertDialog(
             onDismissRequest = {
                 openDialog.value = false
             },
-            icon = { Icon(Icons.Default.Close, contentDescription = "Error cross") },
+            icon = { Icon(Icons.Default.Close, contentDescription = stringResource(R.string.error_icon)) },
             title = {
                 Text(text = title)
             },
             text = {
                 Text(
-                    "Cancel refining and save preview model ?"
+                    stringResource(R.string.cancel_refining)
                 )
             },
             confirmButton = {
@@ -38,7 +36,7 @@ fun CancelDialog(
                     confirm.value = true
                     openDialog.value = false
                 }) {
-                    Text("Yes")
+                    Text(stringResource(R.string.yes))
                 }
             },
             dismissButton = {
@@ -46,7 +44,7 @@ fun CancelDialog(
                     confirm.value = false
                     openDialog.value = false
                 }) {
-                    Text("No")
+                    Text(stringResource(R.string.no))
                 }
             }
         )

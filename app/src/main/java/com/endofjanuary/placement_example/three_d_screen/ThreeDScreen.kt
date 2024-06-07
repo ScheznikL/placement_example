@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.three_d_screen
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,11 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.endofjanuary.placement_example.MainViewModel
+import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.chat.LottieDotsFlashing
 import com.endofjanuary.placement_example.repo.DownloaderRepoImpl
 import com.endofjanuary.placement_example.utils.Resource
@@ -41,7 +42,6 @@ import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.screens.DoDownload
 import io.github.sceneview.Scene
 import io.github.sceneview.math.Position
-import io.github.sceneview.model.model
 import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
@@ -106,10 +106,12 @@ fun ThreeDMain(
         viewModel.downloadError
     }
 
+    val context = LocalContext.current
+
     LaunchedEffect(downloadError) {
         if (downloadError != null) {
             snackbarHostState.showSnackbar(
-                message = downloadError.toString(), actionLabel = "understood"
+                message = downloadError.toString(), actionLabel = context.getString(R.string.error_OK)
             )
         }
     }
@@ -146,8 +148,8 @@ fun ThreeDMain(
             LaunchedEffect(refineSuccess.value) {
                 if (refineSuccess.value != null) {
                     if (snackbarHostState.showSnackbar(
-                            message = "Refine model is Done\n\r Would you like to reload page ?",
-                            actionLabel = "OK"
+                            message = context.getString(R.string.reload_page_question),
+                            actionLabel = context.getString(R.string.yes)
                         ) == SnackbarResult.ActionPerformed
                     ) {
                         viewModel.loadModelFromPath(
@@ -164,13 +166,13 @@ fun ThreeDMain(
                 when (deleteSuccess.value) {
                     is Resource.Error -> {
                         snackbarHostState.showSnackbar(
-                            message = "Error when deleting model...",
+                            message = context.getString(R.string.error_header) + deleteSuccess.value.message,
                         )
                     }
 
                     is Resource.Success -> {
                         if (snackbarHostState.showSnackbar(
-                                message = "Model deleted successfully", actionLabel = "OK"
+                                message = context.getString(R.string.model_deleted_successfully), actionLabel = "OK"
                             ) == SnackbarResult.ActionPerformed
                         ) {
                             navController.popBackStack()
@@ -188,8 +190,6 @@ fun ThreeDMain(
                         position = Position(z = 4.0f)
                     }
 
-                    Log.d("loadModel R", "data - ${instanceState.data!!.model.instance}")
-
                     val currentNodes = remember {
                         viewModel.currentNodes
                     }
@@ -197,7 +197,7 @@ fun ThreeDMain(
                     Scene(modifier = Modifier
                         .fillMaxSize()
                         .blur(200.dp),
-                        engine = engine,
+                       // engine = engine,
                         modelLoader = modelLoader,
                         cameraNode = cameraNode,
                         childNodes = currentNodes.toList(),
@@ -209,28 +209,9 @@ fun ThreeDMain(
                                 cameraNode.setShift(xShift = 2.0, 0.0)
                             }
                         })
-                    /**
-                     *     Button(
-                     *                         modifier = Modifier.align(Alignment.TopStart),
-                     *                         onClick = {
-                     *                             viewModel.loadModelFromPath(
-                     *                                 modelLoader,
-                     *                                 modelPath = MODEL_PATH,
-                     *                                 modelImageUrl = IMG_PATH,
-                     *                                 true
-                     *                             )
-                     *                         }) {
-                     *                         Text(text = "Temp Button")
-                     *                     }
-                     */
-
-
-                    /**
-                     *if doesn't request overwrite
-                     **/
-                    if (refineIsLoading.value /*&& !overwriteRefine.value*/) {
+                    if (refineIsLoading.value) {
                         Box {
-                            Text(text = "Refining is in process DO NOT leave the page ...")
+                            Text(text = stringResource(R.string.refining_in_process))
                             LottieDotsFlashing(
                                 modifier = Modifier
                                     .size(100.dp)
@@ -261,7 +242,7 @@ fun ThreeDMain(
                     if (refineIsError.value != null) {
                         LaunchedEffect(snackbarHostState) {
                             snackbarHostState.showSnackbar(
-                                message = "Error: ${refineIsError.value}", actionLabel = "message"
+                                message = context.getString(R.string.error)+refineIsError.value,
                             )
                         }
                     }
@@ -278,7 +259,7 @@ fun ThreeDMain(
                     ) {
                         Text(
                             style = MaterialTheme.typography.bodyLarge,
-                            text = "Error occurred:",
+                            text = stringResource(id = R.string.error_header),
                             color = MaterialTheme.colorScheme.error
                         )
                         Text(
@@ -286,12 +267,7 @@ fun ThreeDMain(
                             text = instanceState.message.toString(),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
-                    }/*LaunchedEffect(snackbarHostState) {
-                        snackbarHostState.showSnackbar(
-                            message = "Error: ${instanceState.message}",
-                            actionLabel = "message"
-                        )
-                    }*/
+                    }
                 }
 
                 is Resource.Loading -> {
@@ -302,7 +278,7 @@ fun ThreeDMain(
                     ) {
                         Text(
                             style = MaterialTheme.typography.bodySmall,
-                            text = "loading model...",
+                            text = stringResource(id = R.string.loading),
                         )
                         CircularProgressIndicator(
                             color = MaterialTheme.colorScheme.onBackground,
@@ -318,7 +294,7 @@ fun ThreeDMain(
                     ) {
                         Text(
                             style = MaterialTheme.typography.bodySmall,
-                            text = "loading...",
+                            text = stringResource(id = R.string.loading),
                         )
                         CircularProgressIndicator(
                             color = MaterialTheme.colorScheme.onBackground,

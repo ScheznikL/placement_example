@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.upload_image
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.endofjanuary.placement_example.R
 
 
 @Composable
@@ -28,18 +29,17 @@ fun OnDataLoading(
         modifier = modifier.fillMaxWidth()
     ) {
         if (isUploading) {
-            Text(text = "Your data is uploading ...")
+            Text(text = stringResource(R.string.your_data_is_uploading))
             CircularProgressIndicator()
         } else if (isLoading) {
-            Log.d("loadModel UI", "is Loading")
-            Text(text = "The model is in progress...\r\n${progress}%")
+            Text(text = stringResource(R.string.model_progress, progress.toString()))
             CircularProgressIndicator()
-        } else if (isUploadingError.isNotBlank()) {
+        } else if (isUploadingError.isNotEmpty()) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "There is an error: $isUploadingError")
+                Text(text = stringResource(R.string.error_header, progress.toString()) + isUploadingError)
             }
         }
     }

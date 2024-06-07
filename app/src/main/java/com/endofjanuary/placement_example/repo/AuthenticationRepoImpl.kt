@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.repo
 
-import android.util.Log
 import com.endofjanuary.placement_example.data.models.User
 import com.endofjanuary.placement_example.utils.Resource
 import com.google.firebase.auth.AuthResult
@@ -25,6 +24,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+
+const val DOCUMENT_PATH = "/users/"
+
 class AuthenticationRepoImpl(
     private val firebaseAuth: FirebaseAuth, private val fireStoreDB: FirebaseFirestore
 ) : AuthenticationRepo {
@@ -37,25 +39,11 @@ class AuthenticationRepoImpl(
     override val signInError = MutableStateFlow<String?>(null)
     override val signInState = MutableStateFlow(SignInState.NOT_SIGNED_IN)
 
-
-    /*    override val currentUser: User?
-            get() = firebaseAuth.currentUser?.let {
-                Log.d("user", "${it.isEmailVerified}")
-
-                User(
-                    email = it.email!!,
-                    displayName = it.displayName,
-                    profileUrl = it.photoUrl?.path,
-                    phoneNumber = it.phoneNumber,
-                    isEmailVerified = it.isEmailVerified
-                )
-            }*/
-
     override fun currentUser(scope: CoroutineScope): Flow<User?> = callbackFlow {
         val authStateListener = FirebaseAuth.AuthStateListener { auth ->
             val currentUser = auth.currentUser
             if (currentUser != null) {
-                userDoc = fireStoreDB.document("/users/${currentUser.uid}")
+                userDoc = fireStoreDB.document(DOCUMENT_PATH + currentUser.uid)
 
                 val fireStoreUserFlow = fireStoreUserData(userDoc)
                 scope.launch {
@@ -101,7 +89,7 @@ class AuthenticationRepoImpl(
     private fun fireStoreUserData(userDoc: DocumentReference): Flow<FireStoreUser?> = callbackFlow {
         val docStateListener = userDoc.addSnapshotListener { snapshot, e ->
             if (e != null) {
-                Log.w("FIRESTORE get User", "Listen failed.", e)
+                signInError.value = e.message
                 return@addSnapshotListener
             }
             if (snapshot != null && snapshot.exists()) {
@@ -112,7 +100,7 @@ class AuthenticationRepoImpl(
             }
         }
         awaitClose {
-            docStateListener.remove() // Ensure we remove the listener on close
+            docStateListener.remove()
         }
     }
 
@@ -123,7 +111,7 @@ class AuthenticationRepoImpl(
             else signInState.value = SignInState.CREDENTIAL_ERROR
         } catch (e: Exception) {
             signInError.value = e.message
-            // Timber.d(e.toString())
+
             when (e) {
                 is FirebaseAuthInvalidUserException -> signInState.value =
                     SignInState.USER_NOT_FOUND
@@ -145,12 +133,12 @@ class AuthenticationRepoImpl(
                 firebaseAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Log.d("signUp", "createUserWithEmail:success")
+
                             continuation.resume(task.result)
                         } else {
-                            Log.w("signUp", "createUserWithEmail:failure", task.exception)
+
                             continuation.resumeWithException(
-                                task.exception ?: Exception("Unknown error")
+                                task.exception ?: Exception()
                             )
                         }
                     }
@@ -164,13 +152,10 @@ class AuthenticationRepoImpl(
             } else {
                 signInState.value = SignInState.NOT_SIGNED_IN
             }
-//            val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-//            user = authResult.user!!
-//            signInState.value = SignInState.VERIFYING_EMAIL
 
         } catch (e: Exception) {
             signInError.value = e.message
-            // Timber.d(e.toString())
+
             when (e) {
                 is FirebaseAuthInvalidUserException -> signInState.value =
                     SignInState.USER_NOT_FOUND
@@ -192,20 +177,16 @@ class AuthenticationRepoImpl(
             val result = suspendCoroutine { continuation ->
                 firebaseAuth.currentUser!!.sendEmailVerification().addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        Log.d("email verify", "Email sent.")
                         signInState.value = SignInState.VERIFYING_EMAIL
                         continuation.resume(task.result)
                     } else {
-                        Log.w("email verify", "sendEmailVerification:failure", task.exception)
                         continuation.resumeWithException(
-                            task.exception ?: Exception("Unknown error")
+                            task.exception ?: Exception()
                         )
                     }
                 }
             }
-            //  firebaseAuth.currentUser?.sendEmailVerification()?.await()
         } catch (e: Exception) {
-            Log.e("email verify", "error: ${e.message}")
             signInState.value = SignInState.VERIFY_FAILED
             signInError.value = e.message
         }
@@ -236,23 +217,22 @@ class AuthenticationRepoImpl(
     ): Resource<String> {
         val def = CompletableDeferred<Resource<String>>()
         try {
-            val user = hashMapOf(
-                "auto_refine" to (refine),
-                "auto_save" to (save),
-                "name" to userName,
+            val user = FireStoreUser(
+                auto_refine = refine,
+                auto_save = save,
+                name = userName,
             )
+
             userDoc.set(user).addOnSuccessListener {
-                Log.d("FIRESTORE upd", "Document has been updated!")
                 signInState.value = SignInState.AUTHORIZED
-                def.complete(Resource.Success("Document has been saved!"))
+                def.complete(Resource.Success(""))
             }.addOnFailureListener { e ->
                 signInState.value = SignInState.NOT_SIGNED_IN
-                Log.w("FIRESTORE upd", "Error adding document", e)
                 throw Exception(e.message)
             }
             return def.await()
         } catch (e: Exception) {
-            return Resource.Error("Error adding document ${e.message}")
+            return Resource.Error(e.message.toString())
         }
     }
 
@@ -262,28 +242,21 @@ class AuthenticationRepoImpl(
         val credential = EmailAuthProvider.getCredential(email, password)
 
         try {
-            suspendCoroutine<Unit> { continuation ->
-                user.reauthenticate(credential)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Log.d(
-                                "FIREBASE reauth",
-                                "User re-authenticated. Pas:$password"
-                            )
-                            signInState.value = SignInState.REAUTHORIZED
-                            continuation.resume(Unit)
+            suspendCoroutine { continuation ->
+                user.reauthenticate(credential).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        signInState.value = SignInState.REAUTHORIZED
+                        continuation.resume(Unit)
 
-                        } else {
-                            continuation.resumeWithException(
-                                task.exception ?: Exception("Unknown error")
-                            )
-                        }
+                    } else {
+                        continuation.resumeWithException(
+                            task.exception ?: Exception()
+                        )
                     }
+                }
             }
-            if (signInState.value == SignInState.REAUTHORIZED)
-                sendPasswordResetEmail(email)
+            if (signInState.value == SignInState.REAUTHORIZED) sendPasswordResetEmail(email)
         } catch (e: Exception) {
-            Log.d("FIRESTORE reauth ex", e.message.toString())
             signInError.value = e.message
 
             when (e) {
@@ -301,42 +274,29 @@ class AuthenticationRepoImpl(
     override suspend fun sendPasswordResetEmail(email: String) {
         try {
             suspendCoroutine<Unit> { continuation ->
-                firebaseAuth.sendPasswordResetEmail(email)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            signInState.value = SignInState.CREDENTIALS_RESET_REQ
-                            Log.d("FIREBASE changePassword", "Email sent.")
-                        } else {
-                            Log.w("FIREBASE", "changePassword:failure", task.exception)
-                            continuation.resumeWithException(
-                                task.exception ?: Exception("Unknown error")
-                            )
-                        }
+                firebaseAuth.sendPasswordResetEmail(email).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        signInState.value = SignInState.CREDENTIALS_RESET_REQ
+                    } else {
+                        continuation.resumeWithException(
+                            task.exception ?: Exception()
+                        )
                     }
+                }
             }
         } catch (e: Exception) {
-            Log.d("FIREBASE ex changePassword", e.message.toString())
             signInError.value = e.message
             signInState.value = SignInState.CREDENTIALS_RESET_ERR
         }
     }
 
     override suspend fun forChangePassword(
-        email: String,
-        oldPassword: String
+        email: String, oldPassword: String
     ) {
         reAuthenticateUser(email, oldPassword)
-     /*   if (signInState.value == SignInState.REAUTHORIZED) {
-            sendPasswordResetEmail(email)
-        } else {
-            Log.w("FIREBASE forChangePassword", "else")
-            return
-        }*/
     }
 }
 
-object FireStoreUser {
-    val auto_refine: Boolean = false
-    val auto_save: Boolean = false
-    val name: String = ""
-}
+data class FireStoreUser(
+    val auto_refine: Boolean = false, val auto_save: Boolean = false, val name: String = ""
+)

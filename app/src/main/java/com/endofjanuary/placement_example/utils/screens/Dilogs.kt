@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -58,18 +59,15 @@ fun DoRefineDialog(
     }
     if (openDialog.value) {
         AlertDialog(onDismissRequest = {
-            // Dismiss the dialog when the user clicks outside the dialog or on the back
-            // button. If you want to disable that functionality, simply use an empty
-            // onDismissRequest.
             openDialog.value = false
         },
             icon = { Icon(painterResource(R.drawable.ic_clock), contentDescription = null) },
             title = {
-                Text(text = "Refine the model")
+                Text(text = stringResource(R.string.refine_dialog_header))
             },
             text = {
                 Text(
-                    "Do you want to refine current model ?" + "\n\r processing may took some time"
+                    stringResource(R.string.refine_model_question)
                 )
             },
             confirmButton = {
@@ -77,7 +75,7 @@ fun DoRefineDialog(
                     confirm.value = true
                     openDialog.value = false
                 }) {
-                    Text("Confirm")
+                    Text(stringResource(id = R.string.confirm))
                 }
             },
             dismissButton = {
@@ -85,7 +83,7 @@ fun DoRefineDialog(
                     confirm.value = false
                     openDialog.value = false
                 }) {
-                    Text("Dismiss")
+                    Text(stringResource(id = R.string.dismiss))
                 }
             })
     }
@@ -102,7 +100,7 @@ fun SpecifyRefineOptions(
     var expanded by remember { mutableStateOf(false) }
 
     val selectedRichness = remember { mutableStateOf(MainViewModel.TextureRichness.High) }
-    val radioOptions = listOf("No", "Yes")
+    val radioOptions = listOf(R.string.no, R.string.yes)
 
     val richnessOptions = MainViewModel.TextureRichness.entries
 
@@ -110,9 +108,6 @@ fun SpecifyRefineOptions(
 
     if (openBasicDialog.value) {
         BasicAlertDialog(onDismissRequest = {
-            // Dismiss the dialog when the user clicks outside the dialog or on the back
-            // button. If you want to disable that functionality, simply use an empty
-            // onDismissRequest.
             openBasicDialog.value = false
         }) {
             Surface(
@@ -124,7 +119,7 @@ fun SpecifyRefineOptions(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Choose texture richness of the model"
+                        text = stringResource(R.string.choose_texture_richness)
                     )
                     Spacer(modifier = Modifier.height(22.dp))
                     Column(
@@ -166,17 +161,16 @@ fun SpecifyRefineOptions(
                     Spacer(modifier = Modifier.height(22.dp))
                     Row {
                         Column {
-                            Text(text = "Would you like to erase")
+                            Text(text = stringResource(R.string.erase_question))
                             Text(
-                                text = " preview model ?", fontWeight = FontWeight.Bold
+                                text = stringResource(R.string.model_type_bold),
+                                fontWeight = FontWeight.Bold
                             )
                         }
                         Column(Modifier.selectableGroup()) {
                             radioOptions.forEach { text ->
                                 Row(
                                     Modifier
-                                        //  .fillMaxWidth()
-                                        //.height(56.dp)
                                         .selectable(
                                             selected = (text == selectedOption),
                                             onClick = { onOptionSelected(text) },
@@ -187,10 +181,10 @@ fun SpecifyRefineOptions(
                                 ) {
                                     RadioButton(
                                         selected = (text == selectedOption),
-                                        onClick = null // null recommended for accessibility with screenreaders
+                                        onClick = null
                                     )
                                     Text(
-                                        text = text,
+                                        text = stringResource(text),
                                         style = MaterialTheme.typography.bodyLarge,
                                         modifier = Modifier.padding(start = 16.dp)
                                     )
@@ -200,16 +194,16 @@ fun SpecifyRefineOptions(
                     }
                     TextButton(
                         onClick = {
-                            overwrite.value = selectedOption == "Yes"
+                            overwrite.value = selectedOption == R.string.yes
                             mainViewModel.loadRefineModel(
                                 id = modelId,
                                 textureRichness = selectedRichness.value,
-                                overwrite = selectedOption == "Yes"
+                                overwrite = selectedOption == R.string.yes
                             )
                             openBasicDialog.value = false
                         }, modifier = Modifier.align(Alignment.End)
                     ) {
-                        Text("Confirm")
+                        Text(stringResource(id = R.string.confirm))
                     }
                 }
             }
@@ -226,8 +220,9 @@ fun DoDownload(
     modelFileName: String?,
     refinedUrl: String?
 ) {
-    val name = mutableStateOf(modelFileName ?: "model")
-    val helpText = remember { mutableStateOf("Save to downloads") }
+    val name = mutableStateOf(modelFileName.toString())
+    val text = stringResource(R.string.initial_download_help)
+    val helpText = remember { mutableStateOf(text) }
 
     val enableEdit = mutableStateOf(false)
 
@@ -235,7 +230,7 @@ fun DoDownload(
         AlertDialog(onDismissRequest = {
             openDialog.value = false
         }, title = {
-            Text(text = "Download")
+            Text(text = stringResource(R.string.download))
         }, text = {
             Column {
                 Text(
@@ -257,7 +252,7 @@ fun DoDownload(
                         )
                     }
                     Icon(imageVector = if (enableEdit.value) Icons.Default.Edit else Icons.Outlined.Edit,
-                        contentDescription = "edit name",
+                        contentDescription = stringResource(R.string.edit_name),
                         modifier = Modifier.clickable {
                             enableEdit.value = !enableEdit.value
                         })
@@ -269,14 +264,14 @@ fun DoDownload(
                 confirm.value = true
                 openDialog.value = false
             }) {
-                Text("Confirm")
+                Text(stringResource(id = R.string.confirm))
             }
         }, dismissButton = {
             TextButton(onClick = {
                 confirm.value = false
                 openDialog.value = false
             }) {
-                Text("Dismiss")
+                Text(stringResource(id = R.string.dismiss))
             }
         })
     }

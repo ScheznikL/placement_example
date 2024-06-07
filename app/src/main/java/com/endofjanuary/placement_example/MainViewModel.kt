@@ -6,9 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -22,6 +20,7 @@ import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromText
 import com.endofjanuary.placement_example.data.remote.meshy.request.PostRefine
 import com.endofjanuary.placement_example.data.remote.meshy.responses.ImageTo3DModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.PostId
+import com.endofjanuary.placement_example.data.remote.meshy.responses.ProgressStatus
 import com.endofjanuary.placement_example.data.remote.meshy.responses.Refine3dModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
 import com.endofjanuary.placement_example.data.room.ModelEntity
@@ -47,15 +46,13 @@ class MainViewModel(
     private val context: Context
 ) : ViewModel() {
 
-    val currentUser = authenticationRepo.currentUser(viewModelScope)
-
-    val dataStoreState = dataStoreRepo.dataStoreState
-
-    val textureRichness = mutableStateOf(TextureRichness.None)
+    private val _currentUser = authenticationRepo.currentUser(viewModelScope)
+    private val _dataStoreState = dataStoreRepo.dataStoreState
 
     companion object {
-        const val CHANNEL_NEW_MODEL = "model_success"
+        const val CHANNEL_NEW_MODEL = "model_download"
         const val NOTIFICATION_ID = 100
+        const val NOTIFICATION_PROGRESS_MAX = 100
     }
 
     val autoRefine = mutableStateOf(false)
@@ -64,7 +61,7 @@ class MainViewModel(
     init {
         createNotificationChannel()
         viewModelScope.launch(Dispatchers.IO) {
-            currentUser.collectLatest {
+            _currentUser.collectLatest {
                 autoRefine.value = it!!.autoRefineModel
                 autoSave.value = it.autoSaveModel
             }
@@ -73,37 +70,31 @@ class MainViewModel(
 
 
     private val _byteArrayState: MutableState<Resource<Boolean>> = mutableStateOf(Resource.None())
-    val byteArrayState: State<Resource<Boolean>>
-        get() = _byteArrayState
+
 
     var model = mutableStateOf(ModelEntry())
-    var postId: MutableState<PostId?> = mutableStateOf(PostId(""))
+    private var postId: MutableState<PostId?> = mutableStateOf(PostId(""))
 
-    val isLoading = mutableStateOf(false) //todo change to percentage
+    val isLoading = mutableStateOf(false)
     val isSuccess = mutableStateOf<Pair<String, Long>?>(null)
     val progress: MutableState<Int?> = mutableStateOf(null)
 
-    // val modelId = mutableStateOf(0)
     val loadError = mutableStateOf<String?>(null)
-    var isSavedSuccess = mutableStateOf<Resource<Long>>(Resource.None())
+    private var isSavedSuccess = mutableStateOf<Resource<Long>>(Resource.None())
 
-    //var isUpdateSuccess = mutableStateOf<Resource<Boolean>>(Resource.None())
-    var isUpdateSuccess = mutableStateOf<Resource<Int>>(Resource.None())
+    private var isUpdateSuccess = mutableStateOf<Resource<Int>>(Resource.None())
 
 
     val modelPath = mutableStateOf<String?>(null)
     val modelImageUrl = mutableStateOf<String?>(null)
     private fun createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is not in the Support Library.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = CHANNEL_NEW_MODEL
-            val descriptionText = "Information of new model"
+            val descriptionText = context.getString(R.string.notification_channel_description)
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_NEW_MODEL, name, importance).apply {
                 description = descriptionText
             }
-            // Register the channel with the system.
             val notificationManager: NotificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
@@ -118,12 +109,11 @@ class MainViewModel(
         if (autoRefine.value) {
             loadRefineModel(
                 model.value.meshyId, textureRichness, false
-            ) // false cause then it's just save
+            )
         }
     }
 
     fun loadRefineModel(id: String, textureRichness: TextureRichness, overwrite: Boolean) {
-        Log.d("loadModel refine", "Enter point $id - $textureRichness - $overwrite")
         isLoading.value = true
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -136,7 +126,6 @@ class MainViewModel(
                 is Resource.Success -> {
 
                     if (result.data != null) {
-                        Log.d("loadModelRefine_result Success id:", result.data.result)
 
                         var refine = getRefine(result.data.result)
 
@@ -148,14 +137,9 @@ class MainViewModel(
                             }
 
                             is Resource.Success -> {
-                                Log.d(
-                                    "eventualApiRes Success id:", refine.data?.id ?: "none"
-                                )
-                                while (refine.data!!.status == "PENDING" || refine.data!!.status == "IN_PROGRESS") {
-                                    Log.d(
-                                        "loadModel R: while",
-                                        "entered with status ${refine.data!!.status} ${refine.data!!.progress}%"
-                                    )
+
+                                while (refine.data!!.status == ProgressStatus.PENDING.toString() || refine.data!!.status == ProgressStatus.IN_PROGRESS.toString()) {
+
                                     delay(40000)
                                     refine = getRefine(result.data.result)
 
@@ -165,7 +149,7 @@ class MainViewModel(
                                     }
 
                                 }
-                                if (refine.data!!.status == "SUCCEEDED") {
+                                if (refine.data!!.status == ProgressStatus.SUCCEEDED.toString()) {
 
                                     model.value = ResponseToModelEntryConverter().toModelEntry(
                                         refineModel = refine.data
@@ -177,13 +161,16 @@ class MainViewModel(
                                         )
                                     } else {
                                         updateByteInstancedModel(
-                                            isRefine = true, oldMeshyId = id
+                                            oldMeshyId = id
                                         )
                                     }
                                 }
-                                if (refine.data!!.status == "FAILED" || refine.data!!.status == "EXPIRED") {
-                                    loadError.value =
-                                        "Model loading is ${refine.data!!.status} with ${refine.data!!.task_error}"
+                                if (refine.data!!.status == ProgressStatus.FAILED.toString() || refine.data!!.status == ProgressStatus.EXPIRED.toString()) {
+                                    loadError.value = context.getString(
+                                        R.string.model_loading_error,
+                                        refine.data!!.status,
+                                        refine.data!!.task_error
+                                    )
                                     isLoading.value = false
                                     showNotification(
                                         NotificationType.ERROR, refine.data!!.task_error.toString()
@@ -191,8 +178,7 @@ class MainViewModel(
                                 }
                             }
 
-                            is Resource.Loading -> {}
-                            is Resource.None -> {}
+                            else -> {}
                         }
                     }
                 }
@@ -212,7 +198,7 @@ class MainViewModel(
     }
 
     fun loadModelEntryFromImage(url: String, name: String = "") {
-        Log.d("loadModel img", "Enter point of name $name")
+
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
             val result = meshyRepository.postImageTo3D(PostFromImage(url))
@@ -221,28 +207,19 @@ class MainViewModel(
                 is Resource.Success -> {
 
                     if (result.data != null) {
-                        Log.d("loadModelEntry_result Success id:", result.data.result)
-
                         var image3d = getImageTo3D(result.data.result)
 
                         when (image3d) {
                             is Resource.Error -> {
                                 loadError.value = image3d.message
                                 isLoading.value = false
-                                Log.d(" loadModel eventualApiRes Error", image3d.message.toString())
                                 showNotification(NotificationType.ERROR, image3d.message!!)
                             }
 
                             is Resource.Success -> {
-                                Log.d(
-                                    " loadModel eventualApiRes Success id:",
-                                    image3d.data?.id ?: "none"
-                                )
-                                while (image3d.data!!.status == "PENDING" || image3d.data!!.status == "IN_PROGRESS") {
-                                    Log.d(
-                                        "loadModel while",
-                                        "while entered with status ${image3d.data!!.status} ${image3d.data!!.progress}%"
-                                    )
+
+                                while (image3d.data!!.status == ProgressStatus.PENDING.toString() || image3d.data!!.status == ProgressStatus.IN_PROGRESS.toString()) {
+
                                     progress.value = image3d.data!!.progress
                                     delay(40000)
                                     image3d = getImageTo3D(result.data.result)
@@ -252,7 +229,7 @@ class MainViewModel(
                                     }
 
                                 }
-                                if (image3d.data!!.status == "SUCCEEDED") {
+                                if (image3d.data!!.status == ProgressStatus.SUCCEEDED.toString()) {
                                     isLoading.value = false
 
                                     model.value =
@@ -263,9 +240,12 @@ class MainViewModel(
                                         imageDescription = name
                                     )
                                 }
-                                if (image3d.data!!.status == "FAILED" || image3d.data!!.status == "EXPIRED") {
-                                    loadError.value =
-                                        "Model loading is ${image3d.data!!.status} with ${image3d.data!!.task_error}"
+                                if (image3d.data!!.status == ProgressStatus.FAILED.toString() || image3d.data!!.status == ProgressStatus.EXPIRED.toString()) {
+                                    loadError.value = context.getString(
+                                        R.string.model_loading_error,
+                                        image3d.data!!.status,
+                                        image3d.data!!.task_error
+                                    )
 
                                     isLoading.value = false
                                     model.value =
@@ -276,9 +256,7 @@ class MainViewModel(
                                 }
                             }
 
-                            else -> {
-                                //   isLoading.value = true
-                            }
+                            else -> {}
                         }
                     }
                 }
@@ -300,7 +278,6 @@ class MainViewModel(
     }
 
     fun loadModelEntryFromText(prompt: String) {
-        Log.d("loadModel text", "Enter point")
 
         viewModelScope.launch {
             val result = meshyRepository.postTextTo3D(PostFromText(prompt, "preview"))
@@ -308,41 +285,30 @@ class MainViewModel(
                 is Resource.Success -> {
                     postId.value = result.data ?: PostId("")
                     if (result.data != null) {
-                        Log.d("loadModelEntry_result Success id:", result.data.result)
                         var eventualApiRes = getTextTo3D(result.data.result)
                         when (eventualApiRes) {
                             is Resource.Error -> {
-                                Log.d("eventualApiRes Error", eventualApiRes.toString())
                                 showNotification(NotificationType.ERROR, eventualApiRes.message!!)
                             }
 
                             is Resource.Success -> {
-                                Log.d(
-                                    "eventualApiRes Success id:", eventualApiRes.data?.id ?: "none"
-                                )
 
-                                while (eventualApiRes.data!!.status == "PENDING" || eventualApiRes.data!!.status == "IN_PROGRESS") {
-                                    Log.d(
-                                        "loadModel while",
-                                        "while entered with status ${eventualApiRes.data!!.status} ${eventualApiRes.data!!.progress}%"
-                                    )
+                                while (eventualApiRes.data!!.status == ProgressStatus.PENDING.toString() || eventualApiRes.data!!.status == ProgressStatus.IN_PROGRESS.toString()) {
+
                                     delay(20000)
                                     eventualApiRes = getTextTo3D(result.data.result)
                                     if (eventualApiRes is Resource.Error) {
                                         showNotification(
                                             NotificationType.ERROR,
-                                            result.message ?: "error occurred"
+                                            result.message ?: context.getString(R.string.error_header)
                                         )
                                         break
                                     }
-                                    // return Resource.Loading()
                                 }
-                                if (eventualApiRes.data!!.status == "SUCCEEDED") {
+                                if (eventualApiRes.data!!.status == ProgressStatus.SUCCEEDED.toString()) {
                                     isLoading.value = false
                                     model.value =
                                         ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
-
-                                    // All main prop - MESHYid set in saveByteInstancedModel
                                     if (!autoRefine.value) {
                                         saveByteInstancedModel(
                                             isFromText = true,
@@ -350,9 +316,12 @@ class MainViewModel(
                                         )
                                     }
                                 }
-                                if (eventualApiRes.data!!.status == "FAILED" || eventualApiRes.data!!.status == "EXPIRED") {
-                                    loadError.value =
-                                        "Model loading is ${eventualApiRes.data!!.status}"
+                                if (eventualApiRes.data!!.status == ProgressStatus.FAILED.toString() || eventualApiRes.data!!.status == ProgressStatus.EXPIRED.toString()) {
+                                    loadError.value = context.getString(
+                                        R.string.model_loading_error,
+                                        eventualApiRes.data!!.status,
+                                        eventualApiRes.data!!.progress.toString()
+                                    )
                                     isLoading.value = false
                                     model.value =
                                         ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
@@ -405,7 +374,7 @@ class MainViewModel(
         try {
             viewModelScope.launch(Dispatchers.IO) {
                 URL(model.value.modelImageUrl).openStream()
-                    .use { inputStream: InputStream -> // TODO change to model
+                    .use { inputStream: InputStream ->
                         val inStream = BufferedInputStream(inputStream)
                         val output = ByteArrayOutputStream()
                         inStream.copyTo(output)
@@ -413,7 +382,7 @@ class MainViewModel(
 
                         isSavedSuccess.value = modelRoom.saveModel(
                             ModelEntity(
-                                modelInstance = output.toByteArray(), // todo get rid of
+                                modelInstance = output.toByteArray(),
                                 modelPath = model.value.modelPath,
                                 modelDescription = imageDescription ?: model.value.modelDescription,
                                 modelImageUrl = model.value.modelImageUrl,
@@ -424,7 +393,6 @@ class MainViewModel(
                             )
                         )
 
-
                         when (isSavedSuccess.value) {
                             is Resource.Success -> {
                                 saveLastModel(
@@ -432,7 +400,7 @@ class MainViewModel(
                                     modelImageUrl = model.value.modelImageUrl,
                                     id = isSavedSuccess.value.data?.toInt() ?: 0
                                 )
-                                if (dataStoreState.value.isEmpty()) {
+                                if (_dataStoreState.value.isEmpty()) {
                                     modelImageUrl.value = model.value.modelImageUrl
                                     modelPath.value = model.value.modelPath
 
@@ -442,7 +410,7 @@ class MainViewModel(
                                         NotificationType.SUCCESS, model.value.modelDescription
                                     )
                                 } else {
-                                    loadError.value = dataStoreState.value
+                                    loadError.value = _dataStoreState.value
                                 }
                                 isLoading.value = false
                             }
@@ -453,16 +421,14 @@ class MainViewModel(
 
                             is Resource.Error -> {
                                 isLoading.value = false
-                                loadError.value = "Saving Model Error"
+                                loadError.value = isSavedSuccess.value.message
                                 showNotification(
-                                    NotificationType.ERROR, "Saving Model Error"
+                                    NotificationType.ERROR, isSavedSuccess.value.message.toString()
                                 )
                             }
 
                             else -> {}
                         }
-
-                        Log.d("loadModel in S", "isSavedSuccess id= ${isSavedSuccess.value.data} ")
 
                         output.close()
                         inputStream.close()
@@ -475,8 +441,8 @@ class MainViewModel(
             loadError.value = e.message
         }
     }
+
     private fun updateByteInstancedModel(
-        isRefine: Boolean,
         oldMeshyId: String,
     ) {
         try {
@@ -486,7 +452,7 @@ class MainViewModel(
                     modelPath = model.value.modelPath,
                     modelImageUrl = model.value.modelImageUrl,
                     meshyId = oldMeshyId,
-                    isRefine = isRefine
+                    isRefine = true
                 )
                 when (isUpdateSuccess.value) {
                     is Resource.Success -> {
@@ -495,12 +461,9 @@ class MainViewModel(
                             modelImageUrl = model.value.modelImageUrl,
                             id = isUpdateSuccess.value.data ?: 0
                         )
-                        if (dataStoreState.value.isEmpty()) {
+                        if (_dataStoreState.value.isEmpty()) {
                             //    modelId.value = model.value.id
-                            Log.d(
-                                "loadModel Upd",
-                                "for ${isUpdateSuccess.value} updated ROOM ${model.value.modelPath} \n\r ${model.value.modelImageUrl} "
-                            )
+
                             modelPath.value = model.value.modelPath
                             modelImageUrl.value = model.value.modelImageUrl
                             isSuccess.value =
@@ -509,16 +472,16 @@ class MainViewModel(
                                 NotificationType.SUCCESS, model.value.modelDescription
                             )
                         } else {
-                            loadError.value = dataStoreState.value
+                            loadError.value = _dataStoreState.value
                         }
                         isLoading.value = false
                     }
 
                     is Resource.Error -> {
                         isLoading.value = false
-                        loadError.value = isSavedSuccess.value.message
+                        loadError.value = isUpdateSuccess.value.message
                         showNotification(
-                            NotificationType.ERROR, "Saving Model Error"
+                            NotificationType.ERROR, isUpdateSuccess.value.message.toString()
                         )
                     }
 
@@ -532,8 +495,7 @@ class MainViewModel(
         }
     }
 
-    private fun showNotification(type: NotificationType, description: String = "") {
-        Log.d("loadModel", "showNotification Enter point")
+    private fun showNotification(type: NotificationType, description: String = "") { // todo clean
         with(NotificationManagerCompat.from(context)) {
             if (ActivityCompat.checkSelfPermission(
                     context, Manifest.permission.POST_NOTIFICATIONS
@@ -552,17 +514,20 @@ class MainViewModel(
             when (type) {
                 NotificationType.LOADING -> {
                     val builder = NotificationCompat.Builder(context, CHANNEL_NEW_MODEL).apply {
-                        setContentTitle("Model is loading")
-                        setContentText("Download in progress")
-                        setStyle(NotificationCompat.BigTextStyle().bigText("loading"))
+                        setContentTitle(context.getString(R.string.app_name))
+                        setContentText(context.getString(R.string.notification_context))
+                        setStyle(
+                            NotificationCompat.BigTextStyle()
+                                .bigText(context.getString(R.string.big_style_notif_loading))
+                        )
                         setSmallIcon(R.drawable.ic_blur)
-                        setPriority(NotificationCompat.PRIORITY_MAX)
+                        priority = NotificationCompat.PRIORITY_MAX
                     }
-                    val PROGRESS_MAX = 100
-                    val PROGRESS_CURRENT = 0
+
+                    val progressCurrent = 0
                     NotificationManagerCompat.from(context).apply {
                         // Issue the initial notification with zero progress.
-                        builder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false)
+                        builder.setProgress(NOTIFICATION_PROGRESS_MAX, progressCurrent, false)
                         notify(NOTIFICATION_ID, builder.build())
 
                         // Do the job that tracks the progress here.
@@ -572,7 +537,8 @@ class MainViewModel(
                         // notificationManager.notify(notificationId, builder.build());
 
                         // When done, update the notification once more to remove the progress bar.
-                        builder.setContentText("Download complete").setProgress(0, 0, false)
+                        builder.setContentText(context.getString(R.string.notif_download_complete))
+                            .setProgress(0, 0, false)
                         notify(NOTIFICATION_ID, builder.build())
                     }
                 }
@@ -580,7 +546,8 @@ class MainViewModel(
                 NotificationType.ERROR -> {
 
                     val builder = NotificationCompat.Builder(context, CHANNEL_NEW_MODEL)
-                        .setSmallIcon(R.drawable.ic_token).setContentTitle("Error!")
+                        .setSmallIcon(R.drawable.ic_token)
+                        .setContentTitle(context.getString(R.string.error))
                         .setContentText(description).setPriority(NotificationCompat.PRIORITY_HIGH)
                     // notificationId is a unique int for each notification that you must define.
                     notify(NOTIFICATION_ID, builder.build())
@@ -589,8 +556,11 @@ class MainViewModel(
                 NotificationType.SUCCESS -> {
 
                     val builder = NotificationCompat.Builder(context, CHANNEL_NEW_MODEL)
-                        .setSmallIcon(R.drawable.ic_center_focus).setContentTitle("New model!")
-                        .setContentText("New model was successfully created")
+                        .setSmallIcon(R.drawable.ic_center_focus).setContentTitle(
+                            context.getString(
+                                R.string.notif_success_title
+                            )
+                        ).setContentText(context.getString(R.string.success_notif_context))
                         .setStyle(NotificationCompat.BigTextStyle())
                         .setPriority(NotificationCompat.PRIORITY_MAX)
                     // notificationId is a unique int for each notification that you must define.

@@ -33,15 +33,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.endofjanuary.placement_example.MainViewModel
+import com.endofjanuary.placement_example.R
 
 @Composable
 fun AutoRefineProgressBubble(
     modifier: Modifier = Modifier,
-    message: String = "You have enabled auto refine mode, so choose desired quality:",
+    message: String = "",
     selectedRichness: MutableState<MainViewModel.TextureRichness> = remember {
         mutableStateOf(
             MainViewModel.TextureRichness.High
@@ -62,30 +64,17 @@ fun AutoRefineProgressBubble(
     ) {
         Spacer(modifier = Modifier.size(11.dp))
         Row(verticalAlignment = Alignment.Bottom) {
-/*            Image(
-                modifier = Modifier
-                    .padding(start = 8.dp, end = 9.dp)
-                    .size(33.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop,
-                painter = painterResource(R.drawable.),
-                contentDescription = "chat image"
-            )*/
             Icon(
                 Icons.Default.Info,
-                contentDescription = "info message",
+                contentDescription = stringResource(R.string.info_message_icon),
                 modifier = Modifier
                     .padding(start = 8.dp, end = 9.dp)
                     .size(33.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
             Box(
-                modifier = Modifier
-                    .weight(1.0f)
+                modifier = Modifier.weight(1.0f)
             ) {
-                //   Column(
-                //       horizontalAlignment = Alignment.Start,
-                //  ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
@@ -95,19 +84,17 @@ fun AutoRefineProgressBubble(
                         .padding(horizontal = 18.dp, vertical = 12.dp)
                 ) {
                     Text(
-                        modifier = Modifier.padding(top = 1.dp), text = message,
+                        modifier = Modifier.padding(top = 1.dp),
+                        text = message.ifEmpty { stringResource(R.string.refine_mode_message) },
                         letterSpacing = MaterialTheme.typography.bodyLarge.letterSpacing,
                         textAlign = TextAlign.Justify
                     )
                     Spacer(modifier = Modifier.size(8.dp))
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier
-                                .height(100.dp)
+                            columns = GridCells.Fixed(2), modifier = Modifier.height(100.dp)
                         ) {
                             items(richnessOptions) {
                                 val selected = selectedRichness.value == it
@@ -143,14 +130,13 @@ fun AutoRefineProgressBubble(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         IconButton(onClick = { onDone(selectedRichness.value) }) {
-                            Icon(Icons.Default.Done, "confirm")
+                            Icon(Icons.Default.Done, stringResource(R.string.confirm_icon))
                         }
                         IconButton(onClick = onCancel) {
-                            Icon(Icons.Default.Close, "edit")
+                            Icon(Icons.Default.Close, stringResource(R.string.edit_icon))
                         }
                     }
                 }
-                //}
             }
             Spacer(modifier = Modifier.size(bubblePadding))
         }

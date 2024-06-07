@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -41,8 +42,7 @@ import org.koin.androidx.compose.getViewModel
 
 @Composable
 fun RegistrationScreen(
-    navController: NavController,
-    modifier: Modifier = Modifier
+    navController: NavController, modifier: Modifier = Modifier
 ) {
 
     val viewModel = getViewModel<RegistrationViewModel>()
@@ -65,19 +65,13 @@ fun RegistrationScreen(
         VisualTransformation.None
     }
 
-    val currentUser by viewModel.currentUser.collectAsState() // to initialize user
+    val currentUser by viewModel.currentUser.collectAsState()
     val signInError by viewModel.signInError.collectAsStateWithLifecycle(initialValue = null)
 
     val authState by viewModel.signInState.collectAsStateWithLifecycle()
 
-    val headingText = if (register) "Sign Up" else "Sign In"
-
-    /*    LaunchedEffect(currentUser) {
-            Log.d("email stat", "Verified: ${currentUser?.isEmailVerified}")
-            if (authState == SignInState.AUTHORIZED *//*&& currentUser?.isEmailVerified == true*//*) {
-            navController.navigate("home_screen")
-        }
-    }*/
+    val headingText =
+        if (register) stringResource(R.string.sign_up) else stringResource(R.string.sign_in)
 
     Surface(
         modifier = modifier
@@ -94,24 +88,20 @@ fun RegistrationScreen(
             HeadingTextComponent(heading = headingText)
             Spacer(modifier = Modifier.height(20.dp))
             OutlinedTextField(
-                modifier = Modifier
-                    .padding(5.dp),
+                modifier = Modifier.padding(5.dp),
                 isError = isEmailError,
                 value = email,
                 onValueChange = {
                     viewModel.emailValueState.value = it
                     viewModel.onEmailValueChanged()
                 },
-                label = { Text(text = "Enter email") },
+                label = { Text(text = stringResource(R.string.enter_email)) },
                 supportingText = {
-                    if (isEmailError)
-                        Text(text = "Invalid Email")
+                    if (isEmailError) Text(text = stringResource(R.string.invalid_email))
                 },
                 singleLine = true
             )
-            OutlinedTextField(
-                modifier = Modifier
-                    .padding(5.dp),
+            OutlinedTextField(modifier = Modifier.padding(5.dp),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                 ),
@@ -122,35 +112,29 @@ fun RegistrationScreen(
                     viewModel.onPasswordValueChanged()
                 },
                 supportingText = {
-                    if (isPasswordError)
-                        Text(text = "Password has to contain special characters, one big letter and be at least 8 characters.")
+                    if (isPasswordError) Text(text = stringResource(R.string.password_requirements))
                 },
-                label = { Text(text = "Enter password") },
+                label = { Text(text = stringResource(R.string.enter_password)) },
                 singleLine = true,
                 visualTransformation = passwordVisualTransformation,
                 trailingIcon = {
                     IconButton(onClick = {
                         hidePassword = !hidePassword
                     }) {
-                        if (hidePassword)
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_eye_filled),
-                                contentDescription = "show password"
-                            )
-                        else
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_eye_outlined),
-                                contentDescription = "hide password"
-                            )
+                        if (hidePassword) Icon(
+                            painter = painterResource(id = R.drawable.ic_eye_filled),
+                            contentDescription = stringResource(R.string.show_password)
+                        )
+                        else Icon(
+                            painter = painterResource(id = R.drawable.ic_eye_outlined),
+                            contentDescription = stringResource(R.string.hide_password)
+                        )
                     }
-                }
-            )
+                })
 
 
             if (register) {
-                OutlinedTextField(
-                    modifier = Modifier
-                        .padding(5.dp),
+                OutlinedTextField(modifier = Modifier.padding(5.dp),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password
                     ),
@@ -160,36 +144,29 @@ fun RegistrationScreen(
                         viewModel.confirmPasswordValueState.value = it
                         viewModel.onConfirmPasswordChanged()
                     },
-                    label = { Text(text = "Confirm password") },
+                    label = { Text(text = stringResource(R.string.confirm_password)) },
                     supportingText = {
-                        if (isConfirmPasswordError)
-                            Text(text = "Password doesn't match")
+                        if (isConfirmPasswordError) Text(text = stringResource(R.string.password_doesn_t_match))
                     },
-                    //   keyboardOptions =  KeyboardOptions(keyboardType = KeyboardType.Password),
                     singleLine = true,
                     visualTransformation = passwordVisualTransformation,
                     trailingIcon = {
                         IconButton(onClick = {
                             hidePassword = !hidePassword
                         }) {
-                            if (hidePassword)
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_eye_filled),
-                                    contentDescription = "show password"
-                                )
-                            else
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_eye_outlined),
-                                    contentDescription = "hide password"
-                                )
+                            if (hidePassword) Icon(
+                                painter = painterResource(id = R.drawable.ic_eye_filled),
+                                contentDescription = stringResource(id = R.string.show_password)
+                            )
+                            else Icon(
+                                painter = painterResource(id = R.drawable.ic_eye_outlined),
+                                contentDescription = stringResource(id = R.string.hide_password)
+                            )
                         }
-                    }
-                )
+                    })
             }
-            Button(
-                enabled = !isPasswordError && !isConfirmPasswordError && !isEmailError && email.isNotBlank() && password.isNotBlank(),
+            Button(enabled = !isPasswordError && !isConfirmPasswordError && !isEmailError && email.isNotBlank() && password.isNotBlank(),
                 onClick = {
-                    //  navController.navigate("home_screen")
                     if (register) {
                         viewModel.onSignUp()
                     } else {
@@ -197,9 +174,9 @@ fun RegistrationScreen(
                     }
                 }) {
                 if (register) {
-                    Text("Register")
+                    Text(stringResource(R.string.register))
                 } else {
-                    Text("Sign In")
+                    Text(stringResource(id = R.string.sign_in))
                 }
             }
             if (!register) {
@@ -208,7 +185,7 @@ fun RegistrationScreen(
                         register = true
                     },
                 ) {
-                    Text(text = "Don't have an account ? Register!")
+                    Text(text = stringResource(R.string.no_account_register))
                 }
             } else {
                 TextButton(
@@ -216,56 +193,59 @@ fun RegistrationScreen(
                         register = false
                     },
                 ) {
-                    Text(text = "Back to signing in ...")
+                    Text(text = stringResource(R.string.to_signing_in))
                 }
             }
 
             val context = LocalContext.current
-/*            LaunchedEffect(signInError) {
-                if (signInError != null) {
-                    Toast.makeText(
-                        context,
-                        "Error: $signInError",
-                        Toast.LENGTH_LONG,
-                    ).show()
-                }
-            }*/
             when (authState) {
                 SignInState.AUTHORIZED -> {
                     navController.navigate("home_screen")
                 }
 
-                SignInState.CREDENTIAL_ERROR -> Toast.makeText( // todo scaffold & snackbar
+                SignInState.CREDENTIAL_ERROR -> Toast.makeText(
+                    // todo scaffold & snackbar
                     context,
-                    "Authentication failed cause of credential error."+
-                            if (!signInError.isNullOrEmpty()) "Details: $signInError" else "",
+                    stringResource(R.string.credential_error) + if (!signInError.isNullOrEmpty()) stringResource(
+                        R.string.details,
+                        signInError.toString()
+                    ) else "",
                     Toast.LENGTH_SHORT,
                 ).show()
 
                 SignInState.USER_NOT_FOUND -> Toast.makeText(
                     context,
-                    "No such user exist" +
-                            if (!signInError.isNullOrEmpty()) "\r\nDetails: $signInError" else "",
+                    stringResource(R.string.user_not_found) + if (!signInError.isNullOrEmpty()) stringResource(
+                        R.string.details,
+                        signInError.toString()
+                    ) else "",
                     Toast.LENGTH_SHORT,
                 ).show()
 
                 SignInState.VERIFY_FAILED -> Toast.makeText(
-                   context,
-                    "Email verification failed :("+
-                            if (!signInError.isNullOrEmpty()) "\r\nDetails: $signInError" else "",
+                    context,
+                    stringResource(R.string.email_verification_failed) + if (!signInError.isNullOrEmpty()) stringResource(
+                        R.string.details,
+                        signInError.toString()
+                    ) else "",
                     Toast.LENGTH_SHORT,
                 ).show()
 
                 SignInState.VERIFYING_EMAIL -> Toast.makeText(
                     context,
-                    "Verification email was sent",
+                    stringResource(R.string.verification_email_was_sent),
                     Toast.LENGTH_SHORT,
                 ).show()
 
                 SignInState.USER_COLLISION -> Toast.makeText(
                     context,
-                    "$email already exist"+
-                            if (!signInError.isNullOrEmpty()) "\r\nDetails: $signInError" else "",
+                    stringResource(
+                        R.string.email_already_exist,
+                        email
+                    ) + if (!signInError.isNullOrEmpty()) stringResource(
+                        R.string.details,
+                        signInError.toString()
+                    ) else "",
 
                     Toast.LENGTH_SHORT,
                 ).show()

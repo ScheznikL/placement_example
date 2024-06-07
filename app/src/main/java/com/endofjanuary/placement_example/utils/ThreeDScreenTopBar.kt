@@ -14,6 +14,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
@@ -55,7 +56,7 @@ fun ThreeDScreenTopBar(
             IconButton(onClick = { navController.navigate("ar_screen/${modelId}") }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_token),
-                    contentDescription = "to AR"
+                    contentDescription = stringResource(R.string.to_ar_icon)
                 )
             }
         },
@@ -64,32 +65,21 @@ fun ThreeDScreenTopBar(
                 IconButton(onClick = { openRefineDialog.value = true }) {
                     Icon(
                         painterResource(id = R.drawable.ic_awesome_filled),
-                        contentDescription = "Refine",
+                        contentDescription = stringResource(R.string.refine),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                /*                    TextButton(
-                                        onClick = {
-                                            openRefineDialog.value = true
-                                        },
-                                        modifier = Modifier.background(
-                                            Color(255, 169, 0, 156),
-                                            RoundedCornerShape(8.dp)
-                                        ),
-                                    ) {
-                                        Text("Refine")
-                                    }*/
             }
             IconButton(onClick = { openDownloadDialog.value = true }) {
                 Icon(
                     painterResource(id = R.drawable.ic_download),
-                    contentDescription = "download"
+                    contentDescription = stringResource(R.string.download),
                 )
             }
             IconButton(onClick = { viewModel.deleteModel(meshyId) }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "Delete"
+                    contentDescription = stringResource(R.string.delete),
                 )
             }
         },
@@ -101,7 +91,6 @@ fun ThreeDScreenTopBar(
     DoRefineDialog(openRefineDialog, confirmRefine)
     SpecifyRefineOptions(
         mainViewModel, openDetailedDialog, meshyId, overwrite
-        //TODO if time is up
     )
     DoDownload(
         openDialog = openDownloadDialog,

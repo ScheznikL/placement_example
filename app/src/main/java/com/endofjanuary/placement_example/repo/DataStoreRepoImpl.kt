@@ -1,13 +1,11 @@
 package com.endofjanuary.placement_example.repo
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import com.endofjanuary.placement_example.LastModelsParam
 import com.endofjanuary.placement_example.ModelAccessParam
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 
 class DataStoreRepoImpl(
     private val dataStore: DataStore<LastModelsParam>
@@ -18,15 +16,10 @@ class DataStoreRepoImpl(
         get() = dataStore.data
 
     override suspend fun updateData(modelId: String, id: Int, modelImageUrl: String) {
-        Log.d(
-            "modelList dataStore model _rewrite",
-            "start start ${dataStore.data.map { it.lastModelsList }}"
-        )
         try {
             dataStore.updateData { currentSettings ->
                 if (currentSettings.lastModelsCount >= 10) {
                     currentSettings.toBuilder().removeLastModels(0).addLastModels(
-                        //count,
                         ModelAccessParam.newBuilder().setModelId(modelId).setId(id)
                             .setModelImage(modelImageUrl)
                             .setUnixTimestamp(System.currentTimeMillis())

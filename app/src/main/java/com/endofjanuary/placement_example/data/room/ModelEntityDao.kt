@@ -6,7 +6,6 @@ import androidx.room.Insert
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
-//TODO retrieve flow ?
 @Dao
 interface ModelEntityDao {
     @Query("SELECT * FROM models")

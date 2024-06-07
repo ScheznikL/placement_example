@@ -18,7 +18,6 @@ import androidx.room.PrimaryKey
 data class ModelEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    //val modelInstance: ModelInstance,
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
     val modelInstance: ByteArray,
     val meshyId: String,

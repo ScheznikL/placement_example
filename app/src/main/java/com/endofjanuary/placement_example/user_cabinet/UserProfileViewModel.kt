@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.user_cabinet
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,55 +25,25 @@ class UserProfileViewModel(
     val currentUser = authenticationRepo.currentUser(viewModelScope)
 
     private val _clearDataError = modelRoomRepo.clearModelsTableError
-    val clearDataError: StateFlow<String>
-        get() = _clearDataError
 
     private val _clearDataStoreError = dataStoreRepo.dataStoreState
-    val clearDataStoreError: StateFlow<String>
-        get() = _clearDataStoreError
-
 
     private val _state = MutableStateFlow(UserProfileViewState())
     val state: StateFlow<UserProfileViewState>
         get() = _state
 
-    /*    val displayNameInput = MutableStateFlow<String?>(null)
-        val autoSaveModel = MutableStateFlow<Boolean?>(false)
-        val autoRefineModel = MutableStateFlow<Boolean?>(false)*/
-
     val error = mutableStateOf("")
 
-    val isEmailError = mutableStateOf(false)
     val isPasswordError = mutableStateOf(false)
-    val isNewPasswordError = mutableStateOf(false)
-    val isConfirmPasswordError = mutableStateOf(false)
-
 
     private val passwordPattern =
         Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$")
-
-    var emailValueState = mutableStateOf("")
     var passwordValueState = mutableStateOf("")
-    var newPasswordValueState = mutableStateOf("")
-    var confirmNewPasswordValueState = mutableStateOf("")
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-/*            currentUser.collect {
-                _state.value = UserProfileViewState(
-                    displayName = it?.displayName ?: "",
-                    email = it?.email ?: "",
-                    autoRefineModel = it?.autoRefineModel ?: false,
-                    autoSaveModel = it?.autoSaveModel ?: false,
-                    id = it?.id ?: "",
-                    error = if (_clearDataError.value.isNotEmpty()) _clearDataError.value else if (_clearDataStoreError.value.isNotEmpty()) _clearDataStoreError.value else ""
-                )
-            }
-            */
             combine(
-                currentUser,
-                _clearDataError,
-                _clearDataStoreError
+                currentUser, _clearDataError, _clearDataStoreError
             ) { user, clearDataError, clearDataStoreError ->
                 UserProfileViewState(
                     displayName = user?.displayName ?: "",
@@ -90,25 +59,15 @@ class UserProfileViewModel(
         }
     }
 
-    /*
-
-
-    * */
     fun onSignOut() {
         viewModelScope.launch(Dispatchers.IO) {
             modelRoomRepo.deleteAll()
-            /*  dataStore.data.collect {
-                  if (it.lastModelsList.size > 0) {
-                      dataStore.updateData { current ->
-                          current.toBuilder().clear().build()
-                      }
-                  }
-              }*/
             dataStoreRepo.clearDataStore()
             authenticationRepo.signOut()
         }
     }
-  fun onTempSignOut() {
+
+    fun onTempSignOut() {
         viewModelScope.launch(Dispatchers.IO) {
             authenticationRepo.signOut()
         }
@@ -117,11 +76,11 @@ class UserProfileViewModel(
     fun verifyEmail() {
         viewModelScope.launch { authenticationRepo.verifyEmail() }
     }
+
     fun askForChangePassword() {
         viewModelScope.launch(Dispatchers.IO) {
             authenticationRepo.forChangePassword(
-                _state.value.email,
-                passwordValueState.value
+                _state.value.email, passwordValueState.value
             )
         }
     }
@@ -145,7 +104,6 @@ class UserProfileViewModel(
     }
 
     fun onSaveSwitch(checked: Boolean) {
-        //autoSaveModel.value = checked //
         _state.value = _state.value.copy(
             autoSaveModel = checked
         )
@@ -153,7 +111,6 @@ class UserProfileViewModel(
     }
 
     fun onRefineSwitch(checked: Boolean) {
-        //autoRefineModel.value = checked //
         _state.value = _state.value.copy(
             autoRefineModel = checked
         )
@@ -161,16 +118,14 @@ class UserProfileViewModel(
     }
 
     fun onNameChange(name: String) {
-        Log.d("FIRESTORE", "name changed $name")
         _state.value = _state.value.copy(
             displayName = name
         )
-        //  updateUserData()
     }
+
     fun onPasswordValueChanged(value: String) {
         passwordValueState.value = value
-        isPasswordError.value =
-            !passwordPattern.matches(value) || value.isBlank()
+        isPasswordError.value = !passwordPattern.matches(value) || value.isBlank()
     }
 }
 

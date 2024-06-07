@@ -27,8 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.endofjanuary.placement_example.R
 
 @Composable
 fun FinalMessageBubble(
@@ -53,8 +54,8 @@ fun FinalMessageBubble(
                     .size(33.dp)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop,
-                painter = painterResource(com.endofjanuary.placement_example.R.drawable.chatgptlogo),
-                contentDescription = "chat image"
+                painter = painterResource(R.drawable.chatgptlogo),
+                contentDescription = stringResource(R.string.chat_image)
             )
             Box(
                 modifier = Modifier
@@ -74,7 +75,6 @@ fun FinalMessageBubble(
                                     )
                                 ), RoundedCornerShape(30.dp)
                             )
-                            //.shadow(100.dp, spotColor = MaterialTheme.colorScheme.secondary, ambientColor = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(30.dp))
                             .padding(horizontal = 18.dp, vertical = 12.dp)
                     ) {
                         Text(modifier = Modifier.padding(top = 1.dp), text = message)
@@ -84,10 +84,10 @@ fun FinalMessageBubble(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             IconButton(onClick = onDone) {
-                                Icon(Icons.Default.Done, "done")
+                                Icon(Icons.Default.Done, stringResource(R.string.done_button))
                             }
                             IconButton(onClick = onEdit) {
-                                Icon(Icons.Default.Edit, "edit")
+                                Icon(Icons.Default.Edit, stringResource(R.string.edit_icon_button))
                             }
                         }
                     }
@@ -96,11 +96,5 @@ fun FinalMessageBubble(
             Spacer(modifier = Modifier.size(bubblePadding))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FinalMessageBubblePreview() {
-    // FinalMessageBubble(message = "final object description is <............. .... .............. word \n\r.......... .......................>")
 }
 

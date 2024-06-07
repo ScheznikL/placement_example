@@ -3,7 +3,6 @@ package com.endofjanuary.placement_example.upload_image
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
@@ -31,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.endofjanuary.placement_example.R
@@ -72,12 +72,12 @@ fun TakePhoto(
             ) {
                 Icon(
                     painterResource(R.drawable.ic_switch_camera),
-                    contentDescription = "Switch camera"
+                    contentDescription = stringResource(R.string.switch_camera)
                 )
             }
             IconButton(onClick = onClose) {
                 Icon(
-                    Icons.Default.Close, contentDescription = "Back"
+                    Icons.Default.Close, contentDescription = stringResource(R.string.back)
                 )
             }
         }
@@ -97,14 +97,16 @@ fun TakePhoto(
                         context = context
                     )
                 },
-                modifier = Modifier.background(
-                    MaterialTheme.colorScheme.background,
-                    shape = CircleShape
-                ).size(80.dp),
+                modifier = Modifier
+                    .background(
+                        MaterialTheme.colorScheme.background,
+                        shape = CircleShape
+                    )
+                    .size(80.dp),
             ) {
                 Icon(
                     painterResource(id = R.drawable.ic_photo_camera),
-                    contentDescription = "Take photo",
+                    contentDescription = stringResource(R.string.take_photo),
                     modifier = Modifier.size(40.dp)
                 )
             }
@@ -133,7 +135,6 @@ private fun takePhoto(
 
             override fun onError(exception: ImageCaptureException) {
                 super.onError(exception)
-                Log.e("Camera", "Couldn't take photo: ", exception)
             }
         })
 }

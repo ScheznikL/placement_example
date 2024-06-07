@@ -3,7 +3,6 @@ package com.endofjanuary.placement_example.upload_image
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -19,7 +18,6 @@ import java.io.IOException
 
 class UploadImageViewModel(
     private val awStorageRepo: AWStorageRepo,
-    //private val modelRoom: ModelsRepo
 ) : ViewModel() {
     var inputValueState = mutableStateOf("")
     var image: MutableState<Uri?> = mutableStateOf(null)
@@ -32,8 +30,6 @@ class UploadImageViewModel(
 
     fun onPhotoPickerSelect(uri: Uri?) {
         if (uri != null) image.value = uri
-
-        Log.d("selected", uri?.toString() ?: "null uri")
     }
     fun getPresignedUrl(context: Context) {
         if(image.value != null){
@@ -43,10 +39,6 @@ class UploadImageViewModel(
         }
     }
     fun getImagePresignedUrl(context: Context) {
-        /*
-                val flag = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                context.contentResolver.takePersistableUriPermission(selectedUri.value, flag)
-        */
         if (image.value != null) {
             isUploading.value = true
 
@@ -73,7 +65,6 @@ class UploadImageViewModel(
     }
 
     fun getBitmapPresignedUrl() {
-        Log.d("getBitmapPresignedUrl", "Enter")
 
         if (photo.value != null) {
             isUploading.value = true
@@ -111,10 +102,6 @@ class UploadImageViewModel(
                 try {
                     baos.close()
                 } catch (e: IOException) {
-                    Log.e(
-                        "bitmap log",
-                        "ByteArrayOutputStream was not closed"
-                    )
                 }
             }
         }

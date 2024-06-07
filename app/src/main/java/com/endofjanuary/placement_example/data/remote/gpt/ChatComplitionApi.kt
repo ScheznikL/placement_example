@@ -5,8 +5,10 @@ import com.endofjanuary.placement_example.data.remote.gpt.response.CompletionGpt
 import retrofit2.http.Body
 import retrofit2.http.POST
 
+private const val COMPLETION_END_POINT = "chat/completions"
+
 interface ChatComplitionApi {
-    @POST("chat/completions")
+    @POST(COMPLETION_END_POINT)
     suspend fun postToChat(
         @Body body: Post,
     ): CompletionGptObj

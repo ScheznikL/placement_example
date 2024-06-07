@@ -1,11 +1,9 @@
 package com.endofjanuary.placement_example.models_list_screen
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -62,7 +60,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -112,13 +110,13 @@ fun ModelsListScreen(
             FloatingActionButton(onClick = {
                 viewModel.insetModel()
             }) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
             }
         } else {
             FloatingActionButton(onClick = {
                 viewModel.deleteModels()
             }) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
             }
         }
     }) { padding ->
@@ -144,7 +142,6 @@ fun ModelsListScreen(
                             isFromImage = false,
                             loadError = loadError,
                             isLoading = isLoading,
-                            //   isSearching = isSearching,
                             viewModel = viewModel,
                             onSearch = viewModel::onSearch
                         )
@@ -157,7 +154,6 @@ fun ModelsListScreen(
                             isFromImage = true,
                             loadError = loadError,
                             isLoading = isLoading,
-                            // isSearching = isSearching,
                             viewModel = viewModel,
                             onSearch = viewModel::onSearch
                         )
@@ -175,12 +171,11 @@ fun ModelsListContent(
     isFromImage: Boolean,
     loadError: String,
     isLoading: Boolean,
-    // isSearching: Boolean,
     viewModel: ModelsListViewModel,
     onSearch: (String, Boolean) -> Unit
 ) {
     SearchBar(
-        hint = "Search...", modifier = Modifier
+        hint = stringResource(R.string.search), modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
     ) {
@@ -192,55 +187,9 @@ fun ModelsListContent(
         modelListState = modelsListState,
         loadError = loadError,
         isLoading = isLoading,
-        //  isSearching = isSearching,
         viewModel = viewModel
     )
 }
-
-/*@Composable
-fun ModelsFromTextList(
-    navController: NavController,
-    viewModel: ModelsListViewModel,
-) {
-    val modelListState by viewModel.textModelsListState.collectAsState()
-    val loadError by remember { viewModel.loadError }
-    val isLoading by remember { viewModel.isLoading }
-    val isSearching by remember { viewModel.isSearching }
-
-    if (modelListState.isNotEmpty()) {
-        LazyColumn(contentPadding = PaddingValues(16.dp)) {
-            val itemCount = //modelListState.size - 1
-                if (modelListState.size % 2 == 0) {
-                    modelListState.size / 2
-                } else {
-                    modelListState.size / 2 + 1
-                }
-            items(itemCount) {
-                ModelsInRow(
-                    rowIndex = it,
-                    entries = modelListState,
-                    navController = navController,
-                    viewModel = viewModel
-                )
-            }
-        }
-    } else {
-        NoDataSection("It appears you have no model...") { navController.navigate("home_screen") }
-    }
-    Box(
-        contentAlignment = Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        }
-        if (loadError.isNotEmpty()) {
-            RetrySection(error = loadError) {
-                viewModel.loadModels()
-            }
-        }
-    }
-}*/
 
 @Composable
 fun ModelsFromList(
@@ -255,8 +204,7 @@ fun ModelsFromList(
         LazyColumn(
             contentPadding = PaddingValues(16.dp)
         ) {
-            Log.d("modelListState", " ->>>  ${modelListState.size}")
-            val itemCount = //modelListState.size - 1
+            val itemCount =
                 if (modelListState.size % 2 == 0) {
                     modelListState.size / 2
                 } else {
@@ -274,7 +222,7 @@ fun ModelsFromList(
         }
     } else {
         NoDataSection(
-            error = "It appears you have no image model...",
+            error = stringResource(R.string.no_models_data),
             modifier = Modifier.fillMaxSize(),
         ) { navController.navigate("home_screen") }
     }
@@ -390,15 +338,13 @@ fun ModelInRowEntry(
                 },
                 onLongClick = {
                     if (!viewModel.selectionMode.value) viewModel.activateSelectionMode()
-                    Log.d("onLongClick", "${entry.meshyId} - ${entry.modelDescription}")
                     viewModel.selectModel(entry)
-                    Log.d("onLongClick", viewModel.selectedIds.value.toString())
                 },
             )
 
     ) {
         if (entry.isExpired == false) {
-            Column {// SubcomposeAsyncImage
+            Column {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current).data(entry.modelImageUrl)
                         .crossfade(true).build(),
@@ -467,37 +413,7 @@ fun RetrySection(
         Button(
             onClick = { onRetry() }, modifier = Modifier.align(CenterHorizontally)
         ) {
-            Text(text = "Retry")
-        }
-    }
-}
-
-@Composable
-fun NoDataSection(
-    error: String,
-    modifier: Modifier = Modifier,
-    onGoHome: () -> Unit,
-) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = CenterHorizontally,
-        modifier = modifier
-    ) {
-        Image(
-            modifier = Modifier
-                .padding(start = 8.dp, end = 9.dp)
-                .size(33.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop,
-            painter = painterResource(R.drawable.glass),
-            contentDescription = "chat image"
-        )
-        Text(error, color = MaterialTheme.colorScheme.secondary, fontSize = 18.sp)
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = { onGoHome() }, modifier = Modifier.align(CenterHorizontally)
-        ) {
-            Text(text = "Request model") // todo go to chat
+            Text(text = stringResource(R.string.retry))
         }
     }
 }
@@ -537,8 +453,8 @@ private fun CategoryTabs(
                 text = {
                     Text(
                         text = when (category) {
-                            Category.FromText -> "Models from text"
-                            Category.FromImage -> "Models from image"
+                            Category.FromText -> stringResource(R.string.tab_from_text)
+                            Category.FromImage -> stringResource(R.string.tab_from_image)
                         }, style = MaterialTheme.typography.bodySmall
                     )
                 })
@@ -583,59 +499,3 @@ fun SearchBar(
         }
     }
 }
-
-
-//
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun ModelViewTypeDialog(openDialog: MutableState<Boolean>, dialogRes: MutableState<Boolean?>) {
-//    BasicAlertDialog(
-//        onDismissRequest = {
-//            // Dismiss the dialog when the user clicks outside the dialog or on the back
-//            // button. If you want to disable that functionality, simply use an empty
-//            // onDismissRequest.
-//            openDialog.value = false
-//        }
-//    ) {
-//        Surface(
-//            modifier = Modifier
-//                .wrapContentWidth()
-//                .wrapContentHeight(),
-//            shape = MaterialTheme.shapes.large,
-//            tonalElevation = AlertDialogDefaults.TonalElevation
-//        ) {
-//            Column(modifier = Modifier.padding(26.dp)) {
-//                Text(
-//                    text = "Would you like to place this model in your room via camera " +
-//                            "or just view in 3D viewer?",
-//                    textAlign = TextAlign.Justify
-//                )
-//                Spacer(modifier = Modifier.height(24.dp))
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.SpaceBetween,
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    TextButton(
-//                        onClick = {
-//                            openDialog.value = false
-//                            dialogRes.value = false
-//                        },
-//                        // modifier = Modifier.align(Start)
-//                    ) {
-//                        Text("Viewer")
-//                    }
-//                    TextButton(
-//                        onClick = {
-//                            openDialog.value = false
-//                            dialogRes.value = true
-//                        },
-//                        // modifier = Modifier.align(Start)
-//                    ) {
-//                        Text("Camera")
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}

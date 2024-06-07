@@ -19,6 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.R
@@ -40,14 +41,11 @@ fun UploadImageBottomSheet(
             },
             sheetState = sheetState
         ) {
-            // Sheet content
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(
-                        WindowInsets.navigationBars/*.only(
-                            WindowInsetsSides.Bottom +
-                        )*/
+                        WindowInsets.navigationBars
                     )
                     .padding(
                         horizontal = 25.dp,
@@ -67,10 +65,9 @@ fun UploadImageBottomSheet(
                     }) {
                     Icon(
                         painterResource(R.drawable.ic_photo_camera),
-                        "photo"
+                        stringResource(R.string.photo)
                     )
                 }
-                //Spacer(Modifier.width(20.dp))
                 IconButton(
                     modifier = Modifier.size(50.dp),
                     onClick = {
@@ -83,7 +80,7 @@ fun UploadImageBottomSheet(
                     }) {
                     Icon(
                         painterResource(R.drawable.ic_gallery),
-                        "gallery"
+                        stringResource(R.string.gallery)
                     )
                 }
             }

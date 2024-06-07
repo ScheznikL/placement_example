@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -109,14 +110,14 @@ fun BottomModalChangePasswordSheet(
                     modifier = Modifier.padding(8.dp)
                 ) {
                     Text(
-                        text = "Reset Link",
+                        text = stringResource(R.string.change_passwoed_reset_link_header),
                         fontWeight = FontWeight.W500,
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.secondary
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "has been sent to\r\n$email",
+                        stringResource(R.string.reset_password_email),
                         fontWeight = FontWeight.W400,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary
@@ -129,7 +130,7 @@ fun BottomModalChangePasswordSheet(
                             }
                         }
                     }) {
-                        Text("Done")
+                        Text(stringResource(R.string.done_button))
                     }
                 }
             }
@@ -149,7 +150,7 @@ fun ErrorContent(
 ) {
     Column(modifier = modifier.padding(8.dp)) {
         Text(
-            text = "Error occurred",
+            text = stringResource(R.string.error_header),
             fontWeight = FontWeight.W500,
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.secondary
@@ -179,11 +180,13 @@ fun ErrorContent(
                             showBottomSheet.value = false
                         }
                     }
-                }, title = "Try later", modifier = Modifier.align(Alignment.CenterStart)
+                },
+                title = stringResource(R.string.try_later),
+                modifier = Modifier.align(Alignment.CenterStart)
             )
             EdgeButton(
                 onProceedClick = onTryAgain,
-                title = "Try again",
+                title = stringResource(R.string.try_again),
                 modifier = Modifier.align(Alignment.CenterEnd),
                 inverseShape = true
             )
@@ -202,7 +205,7 @@ fun SendingEmailContent(
     Column(modifier = modifier.imePadding()) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                text = "Log In again",
+                text = stringResource(R.string.log_in_again),
                 fontWeight = FontWeight.W500,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.secondary
@@ -215,17 +218,22 @@ fun SendingEmailContent(
             )
             Spacer(modifier = Modifier.height(20.dp))
             PasswordInputComponent(
-                labelVal = "password",
+                labelVal = stringResource(R.string.password),
                 isPasswordError = isPasswordError,
                 onPasswordValueChanged = onPasswordValueChanged,
             )
             Spacer(modifier = Modifier.height(10.dp))
         }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp), horizontalArrangement = Arrangement.End
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            horizontalArrangement = Arrangement.End
         ) {
             EdgeButton(
-                onProceedClick = onEmailSend, title = "Proceed", enabled = !isPasswordError
+                onProceedClick = onEmailSend,
+                title = stringResource(R.string.proceed),
+                enabled = !isPasswordError
             )
         }
     }
@@ -236,7 +244,7 @@ fun PasswordInputComponent(
     labelVal: String,
     isPasswordError: Boolean,
     onPasswordValueChanged: (String) -> Unit,
-    error: String = "Password has to contain at least one special character, big letter and digit.\r\nAlso at least 8 characters "
+    error: String = stringResource(R.string.password_requirements)
 ) {
     var password by remember {
         mutableStateOf("")
@@ -258,7 +266,7 @@ fun PasswordInputComponent(
         leadingIcon = {
             Icon(
                 Icons.Default.Lock,
-                contentDescription = "at symbol",
+                contentDescription = stringResource(R.string.password_icon),
                 tint = MaterialTheme.colorScheme.tertiary
             )
         },
@@ -266,9 +274,10 @@ fun PasswordInputComponent(
             if (isPasswordError) Text(text = error)
         },
         trailingIcon = {
-            val description = if (isShowPassword) "Show Password" else "Hide Password"
-            val iconImage =
-                if (isShowPassword) R.drawable.ic_eye_filled else R.drawable.ic_eye_outlined
+            val description = if (isShowPassword) stringResource(R.string.show_password)
+            else stringResource(R.string.hide_password)
+            val iconImage = if (isShowPassword) R.drawable.ic_eye_filled
+            else R.drawable.ic_eye_outlined
             IconButton(onClick = {
                 isShowPassword = !isShowPassword
             }) {

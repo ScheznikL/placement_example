@@ -10,12 +10,7 @@ import androidx.room.RoomDatabase
     version = 4,
     exportSchema = false
 )
-//@TypeConverters(Converters::class)
 abstract class ARAppDatabase : RoomDatabase() {
     abstract fun modelDao(): ModelEntityDao
-//    abstract fun episodesDao(): EpisodesDao
-//    abstract fun categoriesDao(): CategoriesDao
-//    abstract fun podcastCategoryEntryDao(): PodcastCategoryEntryDao
-//    abstract fun transactionRunnerDao(): TransactionRunnerDao
-//    abstract fun podcastFollowedEntryDao(): PodcastFollowedEntryDao
+
 }

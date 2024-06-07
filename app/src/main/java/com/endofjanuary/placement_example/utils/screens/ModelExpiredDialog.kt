@@ -8,6 +8,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.endofjanuary.placement_example.R
 
 
@@ -26,10 +27,10 @@ fun ModelExpiredDialog(
                 tint = MaterialTheme.colorScheme.onError
             )
         }, title = {
-            Text(text = "The model has expired")
+            Text(text = stringResource(R.string.the_model_has_expired))
         }, text = {
             Text(
-                "Do you want to delete this record ?"
+                stringResource(R.string.delete_this_record)
             )
         }, confirmButton = {
             TextButton(onClick = {
@@ -37,14 +38,14 @@ fun ModelExpiredDialog(
                 onConfirm()
                 openDialog.value = false
             }) {
-                Text("Delete")
+                Text(stringResource(R.string.delete))
             }
         }, dismissButton = {
             TextButton(onClick = {
                 confirm.value = false
                 openDialog.value = false
             }) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         })
     }

@@ -51,7 +51,6 @@ class ThreeDScreenViewModel(
                 modelFromRoom.value = modelRoom.getModelById(localId)
                 when (modelFromRoom.value) {
                     is Resource.Success -> {
-                        //calculate short description
                         val names = modelFromRoom.value.data!!.modelDescription.split(' ')
                         modelDescriptionShorten.value = if (names.size >= 2) {
                             names.subList(0, 2).joinToString(" ") { it }

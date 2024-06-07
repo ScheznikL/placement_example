@@ -9,10 +9,10 @@ import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
 
 class ResponseToModelEntryConverter {
     fun toModelEntry(modelfromtext: TextTo3DModel?): ModelEntry {
-        // Log.d("toModelEntry",model?.model_urls?.glb ?: "none or error")
+
         return if (modelfromtext != null)
             ModelEntry(
-                id = 0, // to Int Id that 018dc381-7336-7595-9d01-61ecaaa0ccde
+                id = 0,
                 modelDescription = modelfromtext.prompt,
                 modelPath = modelfromtext.model_urls.glb,
                 modelImageUrl = modelfromtext.thumbnail_url,
@@ -24,10 +24,10 @@ class ResponseToModelEntryConverter {
             ModelEntry()
     }
     fun toModelEntry(refineModel: Refine3dModel?): ModelEntry {
-        // Log.d("toModelEntry",model?.model_urls?.glb ?: "none or error")
+
         return if (refineModel != null)
             ModelEntry(
-                id = 0, // to Int Id that 018dc381-7336-7595-9d01-61ecaaa0ccde
+                id = 0,
                 modelDescription = refineModel.prompt,
                 modelPath = refineModel.model_urls.glb,
                 modelImageUrl = refineModel.thumbnail_url,
@@ -40,10 +40,10 @@ class ResponseToModelEntryConverter {
     }
 
     fun toModelEntry(modelfromimage: ImageTo3DModel?, name: String = ""): ModelEntry {
-        // Log.d("toModelEntry",model?.model_urls?.glb ?: "none or error")
+
         return if (modelfromimage != null)
             ModelEntry(
-                id = 0, // to Int Id that 018dc381-7336-7595-9d01-61ecaaa0ccde
+                id = 0,
                 modelDescription = name,
                 modelPath = modelfromimage.model_urls.glb,
                 modelImageUrl = modelfromimage.thumbnail_url,

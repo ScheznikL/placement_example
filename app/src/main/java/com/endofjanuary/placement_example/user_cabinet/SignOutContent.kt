@@ -8,7 +8,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import com.endofjanuary.placement_example.R
 
 @Composable
 fun SignOutContent(
@@ -21,9 +23,9 @@ fun SignOutContent(
         horizontalAlignment = Alignment.CenterHorizontally,
 
         ) {
-        Text(text = "You logged out successfully")
+        Text(text = stringResource(R.string.you_logged_out_successfully))
         Button(onClick = { navController.navigate("reg_screen") }) {
-            Text(text = "To Welcome Screen")
+            Text(text = stringResource(R.string.to_welcome_screen))
         }
     }
 }

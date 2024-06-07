@@ -35,7 +35,7 @@ class MeshyRepoImpl (
         val response = try {
             api.postTextTo3D(body)
         } catch(e: Exception) {
-            return Resource.Error("error - ${e.message.toString()}")
+            return Resource.Error(e.message.toString())
         }
         return Resource.Success(response)
     }
@@ -53,7 +53,7 @@ class MeshyRepoImpl (
         val response = try {
             api.postImageTo3D(body)
         } catch(e: Exception) {
-            return Resource.Error("error - ${e.message.toString()}")
+            return Resource.Error(e.message.toString())
         }
         return Resource.Success(response)
     }
@@ -62,7 +62,7 @@ class MeshyRepoImpl (
         val response = try {
             api.postRefine(body)
         } catch(e: Exception) {
-            return Resource.Error("error - ${e.message.toString()}")
+            return Resource.Error(e.message.toString())
         }
         return Resource.Success(response)
     }

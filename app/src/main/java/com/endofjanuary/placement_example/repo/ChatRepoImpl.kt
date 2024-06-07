@@ -13,7 +13,7 @@ class ChatRepoImpl(
         val response = try {
             api.postToChat(body)
         } catch (e: Exception) {
-            return Resource.Error("error - ${e.message.toString()}")
+            return Resource.Error(e.message.toString())
         }
         return Resource.Success(response)
     }

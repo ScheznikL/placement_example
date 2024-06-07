@@ -13,7 +13,6 @@ class DownloaderRepoImpl(
     override fun downloadFile(url: String, modelName: String): Resource<Long> {
         return try {
             val req = DownloadManager.Request(url.toUri())
-                //.setMimeType("model/glb")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setTitle(modelName)
                 .setDestinationInExternalPublicDir(

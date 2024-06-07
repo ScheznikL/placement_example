@@ -1,5 +1,7 @@
 package com.endofjanuary.placement_example.repo
 
+import android.content.Context
+import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.data.room.ModelEntity
 import com.endofjanuary.placement_example.data.room.ModelEntityDao
 import com.endofjanuary.placement_example.utils.Resource
@@ -7,21 +9,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class ModelsRepoImpl(
-    private val modelEntityDao: ModelEntityDao
+    private val modelEntityDao: ModelEntityDao,
+    private val context: Context
 ) : ModelsRepo() {
     override val clearModelsTableError = MutableStateFlow("")
-    override suspend fun getAllModels(): Resource<List<ModelEntity>> {
-        return try {
-           // val result = modelEntityDao.getAll()
-           // if (result.isNotEmpty()) {
-                Resource.Success(emptyList())
-//            } else {
-//                Resource.Error("empty List")
-//            }
-        } catch (e: Exception) {
-            Resource.Error(e.message.toString())
-        }
-    }
+
     override suspend fun getAllModelsFlow(): Flow<List<ModelEntity>> = modelEntityDao.getAll()
     override suspend fun saveModel(modelEntity: ModelEntity): Resource<Long> {
         return try {
@@ -57,7 +49,7 @@ class ModelsRepoImpl(
             if (result != null) {
                 Resource.Success(result)
             } else {
-                Resource.Error("No model with corresponding $modelId")
+                Resource.Error(context.getString(R.string.room_no_model_error, modelId.toString()))
             }
         } catch (e: Exception) {
             Resource.Error(e.message.toString())
@@ -70,7 +62,7 @@ class ModelsRepoImpl(
             if (result != null) {
                 Resource.Success(result)
             } else {
-                Resource.Error("Data is null")
+                Resource.Error(context.getString(R.string.room_no_model_error, modelsIds.toString()))
             }
         } catch (e: Exception) {
             Resource.Error(e.message.toString())
@@ -83,7 +75,7 @@ class ModelsRepoImpl(
             if (result != null) {
                 Resource.Success(result)
             } else {
-                Resource.Error("No model with corresponding $modelId")
+                Resource.Error(context.getString(R.string.room_no_model_error, modelId))
             }
         } catch (e: Exception) {
             Resource.Error(e.message.toString())
@@ -96,7 +88,7 @@ class ModelsRepoImpl(
             if (result != null) {
                 Resource.Success(result)
             } else {
-                Resource.Error("Error")
+                Resource.Error(context.getString(R.string.error))
             }
         } catch (e: Exception) {
             Resource.Error(e.message.toString())
@@ -107,7 +99,7 @@ class ModelsRepoImpl(
         try {
             modelEntityDao.deleteAll()
         } catch (e: Exception) {
-           clearModelsTableError.value = e.message.toString()
+            clearModelsTableError.value = e.message.toString()
         }
     }
 }

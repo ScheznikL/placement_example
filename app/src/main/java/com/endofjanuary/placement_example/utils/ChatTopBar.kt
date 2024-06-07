@@ -11,6 +11,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.R
 
@@ -18,7 +19,7 @@ import com.endofjanuary.placement_example.R
 @Composable
 fun ChatTopBar(navController: NavController, autoRefineEnabled: Boolean) {
     TopAppBar(
-        title = { Text(text = "Chat") },
+        title = { Text(text = stringResource(R.string.chat_top_bar_header)) },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
@@ -26,7 +27,7 @@ fun ChatTopBar(navController: NavController, autoRefineEnabled: Boolean) {
             IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Arrow Back"
+                    contentDescription = stringResource(R.string.arrow_back)
                 )
             }
         },
@@ -37,7 +38,7 @@ fun ChatTopBar(navController: NavController, autoRefineEnabled: Boolean) {
                 }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_awesome_filled),
-                        contentDescription = "refine",
+                        contentDescription = stringResource(R.string.refine_enabled),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -45,7 +46,7 @@ fun ChatTopBar(navController: NavController, autoRefineEnabled: Boolean) {
                 IconButton(onClick = { navController.navigate("user_profile") }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_awesome_outlined),
-                        contentDescription = "refine",
+                        contentDescription = stringResource(R.string.refine_disabled),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }

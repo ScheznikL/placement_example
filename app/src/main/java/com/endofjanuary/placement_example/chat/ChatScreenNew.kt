@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.chat
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,8 +40,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.input.ImeAction
@@ -81,11 +82,13 @@ fun ChatScreenNew(
     val modelToRefine by remember { mainViewModel.model }
     val autoRefine by remember { mainViewModel.autoRefine }
 
-    val modelIds by remember { mainViewModel.isSuccess }// VIA  MainViewModel
+    val modelIds by remember { mainViewModel.isSuccess }
     val textInput by remember { viewModel.inputValueState }
     var isTextFieldEnabled = remember { true }
     val openCancelRefineDialog = remember { mutableStateOf(false) }
     val cancelRefineDialogConfirm = remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     LaunchedEffect(messagesListState) {
         if (messagesListState.isNotEmpty()) scrollState.animateScrollToItem(messagesListState.size - 1)
@@ -122,7 +125,7 @@ fun ChatScreenNew(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 32.dp)
                             .align(Alignment.CenterHorizontally),
-                        text = "Describe desirable model bellow or choose photo to generate 3D model",
+                        text = stringResource(R.string.chat_card_text),
                         textAlign = TextAlign.Center,
                         style = TextStyle(
                             fontSize = 18.sp,
@@ -143,13 +146,12 @@ fun ChatScreenNew(
                     content = {
                         items(
                             count = messagesListState.size,
-                            // key = { messagesListState[it].content }, //TODO
                             itemContent = { index ->
                                 MessageBubble(
                                     modifier = Modifier.animateItemPlacement(),
                                     message = messagesListState[index],
                                     onEdit = {
-                                        viewModel.send("NEXT") //todo no next in chat
+                                        viewModel.send("NEXT")
                                     },
                                     onDone = {
                                         isTextFieldEnabled = false
@@ -157,7 +159,6 @@ fun ChatScreenNew(
                                         mainViewModel.loadModelEntryFromText(
                                             viewModel.description!!
                                         )
-                                        Log.d("description", viewModel.description ?: "null")
                                     },
                                     onGetRefineOptions = {
                                         viewModel.loadingModel()
@@ -168,34 +169,24 @@ fun ChatScreenNew(
                                     }
                                 )
                             })
-
                     })
             }
             LaunchedEffect(openCancelRefineDialog.value) {
-                Log.d("cancelRefineDialogConfirm", "${cancelRefineDialogConfirm.value}")
-                if (cancelRefineDialogConfirm.value) {// 1111 initial value
+                if (cancelRefineDialogConfirm.value) {
                     mainViewModel.saveByteInstancedModel(isFromText = true, isRefine = false)
                 }
             }
 
             LaunchedEffect(modelToRefine) {
-                Log.d("modelIdToRefine", "auto - $autoRefine")
-                if (modelToRefine.meshyId != "1111" && autoRefine) {// 1111 initial value
+                if (modelToRefine.meshyId != "1111" && autoRefine) {
                     viewModel.isAutoRefineEnabled.value = autoRefine
-                    viewModel.addAutoRefineMessage()
+                    viewModel.addAutoRefineMessage(context = context)
                 }
             }
 
             LaunchedEffect(modelIds) {
 
                 if (modelIds != null) { // means model was uploaded to room
-                    Log.d(
-                        "loadingModel UI meshyId",
-                        "enter  ${modelIds?.first} - ${modelIds?.second}"
-                    )
-                    //viewModel.getId()
-                    //if (modelId.data != 0)
-
                     navController.navigate("transit_dialog/${modelIds?.second}/${modelIds?.first}")
                 }
             }
@@ -225,7 +216,7 @@ fun ChatScreenNew(
                         .clickable {
                             navController.navigate("upload_image/${false}")
                         },
-                    contentDescription = "camera",
+                    contentDescription = stringResource(R.string.camera),
                 )
                 BasicTextField(
                     enabled = isTextFieldEnabled,
@@ -256,7 +247,7 @@ fun ChatScreenNew(
                         .clickable {
                             navController.navigate("upload_image/${true}")
                         },
-                    contentDescription = "gallery",
+                    contentDescription = stringResource(R.string.gallery),
                 )
                 Icon(
                     Icons.AutoMirrored.Filled.Send,
@@ -269,14 +260,14 @@ fun ChatScreenNew(
                             }
                         }
                         .alpha(if (textInput.isNotBlank()) 1.0f else 0.5f),
-                    contentDescription = "final",
+                    contentDescription = stringResource(R.string.send),
                 )
             }
         }
     }
     CancelDialog(
         openDialog = openCancelRefineDialog,
-        title = "Cancel Refine",
+        title = stringResource(R.string.cancel_refine_dialog_header),
         confirm = cancelRefineDialogConfirm
     )
 }

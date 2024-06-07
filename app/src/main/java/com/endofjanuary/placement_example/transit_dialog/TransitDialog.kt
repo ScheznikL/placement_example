@@ -17,9 +17,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.endofjanuary.placement_example.R
 
 
 @Composable
@@ -33,8 +35,7 @@ fun ModelViewTypeDialog(navController: NavController, modelId: Int, meshyId: Str
     ) {
         Column(modifier = Modifier.padding(26.dp)) {
             Text(
-                text = "Would you like to place this model in your room via camera " +
-                        "or just view in 3D viewer?",
+                text = stringResource(R.string.model_view_type),
                 textAlign = TextAlign.Justify
             )
             Spacer(modifier = Modifier.height(24.dp))
@@ -49,9 +50,8 @@ fun ModelViewTypeDialog(navController: NavController, modelId: Int, meshyId: Str
                             "threed_screen/${modelId}/$meshyId"
                         )
                     },
-                    // modifier = Modifier.align(Start)
                 ) {
-                    Text("Viewer")
+                    Text(stringResource(R.string.viewer))
                 }
                 TextButton(
                     onClick = {
@@ -59,9 +59,8 @@ fun ModelViewTypeDialog(navController: NavController, modelId: Int, meshyId: Str
                             "ar_screen/${modelId}"
                         )
                     },
-                    // modifier = Modifier.align(Start)
                 ) {
-                    Text("Camera")
+                    Text(stringResource(id = R.string.camera))
                 }
             }
         }

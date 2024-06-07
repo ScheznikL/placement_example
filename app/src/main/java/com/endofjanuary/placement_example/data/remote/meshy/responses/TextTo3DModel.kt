@@ -11,7 +11,7 @@ data class TextTo3DModel(
     val progress: Int,
     val prompt: String,
     val seed: Int,
-    val status: String, //PENDING, IN_PROGRESS, SUCCEEDED, FAILED, EXPIRED.
+    val status: String,
     val texture_urls: List<TextureUrl>,
     val thumbnail_url: String
 )

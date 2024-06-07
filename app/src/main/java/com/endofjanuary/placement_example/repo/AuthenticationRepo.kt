@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 interface AuthenticationRepo {
-    //val currentUser: User?
     val signInError: MutableStateFlow<String?>
     val signInState: MutableStateFlow<SignInState>
     fun currentUser(scope: CoroutineScope): Flow<User?>

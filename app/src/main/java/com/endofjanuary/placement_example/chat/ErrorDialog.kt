@@ -11,17 +11,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.endofjanuary.placement_example.R
 
 @Composable
 fun ErrorDialog(
     errorMessage: String, openDialog: MutableState<Boolean>, modifier: Modifier = Modifier
 ) {
-    val proceed = remember {
-        mutableStateOf(false)
-    }
     if (openDialog.value) {
         AlertDialog(
             onDismissRequest = {
@@ -29,10 +26,10 @@ fun ErrorDialog(
             },
             title = {
                 Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = "Error")
+                    Text(text = stringResource(id = R.string.error_header))
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Error cross",
+                        contentDescription = stringResource(id = R.string.error_icon),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -46,7 +43,7 @@ fun ErrorDialog(
                 TextButton(onClick = {
                     openDialog.value = false
                 }) {
-                    Text("understood")
+                    Text(stringResource(R.string.error_OK))
                 }
             },
             containerColor = MaterialTheme.colorScheme.errorContainer

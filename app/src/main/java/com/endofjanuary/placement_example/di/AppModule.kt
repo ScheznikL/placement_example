@@ -1,5 +1,10 @@
 package com.endofjanuary.placement_example.di
 
+import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
+import aws.sdk.kotlin.services.s3.S3Client
+import com.endofjanuary.placement_example.AwsAccessKeyId
+import com.endofjanuary.placement_example.AwsSecretAccessKey
+import com.endofjanuary.placement_example.AwsSessionToken
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.ar_screen.ARScreenViewModel
 import com.endofjanuary.placement_example.chat.ChatScreenViewModel
@@ -21,8 +26,6 @@ import com.endofjanuary.placement_example.repo.DataStoreRepo
 import com.endofjanuary.placement_example.repo.DataStoreRepoImpl
 import com.endofjanuary.placement_example.repo.DownloaderRepo
 import com.endofjanuary.placement_example.repo.DownloaderRepoImpl
-import com.endofjanuary.placement_example.repo.FireStoreDBImpl
-import com.endofjanuary.placement_example.repo.FireStoreDBRepo
 import com.endofjanuary.placement_example.repo.MeshyRepo
 import com.endofjanuary.placement_example.repo.MeshyRepoImpl
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
@@ -41,13 +44,13 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 private const val BASE_MESHY_URL = "https://api.meshy.ai/"
 private const val BASE_GPT_URL = "https://api.openai.com/v1/"
+private const val AWS_REGION = "eu-north-1"
 
 val appModule = module {
     single {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create()).client(
                 OkHttpClient.Builder()
-                    // .connectTimeout(100, TimeUnit.SECONDS)
                     .addInterceptor(
                         AuthTokenInterceptor()
                     ).build()
@@ -77,17 +80,25 @@ val appModule = module {
     single {
         Firebase.firestore
     }
+    single {
+        S3Client {
+            region = AWS_REGION
+            credentialsProvider = StaticCredentialsProvider {
+                this.accessKeyId = AwsAccessKeyId
+                this.secretAccessKey = AwsSecretAccessKey
+                this.sessionToken = AwsSessionToken
+            }
+        }
+    }
+
     single<MeshyRepo> {
         MeshyRepoImpl(get())
-    }
-    single<FireStoreDBRepo> {
-        FireStoreDBImpl(get())
     }
     single<ChatRepo> {
         ChatRepoImpl(get())
     }
     single<AWStorageRepo> {
-        AWStorageRepoImpl()
+        AWStorageRepoImpl(get())
     }
     single<AuthenticationRepo> {
         AuthenticationRepoImpl(get(), get())
@@ -102,7 +113,7 @@ val appModule = module {
         HomeViewModel(get(), get())
     }
     viewModel {
-        UserProfileViewModel(get(),get(),get())
+        UserProfileViewModel(get(), get(), get())
     }
     viewModel {
         RegistrationViewModel(get())
@@ -131,6 +142,4 @@ val appModule = module {
             dataStoreRepo = get()
         )
     }
-    //   viewModel { (prompt: String) -> ARScreenViewModel(prompt, get()) }
-//    viewModelOf(::ChatScreenViewModel)
 }

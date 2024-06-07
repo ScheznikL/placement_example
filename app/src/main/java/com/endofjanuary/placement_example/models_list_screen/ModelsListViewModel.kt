@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +32,6 @@ class ModelsListViewModel(
 
     val deletedModel = mutableStateOf<Resource<Int>>(Resource.None())
 
-    //var modelsList = mutableStateOf<List<ModelEntry>>(listOf())
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
 
@@ -43,8 +41,6 @@ class ModelsListViewModel(
     private val selectedCategory = MutableStateFlow(Category.FromText)
     private val categories = MutableStateFlow(Category.entries.toList())
 
-
-    // Holds our view state which the UI collects via [state]
     private val _state = MutableStateFlow(ModelListViewState())
     val state: StateFlow<ModelListViewState>
         get() = _state
@@ -72,7 +68,6 @@ class ModelsListViewModel(
         val modelMeshyId = model.meshyId
         if (!selectedIds.value.contains(modelMeshyId)) _selectedIds.value += model.meshyId
         else _selectedIds.value = _selectedIds.value.minus(modelMeshyId)
-        Log.d("CHECK selectedIds", selectedIds.value.toString())
     }
 
     fun activateSelectionMode() {
@@ -124,7 +119,7 @@ class ModelsListViewModel(
             }
             if (isSearchStarting) {
                 cachedModelsList =
-                    if (!isFromImage) _textModelsListState.value else _imageModelsListState.value //
+                    if (!isFromImage) _textModelsListState.value else _imageModelsListState.value
                 isSearchStarting = false
             }
             if (!isFromImage) _textModelsListState.value =
@@ -137,7 +132,6 @@ class ModelsListViewModel(
         isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
 
-            //todo ConvertModelEntityToModelEntry
             try {
                 val result = modelsRoomRepo.getAllModelsFlow().mapNotNull { models ->
                     models.map { model ->
@@ -173,7 +167,7 @@ class ModelsListViewModel(
         viewModelScope.launch(context = Dispatchers.IO) {
             modelsRoomRepo.saveModel(
                 ModelEntity(
-                    modelInstance = ByteArray(1), // TEMP
+                    modelInstance = ByteArray(1),
                     modelPath = "_textModelsListState.value.first().modelPath",
                     modelDescription = "model.value.modelDescription",
                     modelImageUrl = "_textModelsListState.value.first().modelImageUrl",
@@ -191,14 +185,9 @@ class ModelsListViewModel(
         try {
             viewModelScope.launch(Dispatchers.IO) {
                 val result: MutableList<Resource<Int>> = mutableListOf()
-
                 selectedIds.value.forEach { result += modelsRoomRepo.deleteModelById(it) }
-
-                //TODO Loading - try - ...
-
             }
-
-        } catch (e: Exception) { // TODO are two try bad
+        } catch (e: Exception) {
             deletedModel.value = Resource.Error(message = e.message.toString())
         }
     }
@@ -235,8 +224,6 @@ enum class Category {
 }
 
 data class ModelListViewState(
-    //val featuredPodcasts: PersistentList<PodcastWithExtraInfo> = persistentListOf(),
-    //  val refreshing: Boolean = false,
     val selectedCategory: Category = Category.FromText,
     val categories: List<Category> = emptyList(),
     val errorMessage: String? = null,

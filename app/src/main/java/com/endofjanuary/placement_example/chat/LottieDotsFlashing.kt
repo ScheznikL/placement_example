@@ -23,7 +23,6 @@ fun LottieDotsFlashing(modifier: Modifier = Modifier) {
         composition = composition,
         modifier = modifier,
         progress = preloaderProgress,
-       // iterations = 100
     )
 
 }

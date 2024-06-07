@@ -1,23 +1,9 @@
-/*buildscript {
-    ext {
-        var kotlin_version = "1.9.20"
-        var koin_version = "3.5.0"
-        var ksp_version = "1.9.10-1.0.13"
-        var koin_ksp_version = "1.3.0"
-    }
-}*/
-
 plugins {
-    val ksp_version = "1.9.20-1.0.14"
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-   // kotlin("kapt")
-   id("com.google.devtools.ksp")
+    id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
     id("com.google.protobuf")
-    //  id("com.google.devtools.ksp") version ksp_version apply false
-   // kotlin("ksp") version "1.9.10-1.0.13"
-   // kotlin("ksp") version "1.9.10-1.0.13"
 }
 
 android {
@@ -41,8 +27,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
@@ -70,7 +55,7 @@ android {
         }
 
         generateProtoTasks {
-            all().forEach{ task ->
+            all().forEach { task ->
                 task.builtins {
                     create("java") {
                         option("lite")
@@ -84,10 +69,6 @@ android {
     }
 }
 
-
-
-// Compile time check
-
 dependencies {
 
     implementation("androidx.core:core-ktx:1.12.0")
@@ -99,7 +80,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("io.github.sceneview:sceneview:2.0.4")
-    implementation ("io.github.sceneview:arsceneview:2.0.4")
+    implementation("io.github.sceneview:arsceneview:2.0.4")
     implementation("com.google.ar:core:1.41.0")
     implementation("androidx.palette:palette-ktx:1.0.0")
 
@@ -116,7 +97,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.0")
 
     //Gson
-    implementation ("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
@@ -128,41 +109,29 @@ dependencies {
 
     //CameraX
     val camerax_version = "1.3.3"
-    implementation ("androidx.camera:camera-core:${camerax_version}")
-    implementation ("androidx.camera:camera-camera2:${camerax_version}")
-    implementation ("androidx.camera:camera-lifecycle:${camerax_version}")
-    implementation ("androidx.camera:camera-video:${camerax_version}")
+    implementation("androidx.camera:camera-core:${camerax_version}")
+    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    implementation("androidx.camera:camera-video:${camerax_version}")
 
-    implementation ("androidx.camera:camera-view:${camerax_version}")
-    implementation ("androidx.camera:camera-extensions:${camerax_version}")
+    implementation("androidx.camera:camera-view:${camerax_version}")
+    implementation("androidx.camera:camera-extensions:${camerax_version}")
 
     //Koin
-
     val koin_version = "3.5.0"
-    val koin_ksp_version = "1.3.0"
-
     implementation("io.insert-koin:koin-core:$koin_version")
-    implementation( "io.insert-koin:koin-androidx-compose:$koin_version")
-    implementation ("io.insert-koin:koin-android:$koin_version")
-    implementation ("io.insert-koin:koin-androidx-navigation:$koin_version")
-
+    implementation("io.insert-koin:koin-androidx-compose:$koin_version")
+    implementation("io.insert-koin:koin-android:$koin_version")
+    implementation("io.insert-koin:koin-androidx-navigation:$koin_version")
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.5.0")
-    implementation ("io.coil-kt:coil:2.5.0")
-    implementation ("com.google.accompanist:accompanist-coil:0.15.0")
+    implementation("io.coil-kt:coil:2.5.0")
+    implementation("com.google.accompanist:accompanist-coil:0.15.0")
 
-    //  implementation("io.insert-koin:koin-annotations:$koin_ksp_version")
-    // com.google.devtools.ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version")
-
-    //  ksp("com.google.dagger:hilt-android-compiler:2.33-beta")
-    //  implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
-//    ksp("androidx.hilt:hilt-compiler:1.0.0-beta01")
     val nav_version = "2.7.6"
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
-
-    //  implementation ('com.android.support:palette-v7:28.0.0')
 
     //room
     val room_version = "2.6.1"
@@ -170,8 +139,6 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
     // To use Kotlin annotation processing tool (kapt)
     ksp("androidx.room:room-compiler:$room_version")
-    // To use Kotlin Symbol Processing (KSP)
-    //ksp("androidx.room:room-compiler:$room_version")
 
     //lottie lib
     val version = "4.2.0"
@@ -188,8 +155,8 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore:25.0.0")
 
     //dataStore
-    implementation ("androidx.datastore:datastore:1.1.1")
-    implementation ("com.google.protobuf:protobuf-javalite:3.25.1")
-    implementation ("com.google.protobuf:protobuf-kotlin-lite:3.25.1")
+    implementation("androidx.datastore:datastore:1.1.1")
+    implementation("com.google.protobuf:protobuf-javalite:3.25.1")
+    implementation("com.google.protobuf:protobuf-kotlin-lite:3.25.1")
 
 }

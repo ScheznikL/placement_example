@@ -20,3 +20,11 @@ data class Refine3dModel(
     val thumbnail_url: String,
     val video_url: String
 )
+
+enum class ProgressStatus{
+    PENDING,
+    IN_PROGRESS,
+    SUCCEEDED,
+    FAILED,
+    EXPIRED
+}

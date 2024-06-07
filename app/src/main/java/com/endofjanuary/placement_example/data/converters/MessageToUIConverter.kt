@@ -17,7 +17,7 @@ class MessageToUIConverter {
                         MessageType.Assistant
                     }
 
-                    "refine" -> {
+                    "autorefine" -> {
                         MessageType.AutoRefine
                     }
 

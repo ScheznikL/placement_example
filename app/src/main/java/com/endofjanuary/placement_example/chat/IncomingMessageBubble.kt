@@ -20,8 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.endofjanuary.placement_example.R
 
 @Composable
 fun IncomingMessageBubble(
@@ -44,7 +46,8 @@ fun IncomingMessageBubble(
                 .clip(CircleShape),
                 contentScale = ContentScale.Crop,
                 painter = painterResource(com.endofjanuary.placement_example.R.drawable.chatgptlogo),
-                contentDescription = "chat image")
+                contentDescription = stringResource(R.string.chat_image)
+            )
             Box(modifier = Modifier.weight(1.0f)) {
                 Column(horizontalAlignment = Alignment.Start) {
                     Column(

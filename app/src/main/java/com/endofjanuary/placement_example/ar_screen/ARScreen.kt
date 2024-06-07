@@ -20,7 +20,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreenViewModel
 import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.components.BottomBar
@@ -96,18 +98,6 @@ fun ARSceneDisplay(
     LaunchedEffect(key1 = viewModel) {
         viewModel.loadModelRemote(modelLoader, modelId ?: 1)
     }
-    //var loadedInstances = remember { viewModel.loadedInstances }
-
-       /* produceState<Resource<MutableList<ModelInstance>?>>(initialValue = Resource.Loading()) {
-            value =
-                viewModel.loadGlbModel(modelLoader = modelLoader, modelPath = modelEntry.modelPath)
-//                viewModel.loadGlbModel(
-//                    modelLoader = modelLoader,
-//                    //modelPath = "https://github.com/kelvinwatson/glb-files/raw/main/DamagedHelmet.glb",
-//                    modelPath = "https://assets.meshy.ai/google-oauth2%7C107069207183755263308/tasks/018d8e69-28c2-7a80-8c36-fde62fe0d134/output/model.glb?Expires=1707609600&Signature=FZj0vZ~i9zNHCRqv0TJm~zVDzqQUSL9SYt8J3k0aiPK5RUDhsRSGgrqLRQYxwnMGdkqRihR2PqloDWLEWGmvPHoutqWDpD4hd7Og26YXO2XFNubkRwVLem0xV3EfPt61wYI~1E5fSvZHc9D3jljtQbsT4xmNg0iMAUx7zbo5aeayShvVqCjf7gskZqtnLmzJZ8mr1YDk2y9fqIUa44GSsxk9dyFeq7jzFVTCk8lmTPx0t8Qxclqm5lyXh3LfsrCF-jMJPH9g23FTUDLI3GI5Ha4~ip8sOB8H~O1ImXaZiwGvQ8BY3MUK9DS4ue6sc~drHTfI73GbumtkbRT3D2RpOg__&Key-Pair-Id=KL5I0C8H7HX83",
-//                )
-
-        }.value*/
 
     val instanceState by remember {
         viewModel.loadedInstancesState
@@ -166,7 +156,6 @@ fun ARSceneDisplay(
                             )
                         }?.createAnchorOrNull()
                             ?.let { anchor ->
-                                //Log.d("onDoubleTap", .modelPath)
                                 planeRenderer = false
                                 childNodes += viewModel.createAnchorNode(
                                     engine = engine,
@@ -187,7 +176,7 @@ fun ARSceneDisplay(
             ) {
                 Text(
                     style = MaterialTheme.typography.bodySmall,
-                    text = "loading model...",
+                    text = stringResource(R.string.loading),
                     )
                 CircularProgressIndicator(
                     color = MaterialTheme.colorScheme.onBackground,

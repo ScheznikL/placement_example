@@ -16,12 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import com.endofjanuary.placement_example.data.remote.meshy.responses.ProgressStatus
 
 @Composable
 fun ImageWithExpiredLabel(
     modifier: Modifier = Modifier,
     picture: @Composable (() -> Unit),
-    label: String = "EXPIRED",
+    label: String = ProgressStatus.EXPIRED.toString(),
 ) {
     Box(contentAlignment = Alignment.Center, modifier = modifier.size(190.dp)) {
         picture()
@@ -30,7 +31,6 @@ fun ImageWithExpiredLabel(
                 .fillMaxWidth()
                 .background(
                     MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                    //RoundedCornerShape(10.dp)
                 ),
             contentAlignment = Alignment.Center,
         ) {
@@ -53,6 +53,6 @@ fun Tempor() {
                     .size(100.dp)
                     .background(Color.White)
             )
-        }, label = "EXPIRED"
+        }, label = ProgressStatus.EXPIRED.toString()
     )
 }

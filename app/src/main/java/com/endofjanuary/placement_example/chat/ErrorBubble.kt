@@ -18,8 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.endofjanuary.placement_example.R
 
 @Composable
 fun ErrorMessageBubble(
@@ -40,10 +42,9 @@ fun ErrorMessageBubble(
                 modifier = Modifier
                     .padding(start = 8.dp, end = 9.dp)
                     .size(35.dp)
-                //    .clip(CircleShape)
                 ,
                 imageVector = Icons.Outlined.Warning,
-                contentDescription = "warning",
+                contentDescription = stringResource(R.string.warning),
                 tint = Color(255, 119, 0, 226)
             )
             Box(modifier = Modifier.weight(1.0f)) {

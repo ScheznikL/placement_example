@@ -1,7 +1,6 @@
 package com.endofjanuary.placement_example.upload_image
 
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,12 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.endofjanuary.placement_example.MainViewModel
+import com.endofjanuary.placement_example.R
 import org.koin.androidx.compose.getViewModel
 
 
@@ -56,8 +57,7 @@ fun UploadImageDialog(
     val textInput by remember { viewModel.inputValueState }
     val uri by remember { viewModel.image }
     val pickImage = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia(),
-        viewModel::onPhotoPickerSelect
+        ActivityResultContracts.PickVisualMedia(), viewModel::onPhotoPickerSelect
     )
     val isUploading by remember { viewModel.isUploading }
     val isUploadingError by remember { viewModel.isUploadingError }
@@ -69,65 +69,39 @@ fun UploadImageDialog(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    /*    Surface(
-            modifier = Modifier
-                .wrapContentWidth()
-                .wrapContentHeight(),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = AlertDialogDefaults.TonalElevation
-        ) {*/
-    Scaffold(
-        modifier = Modifier
-            .padding(top = 50.dp, bottom = 50.dp)
-            .wrapContentWidth()
-            .wrapContentHeight(),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        }
+    Scaffold(modifier = Modifier
+        .padding(top = 50.dp, bottom = 50.dp)
+        .wrapContentWidth()
+        .wrapContentHeight(), snackbarHost = {
+        SnackbarHost(hostState = snackbarHostState)
+    }
 
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            /*  Text(
-                  text = "Name the model *optional",
-                  textAlign = TextAlign.Justify
-              )*/
             Spacer(modifier = Modifier.height(24.dp))
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                /* Column(
-                     //verticalArrangement = Arrangement.Center,
-                     horizontalAlignment = Alignment.CenterHorizontally,
-                     modifier = Modifier
-                     .weight(3f)
-                     //.border(1.dp, Color.DarkGray)
-                 ) {*/
-                OutlinedTextField(
-                    modifier = Modifier
-                        .padding(5.dp),
+                OutlinedTextField(modifier = Modifier.padding(5.dp),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Default,
                     ),
                     value = textInput,
                     onValueChange = { viewModel.inputValueState.value = it },
-                    placeholder = { Text(text = "Name the model *optional") }
-                )
+                    placeholder = { Text(text = stringResource(R.string.name_the_model_optional)) })
                 Button(
                     onClick = {
-                        pickImage
-                            .launch(
+                        pickImage.launch(
                                 PickVisualMediaRequest(
-                                    ActivityResultContracts
-                                        .PickVisualMedia
-                                        .ImageOnly
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly
                                 )
                             )
                     },
                 ) {
-                    Text("Pick an image")
+                    Text(stringResource(R.string.pick_an_image))
                 }
 
                 if (uri != Uri.EMPTY) {
@@ -144,10 +118,6 @@ fun UploadImageDialog(
                         }
                     } else if (isLoading) {
                         Box() {
-                            Log.d(
-                                "loadModel UI",
-                                "is Loading"
-                            )
                             AsyncImage(
                                 alpha = 0.5f,
                                 model = uri,
@@ -159,15 +129,13 @@ fun UploadImageDialog(
                         }
                     } else if (isUploadingError.isNotBlank()) {
                         Card(
-                            colors = CardDefaults
-                                .cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                         ) {
                             Text(text = isUploadingError)
                         }
                     } else {
                         Card(
                             modifier = Modifier
-                                // .weight(1f)
                                 .padding(top = 10.dp, bottom = 10.dp)
                         ) {
                             AsyncImage(
@@ -185,15 +153,14 @@ fun UploadImageDialog(
                             viewModel.getImagePresignedUrl(context)
                         },
                     ) {
-                        Text("Proceed")
+                        Text(stringResource(id = R.string.proceed))
                     }
 
                     LaunchedEffect(presignedUrl) {
                         if (!presignedUrl.isNullOrBlank()) {
-                            if (!isLoading || isSuccess == null) { // isSuccess == null - to avoid double loading
+                            if (!isLoading || isSuccess == null) {
                                 mainViewModel.loadModelEntryFromImage(
-                                    url = presignedUrl!!,
-                                    name = textInput
+                                    url = presignedUrl!!, name = textInput
                                 )
                                 viewModel.presignedUrl.value = ""
                             }
@@ -201,23 +168,18 @@ fun UploadImageDialog(
                     }
                     LaunchedEffect(isSuccess) {
                         if (isSuccess != null) {
-                            Log.d("loadModel UI", "enter UI")
                             snackbarHostState.showSnackbar(
-                                message = "Loading is successful!",
-                                actionLabel = "Success",
+                                message = context.getString(R.string.loading_is_successful),
                                 duration = SnackbarDuration.Long
                             )
                         }
                     }
-                    Button(
-                        enabled = isSuccess != null,
+                    Button(enabled = isSuccess != null,
                         onClick = { navController.popBackStack() }) {
-                        Text(text = "Done")
+                        Text(text = context.getString(R.string.done_button))
                     }
                 }
             }
         }
     }
-    //}
-
 }

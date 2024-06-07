@@ -2,7 +2,6 @@ package com.endofjanuary.placement_example.user_cabinet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,14 +43,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -65,6 +62,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.chat.ErrorDialog
 import com.endofjanuary.placement_example.repo.SignInState
 import com.endofjanuary.placement_example.utils.components.BottomBar
@@ -72,7 +70,7 @@ import com.endofjanuary.placement_example.utils.screens.DeleteDialog
 import org.koin.androidx.compose.getViewModel
 
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
     navController: NavController, modifier: Modifier = Modifier
@@ -88,38 +86,22 @@ fun UserProfileScreen(
 
     val nameEditEnabled = mutableStateOf(false)
 
-    var decorationText = //todo display add name
-        if (viewState.displayName.trim()
-                .isEmpty()
-        ) "Add name" else viewState.displayName
-
-
     val scrollState = rememberScrollState()
-    val focusManager = LocalFocusManager.current
-    val focusRequester = remember { FocusRequester() }
+    val context = LocalContext.current
 
-    var textInput by remember { mutableStateOf(viewState.displayName) }
+    var textInput by remember { mutableStateOf(context.getString(R.string.add_name) ) }
 
     val confirmOut = mutableStateOf(false)
     val openSignOutDialog = mutableStateOf(false)
     val openErrorDialog: MutableState<Boolean> = mutableStateOf(false)
-    val context = LocalContext.current
 
 
     val sheetState = rememberModalBottomSheetState()
-    //val showBottomSheet = mutableStateOf(false)
     var showBottomSheet = remember { mutableStateOf(false) }
-    val confirmShowBottomSheet = mutableStateOf(false)
     val scope = rememberCoroutineScope()
-    /*
-        val isPasswordError by remember { viewModel.isPasswordError }
-        val isEmailError by remember { viewModel.isEmailError }
-        val isConfirmNewPasswordError by remember { viewModel.isConfirmPasswordError }
-        val isNewPasswordError by remember { viewModel.isNewPasswordError }
-    */
 
     LaunchedEffect(viewState.displayName) {
-        if (viewState.displayName != textInput) {
+        if (viewState.displayName.isNotEmpty()) {
             textInput = viewState.displayName
         }
     }
@@ -128,14 +110,6 @@ fun UserProfileScreen(
             openErrorDialog.value = true
         }
     }
-
-    /*    LaunchedEffect(showBottomSheet) {
-            if (showBottomSheet.value && !sheetState.isVisible) {
-                sheetState.show()
-            }
-        }*/
-
-
 
     Scaffold(bottomBar = { BottomBar(navController) }) { padding ->
         if (authState == SignInState.NOT_SIGNED_IN || currentUser == null) {
@@ -155,7 +129,7 @@ fun UserProfileScreen(
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(currentUser?.profilePictureUrl).crossfade(true).build(),
-                        contentDescription = "user profile picture",
+                        contentDescription = stringResource(R.string.user_profile_picture),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(120.dp)
@@ -169,18 +143,13 @@ fun UserProfileScreen(
                             .size(120.dp)
                             .background(
                                 color = Color.LightGray.copy(alpha = 0.4f), CircleShape
-                            )
-                            .clickable {
-
-                            },
-                        contentAlignment = Alignment.Center
+                            ), contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
-                            contentDescription = "no user picture",
+                            contentDescription = stringResource(R.string.no_user_picture),
                             tint = Color.Gray,
-                            modifier = Modifier
-                                .size(60.dp)
+                            modifier = Modifier.size(60.dp)
                         )
                     }
                 }
@@ -190,28 +159,21 @@ fun UserProfileScreen(
                     modifier = Modifier.padding(top = 5.dp)
                 ) {
                     Row(
-                        Modifier
-                            // .fillMaxWidth()
-                            .padding(horizontal = 36.dp),
+                        Modifier.padding(horizontal = 36.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceEvenly,
                     ) {
                         BasicTextField(
                             enabled = nameEditEnabled.value,
-                            modifier = Modifier
-                                .padding(end = 3.dp, start = 15.dp),
+                            modifier = Modifier.padding(end = 3.dp, start = 15.dp),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Text,
                                 imeAction = ImeAction.Default,
                                 capitalization = KeyboardCapitalization.Words
                             ),
                             keyboardActions = KeyboardActions(onDone = {
-                                //    if (textInput.value.isNotBlank()) {
                                 viewModel.onNameChange(textInput)
-                                viewModel.updateUserData(/*refine = isAutoRefine!!,save = isAutoSaveModels!!*/)
-                                //   focusManager.clearFocus()
-                                // textInput.value = ""
-                                // }
+                                viewModel.updateUserData()
                             }),
                             textStyle = TextStyle(
                                 lineHeight = 1.5.em,
@@ -222,14 +184,13 @@ fun UserProfileScreen(
                             value = textInput.uppercase(),
                             onValueChange = {
                                 textInput = it
-                                decorationText = ""
                             },
                             singleLine = true,
                         )
                         IconButton(onClick = {
                             nameEditEnabled.value = !nameEditEnabled.value
                         }) {
-                            Icon(Icons.Default.Edit, contentDescription = "edit")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(id = R.string.edit_icon))
                         }
                     }
                     Text(currentUser!!.email, Modifier.padding(top = 5.dp))
@@ -256,13 +217,13 @@ fun UserProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Password",
+                            text = stringResource(id = R.string.password),
                             fontSize = 16.sp,
                         )
                         TextButton(onClick = {
                             showBottomSheet.value = true
                         }, contentPadding = PaddingValues(0.dp)) {
-                            Text(text = "Change")
+                            Text(text = stringResource(R.string.change))
                         }
                     }
                     Row(
@@ -279,9 +240,8 @@ fun UserProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "is email verified",
+                            text = stringResource(R.string.is_email_verified),
                             fontSize = 16.sp,
-                            // fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = currentUser!!.isEmailVerified.toString(),
@@ -293,21 +253,17 @@ fun UserProfileScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            //     .background(Color.LightGray, RoundedCornerShape(8.dp))
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "auto save models to device",
+                            text = stringResource(R.string.auto_save_models_to_device),
                             fontSize = 16.sp,
-                            //  fontWeight = FontWeight.Bold
                         )
-                        Switch(checked = viewState.autoSaveModel/*isAutoSaveModels?:false*/,
+                        Switch(checked = viewState.autoSaveModel,
                             onCheckedChange = { isChecked ->
-                                //isAutoSaveModels = isChecked
                                 viewModel.onSaveSwitch(isChecked)
-                                //  viewModel.updateUserData(/*refine = isAutoRefine!!,save = isAutoSaveModels!!*/)
                             })
                     }
                     Row(
@@ -318,16 +274,12 @@ fun UserProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "auto refine created model",
+                            text = stringResource(R.string.auto_refine_created_model),
                             fontSize = 16.sp,
-
-                            // fontWeight = FontWeight.Bold
                         )
-                        Switch(checked = viewState.autoRefineModel/*isAutoRefine?:false*/,
+                        Switch(checked = viewState.autoRefineModel,
                             onCheckedChange = { isChecked ->
-                                //isAutoRefine = isChecked
                                 viewModel.onRefineSwitch(isChecked)
-                                //  viewModel.updateUserData(/*refine = isAutoRefine!!,save = isAutoSaveModels!!*/)
                             })
                     }
                 }
@@ -351,20 +303,19 @@ fun UserProfileScreen(
         }
     }
     DeleteDialog(
-        title = "Sing Out Request",
-        text = "Are you sure want to continue\r\nAll unsaved models will be lost",
-        openDialog = openSignOutDialog, confirm = confirmOut
+        title = stringResource(R.string.sing_out_request),
+        text = stringResource(R.string.sing_out_dialog),
+        openDialog = openSignOutDialog,
+        confirm = confirmOut
     ) {
         viewModel.onSignOut()
     }
     ErrorDialog(
-        errorMessage = viewState.error,
-        openDialog = openErrorDialog
+        errorMessage = viewState.error, openDialog = openErrorDialog
     )
 
     if (showBottomSheet.value) {
-        BottomModalChangePasswordSheet(
-            showBottomSheet = showBottomSheet,
+        BottomModalChangePasswordSheet(showBottomSheet = showBottomSheet,
             sheetState = sheetState,
             scope = scope,
             email = viewState.email,
@@ -378,8 +329,7 @@ fun UserProfileScreen(
                 if (authState == SignInState.CREDENTIALS_RESET_REQ) {
                     viewModel.onTempSignOut()
                 }
-            }
-        )
+            })
     }
 }
 

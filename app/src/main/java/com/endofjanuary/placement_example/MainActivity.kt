@@ -23,19 +23,16 @@ import com.endofjanuary.placement_example.models_list_screen.ModelsListScreen
 import com.endofjanuary.placement_example.register_screen.RegistrationScreen
 import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
-import com.endofjanuary.placement_example.transit_dialog.NewModelType
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
 import com.endofjanuary.placement_example.upload_image.UploadImageScreen
 import com.endofjanuary.placement_example.user_cabinet.UserProfileScreen
 
 
 class MainActivity : ComponentActivity() {
-
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //   val downloader = DownloaderImpl(this)
-        if (!hasRequiredPermissions()) { //todo move to proper place
+        if (!hasRequiredPermissions()) {
             ActivityCompat.requestPermissions(
                 this, CAMERAX_PERMISSIONS, 0
             )
@@ -91,7 +88,6 @@ class MainActivity : ComponentActivity() {
                         }
                         ThreeDScreen(
                             navController = navController,
-                            // downloader = downloader,
                             modelId = modelId,
                             meshyId = meshyId,
                         )
@@ -134,19 +130,12 @@ class MainActivity : ComponentActivity() {
                         }
                         ModelViewTypeDialog(navController, modelId = model!!, meshyId!!)
                     }
-                    dialog(
-                        "new_model",
-                    ) {
-                        NewModelType(navController)
-                    }
                 }
             }
         }
     }
 
     companion object {
-        // private const val kModelFile = "models/model_v2_chair.glb"
-        const val kMaxModelInstances = 5
         private val CAMERAX_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,
         )

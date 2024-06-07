@@ -13,29 +13,27 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.endofjanuary.placement_example.R
 
 private enum class Visibility {
     VISIBLE,
     GONE
 }
 
-/**
- * Shows a button that lets the user scroll to the bottom.
- */
 @Composable
 fun JumpToBottom(
     enabled: Boolean,
     onClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Show Jump to Bottom button
     val transition = updateTransition(
         if (enabled) Visibility.VISIBLE else Visibility.GONE,
-        label = "JumpToBottom visibility animation"
+        label = stringResource(R.string.jumptobottom_visibility_animation)
     )
-    val bottomOffset by transition.animateDp(label = "JumpToBottom offset animation") {
+    val bottomOffset by transition.animateDp(label = stringResource(R.string.jumptobottom_offset_animation)) {
         if (it == Visibility.GONE) {
             (-32).dp
         } else {
@@ -52,7 +50,7 @@ fun JumpToBottom(
                 )
             },
             text = {
-                Text(text ="To Bottom")
+                Text(text = stringResource(R.string.to_bottom))
             },
             onClick = onClicked,
             containerColor = MaterialTheme.colorScheme.surface,
