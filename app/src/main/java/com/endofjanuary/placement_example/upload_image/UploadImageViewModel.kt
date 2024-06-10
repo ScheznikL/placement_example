@@ -64,11 +64,9 @@ class UploadImageViewModel(
         }
     }
 
-    fun getBitmapPresignedUrl() {
-
+    private fun getBitmapPresignedUrl() {
         if (photo.value != null) {
             isUploading.value = true
-
             viewModelScope.launch(Dispatchers.IO) {
                 val result = awStorageRepo.putObjectPresigned(
                     "photo",
@@ -79,7 +77,6 @@ class UploadImageViewModel(
                         isUploadingError.value = result.message.toString()
                         isUploading.value = false
                     }
-
                     is Resource.Loading -> isUploading.value = true
                     is Resource.None -> {}
                     is Resource.Success -> {
@@ -102,6 +99,7 @@ class UploadImageViewModel(
                 try {
                     baos.close()
                 } catch (e: IOException) {
+                    isUploadingError.value = e.message.toString()
                 }
             }
         }

@@ -10,7 +10,7 @@ import com.endofjanuary.placement_example.ar_screen.ARScreenViewModel
 import com.endofjanuary.placement_example.chat.ChatScreenViewModel
 import com.endofjanuary.placement_example.data.proto.appStartupParamsDataStore
 import com.endofjanuary.placement_example.data.remote.gpt.AuthTokenGptInterseptor
-import com.endofjanuary.placement_example.data.remote.gpt.ChatComplitionApi
+import com.endofjanuary.placement_example.data.remote.gpt.ChatCompletionApi
 import com.endofjanuary.placement_example.data.remote.meshy.AuthTokenInterceptor
 import com.endofjanuary.placement_example.data.remote.meshy.MeshyApi
 import com.endofjanuary.placement_example.home.HomeViewModel
@@ -69,7 +69,7 @@ val appModule = module {
             )
             .baseUrl(BASE_GPT_URL)
             .build()
-            .create(ChatComplitionApi::class.java)
+            .create(ChatCompletionApi::class.java)
     }
     single {
         Firebase.auth

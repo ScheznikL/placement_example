@@ -18,6 +18,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -198,59 +199,56 @@ fun RegistrationScreen(
             }
 
             val context = LocalContext.current
-            when (authState) {
-                SignInState.AUTHORIZED -> {
-                    navController.navigate("home_screen")
+            LaunchedEffect(key1 = authState) {
+                when (authState) {
+                    SignInState.AUTHORIZED -> {
+                        navController.navigate("home_screen")
+                    }
+
+                    SignInState.CREDENTIAL_ERROR -> Toast.makeText(
+                        // todo scaffold & snackbar
+                        context,
+                        context.getString(R.string.credential_error) + if (!signInError.isNullOrEmpty()) context.getString(
+                            R.string.details, signInError.toString()
+                        ) else "",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                    SignInState.USER_NOT_FOUND -> Toast.makeText(
+                        context,
+                        context.getString(R.string.user_not_found) + if (!signInError.isNullOrEmpty()) context.getString(
+                            R.string.details, signInError.toString()
+                        ) else "",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                    SignInState.VERIFY_FAILED -> Toast.makeText(
+                        context,
+                        context.getString(R.string.email_verification_failed) + if (!signInError.isNullOrEmpty()) context.getString(
+                            R.string.details, signInError.toString()
+                        ) else "",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                    SignInState.VERIFYING_EMAIL -> Toast.makeText(
+                        context,
+                        context.getString(R.string.verification_email_was_sent),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                    SignInState.USER_COLLISION -> Toast.makeText(
+                        context,
+                        context.getString(
+                            R.string.email_already_exist, email
+                        ) + if (!signInError.isNullOrEmpty()) context.getString(
+                            R.string.details, signInError.toString()
+                        ) else "",
+
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                    else -> {}
                 }
-
-                SignInState.CREDENTIAL_ERROR -> Toast.makeText(
-                    // todo scaffold & snackbar
-                    context,
-                    stringResource(R.string.credential_error) + if (!signInError.isNullOrEmpty()) stringResource(
-                        R.string.details,
-                        signInError.toString()
-                    ) else "",
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                SignInState.USER_NOT_FOUND -> Toast.makeText(
-                    context,
-                    stringResource(R.string.user_not_found) + if (!signInError.isNullOrEmpty()) stringResource(
-                        R.string.details,
-                        signInError.toString()
-                    ) else "",
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                SignInState.VERIFY_FAILED -> Toast.makeText(
-                    context,
-                    stringResource(R.string.email_verification_failed) + if (!signInError.isNullOrEmpty()) stringResource(
-                        R.string.details,
-                        signInError.toString()
-                    ) else "",
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                SignInState.VERIFYING_EMAIL -> Toast.makeText(
-                    context,
-                    stringResource(R.string.verification_email_was_sent),
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                SignInState.USER_COLLISION -> Toast.makeText(
-                    context,
-                    stringResource(
-                        R.string.email_already_exist,
-                        email
-                    ) + if (!signInError.isNullOrEmpty()) stringResource(
-                        R.string.details,
-                        signInError.toString()
-                    ) else "",
-
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                else -> {}
             }
         }
 

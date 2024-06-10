@@ -25,7 +25,7 @@ class AWStorageRepoImpl(
         content: String, stream: InputStream
     ): Resource<String> {
 
-        val file = kotlin.io.path.createTempFile(suffix = ".jpg")
+        val file = kotlin.io.path.createTempFile(suffix = ".png")
 
         stream.use { input ->
             file.outputStream().use { output ->
@@ -38,17 +38,17 @@ class AWStorageRepoImpl(
         try {
             val resp = s3.putObject(PutObjectRequest {
                 bucket = BUCKET_NAME
-                key = "${Path(content).name}.jpg"
+                key = "${Path(content).name}.png"
                 metadata = metadataVal
                 body = file.asByteStream()
             })
 
             val unsignedRequest = GetObjectRequest {
                 bucket = BUCKET_NAME
-                key = "${Path(content).name}.jpg"
+                key = "${Path(content).name}.png"
             }
 
-            val presignedRequest = s3.presignGetObject(unsignedRequest, 3.hours)
+            val presignedRequest = s3.presignGetObject(unsignedRequest, 1.hours)
 
             return Resource.Success(presignedRequest.url.toString())
         } catch (e: Exception) {

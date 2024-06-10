@@ -36,12 +36,13 @@ fun NoDataSection(
         Image(
             modifier = Modifier
                 .padding(start = 8.dp, end = 9.dp)
-                .size(33.dp)
+                .size(93.dp)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop,
             painter = painterResource(R.drawable.glass),
             contentDescription = stringResource(id = R.string.chat_image)
         )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(error, color = MaterialTheme.colorScheme.secondary, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Button(

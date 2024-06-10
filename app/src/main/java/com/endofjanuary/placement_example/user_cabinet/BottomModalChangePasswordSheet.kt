@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -29,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,11 +75,21 @@ fun BottomModalChangePasswordSheet(
         shape = RoundedCornerShape(18.dp),
     ) {
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars
+                )
+                .padding(8.dp)
         ) {
             var visible by remember { mutableStateOf(true) }
-            var errorVisible by remember { mutableStateOf(true) }
+            var errorVisible by remember { mutableStateOf(false) }
             val density = LocalDensity.current
+
+            LaunchedEffect(key1 = error) {
+                if (error.isNotEmpty())
+                    errorVisible = true
+            }
+
             AnimatedVisibility(visible = visible, enter = slideInHorizontally {
                 with(density) { -40.dp.roundToPx() }
             } + fadeIn(
@@ -88,7 +102,8 @@ fun BottomModalChangePasswordSheet(
                     onEmailSend = onEmailSend,
                 )
             }
-            if (state != SignInState.REAUTHORIZED && error.isNotEmpty()) {
+
+            if (state != SignInState.REAUTHORIZED) {
                 visible = false
                 AnimatedVisibility(visible = errorVisible, enter = slideInHorizontally {
                     with(density) { -40.dp.roundToPx() }
@@ -104,7 +119,8 @@ fun BottomModalChangePasswordSheet(
                             errorVisible = false
                         })
                 }
-            } else if (state == SignInState.CREDENTIALS_RESET_REQ) {
+            }
+            if (state == SignInState.CREDENTIALS_RESET_REQ) {
                 visible = false
                 Column(
                     modifier = Modifier.padding(8.dp)
@@ -117,7 +133,7 @@ fun BottomModalChangePasswordSheet(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        stringResource(R.string.reset_password_email),
+                        stringResource(R.string.reset_password_email, email),
                         fontWeight = FontWeight.W400,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary

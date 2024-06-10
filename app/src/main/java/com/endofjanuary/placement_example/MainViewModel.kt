@@ -62,8 +62,8 @@ class MainViewModel(
         createNotificationChannel()
         viewModelScope.launch(Dispatchers.IO) {
             _currentUser.collectLatest {
-                autoRefine.value = it!!.autoRefineModel
-                autoSave.value = it.autoSaveModel
+                autoRefine.value = it?.autoRefineModel ?: false
+                autoSave.value = it?.autoSaveModel ?: false
             }
         }
     }
@@ -177,7 +177,6 @@ class MainViewModel(
                                     )
                                 }
                             }
-
                             else -> {}
                         }
                     }
@@ -202,22 +201,17 @@ class MainViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
             val result = meshyRepository.postImageTo3D(PostFromImage(url))
-
             when (result) {
                 is Resource.Success -> {
-
                     if (result.data != null) {
                         var image3d = getImageTo3D(result.data.result)
-
                         when (image3d) {
                             is Resource.Error -> {
                                 loadError.value = image3d.message
                                 isLoading.value = false
                                 showNotification(NotificationType.ERROR, image3d.message!!)
                             }
-
                             is Resource.Success -> {
-
                                 while (image3d.data!!.status == ProgressStatus.PENDING.toString() || image3d.data!!.status == ProgressStatus.IN_PROGRESS.toString()) {
 
                                     progress.value = image3d.data!!.progress
@@ -255,21 +249,17 @@ class MainViewModel(
                                     )
                                 }
                             }
-
                             else -> {}
                         }
                     }
                 }
-
                 is Resource.Error -> {
                     loadError.value = result.message.toString()
                     isLoading.value = false
                 }
-
                 is Resource.Loading -> {
                     isLoading.value = true
                 }
-
                 else -> {
                     isLoading.value = true
                 }
@@ -462,8 +452,6 @@ class MainViewModel(
                             id = isUpdateSuccess.value.data ?: 0
                         )
                         if (_dataStoreState.value.isEmpty()) {
-                            //    modelId.value = model.value.id
-
                             modelPath.value = model.value.modelPath
                             modelImageUrl.value = model.value.modelImageUrl
                             isSuccess.value =

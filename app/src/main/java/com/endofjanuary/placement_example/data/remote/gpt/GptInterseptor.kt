@@ -7,7 +7,6 @@ import okhttp3.Response
 const val HEADER_NAME = "Authorization"
 const val TOKEN_TYPE = "Bearer "
 
-
 class AuthTokenGptInterseptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()

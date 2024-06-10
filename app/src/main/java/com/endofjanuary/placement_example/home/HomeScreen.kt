@@ -125,12 +125,16 @@ fun HomeContent(
     }
 
     Column(
-        modifier = modifier.windowInsetsPadding(
-            WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
-        )
+        modifier = modifier
+            .windowInsetsPadding(
+                WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
+            )
+            .padding(bottom = 35.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Spacer(
                 Modifier
@@ -139,62 +143,65 @@ fun HomeContent(
                     .windowInsetsTopHeight(WindowInsets.statusBars)
             )
             HomeAppBar(
-               modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             )
-        }
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(15.dp)
-        ) {
-            Text(
-                stringResource(id = R.string.home_header), style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                )
-            )
-            IconButton(
-                onClick = {
-                    onClearLastModels(context)
-                }, enabled = !viewState.lastModels.isNullOrEmpty()
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(15.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.delete_all_last_viewed)
+                Text(
+                    stringResource(id = R.string.home_header),
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                    )
                 )
-            }
-        }
-        if (!viewState.lastModels.isNullOrEmpty()) {
-            LazyRow(
-                reverseLayout = true, state = scrollState
-            ) {
-                items(viewState.lastModels.size) {
-                    Box(
-                        modifier = modifier
-                            .size(300.dp, 350.dp)
-                            .padding(horizontal = 5.dp, vertical = 10.dp)
-                    ) {
-                        ModelItem(
-                            modelItem = viewState.lastModels[it],
-                            navController = navController,
-                            calcDominantColor = calcDominantColor,
-                            onDelete = {
-                                onDeleteExpired(viewState.lastModels[it].modelId)
-                            }
-                        )
-                    }
+                IconButton(
+                    onClick = {
+                        onClearLastModels(context)
+                    }, enabled = !viewState.lastModels.isNullOrEmpty()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.delete_all_last_viewed)
+                    )
                 }
             }
-        } else {
-            EmptyModelItem(
-                message = viewState.errorMessage ?: stringResource(id = R.string.home_empty_text),
-                modifier = Modifier
-                    .padding(10.dp)
-                    .height(190.dp)
-                    .fillMaxWidth()
-            )
+            if (!viewState.lastModels.isNullOrEmpty()) {
+                LazyRow(
+                    reverseLayout = true, state = scrollState
+                ) {
+                    items(viewState.lastModels.size) {
+                        Box(
+                            modifier = modifier
+                                .size(300.dp, 350.dp)
+                                .padding(horizontal = 5.dp, vertical = 10.dp)
+                        ) {
+                            ModelItem(
+                                modelItem = viewState.lastModels[it],
+                                navController = navController,
+                                calcDominantColor = calcDominantColor,
+                                onDelete = {
+                                    onDeleteExpired(viewState.lastModels[it].modelId)
+                                }
+                            )
+                        }
+                    }
+                }
+            } else {
+                EmptyModelItem(
+                    message = viewState.errorMessage
+                        ?: stringResource(id = R.string.home_empty_text),
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .height(190.dp)
+                        .fillMaxWidth()
+                )
+            }
         }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -303,7 +310,7 @@ fun ModelItem(
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)
                             .crossfade(true).build(),
-                        contentDescription =stringResource(R.string.last_model_image),
+                        contentDescription = stringResource(R.string.last_model_image),
                         onSuccess = {
                             calcDominantColor(it.result.drawable) { color ->
                                 if (color != MeshyBlack) {

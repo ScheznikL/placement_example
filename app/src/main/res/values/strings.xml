@@ -33,7 +33,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="chat_card_text">Describe desirable model bellow or choose photo to generate 3D model</string>
-    <string name="camera">camera</string>
+    <string name="camera">Camera</string>
     <string name="gallery">gallery</string>
     <string name="cancel_refine_dialog_header">Cancel Refine</string>
     <string name="send">send icon</string>
@@ -127,5 +127,6 @@
     <string name="sing_out_request">Sing Out Request</string>
     <string name="sing_out_dialog">Are you sure want to continue\nAll unsaved models will be lost</string>
     <string name="request_model">Request model</string>
+    <string name="delete_selected">Are you sure want to delete %d model%s ?</string>
 
 </resources>

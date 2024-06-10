@@ -135,7 +135,8 @@ fun UploadImageScreen(
                     isUploadingError = isUploadingError,
                     isUploading = isUploading,
                     progress = progress,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
+                   // navController = navController
                 )
 
             }

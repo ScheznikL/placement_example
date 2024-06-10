@@ -185,10 +185,15 @@ class ModelsListViewModel(
         try {
             viewModelScope.launch(Dispatchers.IO) {
                 val result: MutableList<Resource<Int>> = mutableListOf()
-                selectedIds.value.forEach { result += modelsRoomRepo.deleteModelById(it) }
+
+                selectedIds.value.forEach {
+                    result += modelsRoomRepo.deleteModelById(it)
+                    dataStoreRepo.removeModelById(it)
+                }
+                selectedIds.value = emptyList()
             }
         } catch (e: Exception) {
-            deletedModel.value = Resource.Error(message = e.message.toString())
+            _state.value = _state.value.copy(errorMessage = e.message.toString())
         }
     }
 

@@ -5,12 +5,13 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,6 +52,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -73,9 +76,11 @@ import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.data.models.ModelEntry
 import com.endofjanuary.placement_example.utils.components.BottomBar
 import com.endofjanuary.placement_example.utils.components.ImageWithExpiredLabel
+import com.endofjanuary.placement_example.utils.screens.DeleteDialog
 import com.endofjanuary.placement_example.utils.screens.ModelExpiredDialog
 import org.koin.androidx.compose.getViewModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun ModelsListScreen(
@@ -88,12 +93,9 @@ fun ModelsListScreen(
         viewModel.loadModels()
     }
 
-    val itemToDelete = remember {
-        viewModel.selectedIds
-    }
-    val deleted = remember {
-        viewModel.deletedModel
-    }
+    val openDeleteFromSelection = remember { mutableStateOf(false) }
+    val confirmDeleteFromSelection = remember { mutableStateOf(false) }
+
     val snackbarHostState = remember { SnackbarHostState() }
 
     val textModelsListState by viewModel.textModelsListState.collectAsState()
@@ -113,10 +115,22 @@ fun ModelsListScreen(
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
             }
         } else {
-            FloatingActionButton(onClick = {
-                viewModel.deleteModels()
-            }) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+            FlowColumn {
+                FloatingActionButton(
+                    onClick = {
+                        viewModel.deactivateSelectionMode()
+                    }, shape = CircleShape
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.delete))
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                FloatingActionButton(
+                    onClick = {
+                        openDeleteFromSelection.value = true
+                    }, shape = CircleShape
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+                }
             }
         }
     }) { padding ->
@@ -162,6 +176,16 @@ fun ModelsListScreen(
             }
         }
     }
+
+    DeleteDialog(
+        title = stringResource(R.string.delete), text = stringResource(
+            id = R.string.delete_selected,
+            viewModel.selectedIds.value.size,
+            if (viewModel.selectedIds.value.size > 1) "s" else ""
+        ), openDialog = openDeleteFromSelection, confirm = confirmDeleteFromSelection
+    ) {
+        viewModel.deleteModels()
+    }
 }
 
 @Composable
@@ -197,19 +221,17 @@ fun ModelsFromList(
     modelListState: List<ModelEntry>,
     loadError: String,
     isLoading: Boolean,
-    //  isSearching: Boolean,
     viewModel: ModelsListViewModel
 ) {
     if (modelListState.isNotEmpty()) {
         LazyColumn(
             contentPadding = PaddingValues(16.dp)
         ) {
-            val itemCount =
-                if (modelListState.size % 2 == 0) {
-                    modelListState.size / 2
-                } else {
-                    modelListState.size / 2 + 1
-                }
+            val itemCount = if (modelListState.size % 2 == 0) {
+                modelListState.size / 2
+            } else {
+                modelListState.size / 2 + 1
+            }
             items(itemCount) {
                 ModelsInRow(
                     rowIndex = it,
@@ -250,22 +272,18 @@ fun ModelsInRow(
 ) {
     Column {
         Row {
-            ModelInRowEntry(
-                entry = entries[rowIndex * 2],
+            ModelInRowEntry(entry = entries[rowIndex * 2],
                 navController = navController,
                 modifier = Modifier.weight(1f),
                 viewModel = viewModel,
-                onDelete = { deleteExpired(entries[rowIndex * 2]) }
-            )
+                onDelete = { deleteExpired(entries[rowIndex * 2]) })
             Spacer(modifier = Modifier.width(16.dp))
             if (entries.size >= rowIndex * 2 + 2) {
-                ModelInRowEntry(
-                    entry = entries[rowIndex * 2 + 1],
+                ModelInRowEntry(entry = entries[rowIndex * 2 + 1],
                     navController = navController,
                     modifier = Modifier.weight(1f),
                     viewModel = viewModel,
-                    onDelete = { deleteExpired(entries[rowIndex * 2 + 1]) }
-                )
+                    onDelete = { deleteExpired(entries[rowIndex * 2 + 1]) })
             } else {
                 Spacer(modifier = Modifier.weight(1f))
             }
@@ -288,7 +306,7 @@ fun ModelInRowEntry(
 
 
     val defaultDominantColor = MaterialTheme.colorScheme.surface
-    val deletedDominantColor = Color.LightGray
+    val deletedDominantColor = Color.Gray.copy(alpha = 0.5f)
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
@@ -310,18 +328,12 @@ fun ModelInRowEntry(
         contentAlignment = Center,
         modifier = modifier
             .shadow(5.dp, RoundedCornerShape(10.dp))
-            .clip(RoundedCornerShape(10.dp))
             .aspectRatio(1f)
             .background(
-                Brush.verticalGradient(
-                    listOf(
-                        dominantColor,
-                        if (selectedIds.contains(entry.meshyId) && selectedMode) deletedDominantColor
-                        else defaultDominantColor
-                    )
-                )
+                if (selectedIds.contains(entry.meshyId) && selectedMode) deletedDominantColor
+                else defaultDominantColor
             )
-            .border(border, RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(10.dp))
             .combinedClickable(
                 onClick = {
                     if (!viewModel.selectionMode.value) {
@@ -341,10 +353,16 @@ fun ModelInRowEntry(
                     viewModel.selectModel(entry)
                 },
             )
-
     ) {
         if (entry.isExpired == false) {
-            Column {
+            Box(
+                modifier = Modifier
+                    .background(
+                        if (selectedIds.contains(entry.meshyId) && selectedMode) deletedDominantColor
+                        else defaultDominantColor
+                    )
+                    .fillMaxSize()
+            ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current).data(entry.modelImageUrl)
                         .crossfade(true).build(),
@@ -355,16 +373,27 @@ fun ModelInRowEntry(
                         }
                     },
                     contentScale = ContentScale.Crop,
+                    alpha = if (selectedIds.contains(entry.meshyId) && selectedMode) 0.5f else 1f,
                     modifier = Modifier
                         .size(120.dp)
-                        .align(CenterHorizontally)
+                        // .align(Center)
+                        .fillMaxSize()
                 )
                 Text(
                     text = entry.modelDescription,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.Transparent, MaterialTheme.colorScheme.surface
+                                ),
+                            )
+                        )
                 )
             }
         } else {
@@ -395,10 +424,9 @@ fun ModelInRowEntry(
             })
         }
     }
+
     ModelExpiredDialog(
-        openDialog = openExpiredDialog,
-        confirm = confirmDelete,
-        onConfirm = onDelete
+        openDialog = openExpiredDialog, confirm = confirmDelete, onConfirm = onDelete
     )
 }
 

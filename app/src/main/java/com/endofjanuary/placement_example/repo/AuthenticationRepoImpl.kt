@@ -133,17 +133,14 @@ class AuthenticationRepoImpl(
                 firebaseAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-
                             continuation.resume(task.result)
                         } else {
-
                             continuation.resumeWithException(
                                 task.exception ?: Exception()
                             )
                         }
                     }
             }
-
             verifyEmail()
             if (result.user != null) {
                 updateUserProfileData(
@@ -152,20 +149,15 @@ class AuthenticationRepoImpl(
             } else {
                 signInState.value = SignInState.NOT_SIGNED_IN
             }
-
         } catch (e: Exception) {
             signInError.value = e.message
-
             when (e) {
                 is FirebaseAuthInvalidUserException -> signInState.value =
                     SignInState.USER_NOT_FOUND
-
                 is FirebaseAuthUserCollisionException -> signInState.value =
                     SignInState.USER_COLLISION
-
                 is FirebaseAuthInvalidCredentialsException -> signInState.value =
                     SignInState.CREDENTIAL_ERROR
-
                 else -> signInState.value = SignInState.CREDENTIAL_ERROR
             }
         }
@@ -222,7 +214,6 @@ class AuthenticationRepoImpl(
                 auto_save = save,
                 name = userName,
             )
-
             userDoc.set(user).addOnSuccessListener {
                 signInState.value = SignInState.AUTHORIZED
                 def.complete(Resource.Success(""))

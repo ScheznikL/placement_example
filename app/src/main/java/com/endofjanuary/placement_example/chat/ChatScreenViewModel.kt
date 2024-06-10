@@ -58,7 +58,6 @@ class ChatScreenViewModel(
 
         description = userMessageContext
 
-
         _messagesListState.value = _messagesListState.value.plus(
             converter.toMessageEntry(
                 Message(
@@ -67,7 +66,6 @@ class ChatScreenViewModel(
             )
         )
         fullUserMessage += "$userMessageContext "
-
         viewModelScope.launch {
             val result =
                 chatRepository.postToGpt(Post(messages = composeMessages()))
@@ -102,7 +100,6 @@ class ChatScreenViewModel(
                 }
             }
         }
-
     }
 
     fun addAutoRefineMessage(context: Context) {
