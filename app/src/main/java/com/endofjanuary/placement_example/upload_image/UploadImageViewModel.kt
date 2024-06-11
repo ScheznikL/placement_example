@@ -3,6 +3,9 @@ package com.endofjanuary.placement_example.upload_image
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -31,13 +34,15 @@ class UploadImageViewModel(
     fun onPhotoPickerSelect(uri: Uri?) {
         if (uri != null) image.value = uri
     }
+
     fun getPresignedUrl(context: Context) {
-        if(image.value != null){
+        if (image.value != null) {
             getImagePresignedUrl(context = context)
-        }else{
+        } else {
             getBitmapPresignedUrl()
         }
     }
+
     fun getImagePresignedUrl(context: Context) {
         if (image.value != null) {
             isUploading.value = true
@@ -77,6 +82,7 @@ class UploadImageViewModel(
                         isUploadingError.value = result.message.toString()
                         isUploading.value = false
                     }
+
                     is Resource.Loading -> isUploading.value = true
                     is Resource.None -> {}
                     is Resource.Success -> {
@@ -103,6 +109,14 @@ class UploadImageViewModel(
                 }
             }
         }
+    }
+
+    fun pickImage(pickImage: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>) {
+        pickImage.launch(
+            PickVisualMediaRequest(
+                ActivityResultContracts.PickVisualMedia.ImageOnly
+            )
+        )
     }
 
     fun onTakePhoto(bitmap: Bitmap) {

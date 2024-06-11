@@ -2,8 +2,8 @@ package com.endofjanuary.placement_example.upload_image
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
@@ -68,9 +68,10 @@ fun UploadImageScreen(
     val presignedUrl by remember { viewModel.presignedUrl }
 
     val isLoading by remember { mainViewModel.isLoading }
+    val loadingError by remember { mainViewModel.loadError }
+
     val isSuccess by remember { mainViewModel.isSuccess }
     val progress by remember { mainViewModel.progress }
-
 
     val pickImage = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(), viewModel::onPhotoPickerSelect
@@ -81,6 +82,7 @@ fun UploadImageScreen(
 
     LaunchedEffect(presignedUrl) {
         if (!presignedUrl.isNullOrBlank()) {
+            Log.d("loadModel", presignedUrl.toString())
             if (!isLoading || isSuccess == null) { // isSuccess == null - to avoid double loading
                 mainViewModel.loadModelEntryFromImage(
                     url = presignedUrl!!, name = textInput
@@ -99,17 +101,13 @@ fun UploadImageScreen(
     }
     if (typeGallery) {
         LaunchedEffect(Unit) {
-            pickImage.launch(
-                PickVisualMediaRequest(
-                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                )
-            )
+            viewModel.pickImage(pickImage)
         }
     } else {
         TakePhoto(onPhotoTaken = viewModel::onTakePhoto, onClose = { navController.popBackStack() })
     }
     if (image != null || photo != null) {
-        Scaffold(topBar = { DefaultTopAppBar(title = "", navController = navController) },
+        Scaffold(topBar = { DefaultTopAppBar(navController = navController) },
             bottomBar = { BottomBar(navController = navController) },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { contentPadding ->
 
@@ -120,7 +118,7 @@ fun UploadImageScreen(
                         bottom = 20.dp + contentPadding.calculateBottomPadding(),
                         start = 10.dp,
                     ),
-                    isActionEnabled = !isUploading && !isLoading,
+                    isActionEnabled = !isUploading && !isLoading && isUploadingError.isEmpty() && loadingError.isNullOrEmpty(),
                     image = image,
                     photo = photo,
                     modelName = textInput,
@@ -128,7 +126,7 @@ fun UploadImageScreen(
                     onProceedClick = {
                         viewModel.getPresignedUrl(context)
                     },
-                    scrollState = scrollState
+                    scrollState = scrollState,
                 )
                 OnDataLoading(
                     isLoading = isLoading,
@@ -136,10 +134,13 @@ fun UploadImageScreen(
                     isUploading = isUploading,
                     progress = progress,
                     modifier = Modifier.align(Alignment.Center),
-                   // navController = navController
+                    loadError = loadingError
                 )
-
             }
+        }
+    } else {
+        PickerDisabledSection(navController = navController) {
+            viewModel.pickImage(pickImage)
         }
     }
 }
@@ -187,7 +188,6 @@ fun UploadImageContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(end = 15.dp),
-            //  .align(Alignment.BottomCenter),
             value = modelName,
             onValueChange = onNameChange,
             textStyle = TextStyle(

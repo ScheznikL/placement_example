@@ -39,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +93,7 @@ fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent(
     modifier: Modifier = Modifier,
@@ -105,6 +107,8 @@ fun HomeContent(
     val appBarColor = surfaceColor.copy(alpha = 0.87f)
 
     val showBottomSheet = remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
 
     val scrollState = rememberLazyListState()
 
@@ -226,6 +230,8 @@ fun HomeContent(
     UploadImageBottomSheet(
         navController = navController,
         showBottomSheet = showBottomSheet,
+        sheetState = sheetState,
+        scope = scope
     )
 }
 

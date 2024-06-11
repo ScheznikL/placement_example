@@ -1,6 +1,7 @@
 package com.endofjanuary.placement_example.repo
 
 
+import android.util.Log
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.model.PutObjectRequest
@@ -32,10 +33,10 @@ class AWStorageRepoImpl(
                 input.copyTo(output)
             }
         }
+        try {
         val metadataVal = mutableMapOf<String, String>()
         metadataVal[DEFAULT_METADATA] = convertToReadableFormat(System.currentTimeMillis())
 
-        try {
             val resp = s3.putObject(PutObjectRequest {
                 bucket = BUCKET_NAME
                 key = "${Path(content).name}.png"
@@ -52,6 +53,10 @@ class AWStorageRepoImpl(
 
             return Resource.Success(presignedRequest.url.toString())
         } catch (e: Exception) {
+            Log.w(
+                "loadModel AWS FAILED || //",
+                e.message.toString()
+            )
             return Resource.Error(e.message.toString())
         }
     }

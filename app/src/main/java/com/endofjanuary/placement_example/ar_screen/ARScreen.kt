@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,15 +70,15 @@ fun ARScreen(
             ARSceneDisplay(modelId)
         }
     }
-
 }
 
 
 @Composable
 fun ARSceneDisplay(
-    modelId : Int?
+    modelId: Int?
 ) {
 
+    val errorAR: MutableState<String?> = mutableStateOf(null)
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
     val materialLoader = rememberMaterialLoader(engine)
@@ -102,86 +103,93 @@ fun ARSceneDisplay(
     val instanceState by remember {
         viewModel.loadedInstancesState
     }
-    when (instanceState) {
-        is Resource.Error -> {
-            ErrorScreen(message = instanceState.message!!)
-        }
+    if (errorAR.value.isNullOrEmpty()) {
+        when (instanceState) {
+            is Resource.Error -> {
+                ErrorScreen(message = instanceState.message!!)
+            }
 
-        is Resource.Success -> {
-            ARScene(
-                modifier = Modifier.fillMaxSize(),
-                childNodes = childNodes,
-                engine = engine,
-                view = view,
-                modelLoader = modelLoader,
-                collisionSystem = collisionSystem,
-                sessionConfiguration = { session, config ->
-                    config.depthMode =
-                        when (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
-                            true -> Config.DepthMode.AUTOMATIC
-                            else -> Config.DepthMode.DISABLED
-                        }
-                    config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
-                    config.lightEstimationMode =
-                        Config.LightEstimationMode.ENVIRONMENTAL_HDR
-                },
-                cameraNode = cameraNode,
-                planeRenderer = planeRenderer,
-                onTrackingFailureChanged = {
-                    trackingFailureReason = it
-                },
-                onSessionUpdated = { session, updatedFrame ->
-                    frame = updatedFrame
-
-                    if (childNodes.isEmpty()) {
-                        updatedFrame.getUpdatedPlanes()
-                            .firstOrNull { it.type == Plane.Type.HORIZONTAL_UPWARD_FACING }
-                            ?.let { it.createAnchorOrNull(it.centerPose) }?.let { anchor ->
-                                childNodes += viewModel.createAnchorNode(
-                                    engine = engine,
-                                    materialLoader = materialLoader,
-                                    modelInstances = instanceState.data!!,
-                                    anchor = anchor,
-                                )
+            is Resource.Success -> {
+                ARScene(
+                    modifier = Modifier.fillMaxSize(),
+                    childNodes = childNodes,
+                    engine = engine,
+                    view = view,
+                    modelLoader = modelLoader,
+                    collisionSystem = collisionSystem,
+                    sessionConfiguration = { session, config ->
+                        config.depthMode =
+                            when (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
+                                true -> Config.DepthMode.AUTOMATIC
+                                else -> Config.DepthMode.DISABLED
                             }
-                    }
-                },
-                onGestureListener = rememberOnGestureListener(
-                    onDoubleTap = { motionEvent, node ->
-                        val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
-                        hitResults?.firstOrNull {
-                            it.isValid(
-                                depthPoint = false,
-                                point = false
-                            )
-                        }?.createAnchorOrNull()
-                            ?.let { anchor ->
-                                planeRenderer = false
-                                childNodes += viewModel.createAnchorNode(
-                                    engine = engine,
-                                    materialLoader = materialLoader,
-                                    modelInstances = instanceState.data!!,
-                                    anchor = anchor,
-                                )
-                            }
+                        config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
+                        config.lightEstimationMode =
+                            Config.LightEstimationMode.ENVIRONMENTAL_HDR
                     },
-                )
-            )
-        }
+                    cameraNode = cameraNode,
+                    planeRenderer = planeRenderer,
+                    onTrackingFailureChanged = {
+                        trackingFailureReason = it
+                    },
+                    onSessionUpdated = { session, updatedFrame ->
+                        frame = updatedFrame
 
-        else -> {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    style = MaterialTheme.typography.bodySmall,
-                    text = stringResource(R.string.loading),
-                    )
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onBackground,
+                        if (childNodes.isEmpty()) {
+                            updatedFrame.getUpdatedPlanes()
+                                .firstOrNull { it.type == Plane.Type.HORIZONTAL_UPWARD_FACING }
+                                ?.let { it.createAnchorOrNull(it.centerPose) }?.let { anchor ->
+                                    childNodes += viewModel.createAnchorNode(
+                                        engine = engine,
+                                        materialLoader = materialLoader,
+                                        modelInstances = instanceState.data!!,
+                                        anchor = anchor,
+                                    )
+                                }
+                        }
+                    },
+                    onGestureListener = rememberOnGestureListener(
+                        onDoubleTap = { motionEvent, node ->
+                            val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
+                            hitResults?.firstOrNull {
+                                it.isValid(
+                                    depthPoint = false,
+                                    point = false
+                                )
+                            }?.createAnchorOrNull()
+                                ?.let { anchor ->
+                                    planeRenderer = false
+                                    childNodes += viewModel.createAnchorNode(
+                                        engine = engine,
+                                        materialLoader = materialLoader,
+                                        modelInstances = instanceState.data!!,
+                                        anchor = anchor,
+                                    )
+                                }
+                        },
+                    ),
+                    onSessionFailed = { e ->
+                        errorAR.value = e.message
+                    }
                 )
             }
+
+            else -> {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        style = MaterialTheme.typography.bodySmall,
+                        text = stringResource(R.string.loading),
+                    )
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+            }
         }
+    } else {
+        ErrorScreen(message = errorAR.value!!)
     }
 }

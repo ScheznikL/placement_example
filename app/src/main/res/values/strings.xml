@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">placement_example</string>
     <string name="home_header">Last Models:</string>
-    <string name="home_empty_text">You haven\'t viewed any model yet</string>
+    <string name="home_empty_text">You haven\'t created any model yet</string>
     <string name="home_button_chat">Begin chat to create unique model</string>
     <string name="home_button_image">Model from Image</string>
     <string name="loading">loading model…</string>
@@ -84,7 +84,7 @@
     <string name="tab_from_image">Models from image</string>
     <string name="room_no_model_error">No model with corresponding %1$s</string>
     <string name="your_data_is_uploading">Your data is uploading …</string>
-    <string name="model_progress">The model is in progress…\n%1$s%</string>
+    <string name="model_progress">The model is in progress…</string>
     <string name="sign_up">Sign Up</string>
     <string name="sign_in">Sign In</string>
     <string name="enter_email">Enter email</string>
@@ -128,5 +128,7 @@
     <string name="sing_out_dialog">Are you sure want to continue\nAll unsaved models will be lost</string>
     <string name="request_model">Request model</string>
     <string name="delete_selected">Are you sure want to delete %d model%s ?</string>
+    <string name="choose_your_image_or_go_back">Choose your image or go back</string>
+    <string name="try_choosing_once_more">Try choosing once more</string>
 
 </resources>

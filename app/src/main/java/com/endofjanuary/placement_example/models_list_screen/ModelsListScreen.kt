@@ -355,47 +355,37 @@ fun ModelInRowEntry(
             )
     ) {
         if (entry.isExpired == false) {
-            Box(
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current).data(entry.modelImageUrl)
+                    .crossfade(true).build(),
+                contentDescription = entry.modelDescription,
+                onSuccess = {
+                    viewModel.calcDominantColor(it.result.drawable) { color ->
+                        dominantColor = color
+                    }
+                },
+                contentScale = ContentScale.FillBounds,
+                alpha = if (selectedIds.contains(entry.meshyId) && selectedMode) 0.5f else 1f,
                 modifier = Modifier
-                    .background(
-                        if (selectedIds.contains(entry.meshyId) && selectedMode) deletedDominantColor
-                        else defaultDominantColor
-                    )
+                    .align(Center)
                     .fillMaxSize()
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current).data(entry.modelImageUrl)
-                        .crossfade(true).build(),
-                    contentDescription = entry.modelDescription,
-                    onSuccess = {
-                        viewModel.calcDominantColor(it.result.drawable) { color ->
-                            dominantColor = color
-                        }
-                    },
-                    contentScale = ContentScale.Crop,
-                    alpha = if (selectedIds.contains(entry.meshyId) && selectedMode) 0.5f else 1f,
-                    modifier = Modifier
-                        .size(120.dp)
-                        // .align(Center)
-                        .fillMaxSize()
-                )
-                Text(
-                    text = entry.modelDescription,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.Transparent, MaterialTheme.colorScheme.surface
-                                ),
-                            )
+            )
+            Text(
+                text = entry.modelDescription,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.Transparent, MaterialTheme.colorScheme.surface
+                            ),
                         )
-                )
-            }
+                    )
+            )
         } else {
             ImageWithExpiredLabel(picture = {
                 Column {// SubcomposeAsyncImage

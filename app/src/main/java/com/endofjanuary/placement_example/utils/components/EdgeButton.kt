@@ -13,10 +13,10 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun EdgeButton(
+    title: String,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     onProceedClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    title: String,
     inverseShape: Boolean = false
 ) {
     val shape = if (!inverseShape) {
@@ -41,8 +41,8 @@ fun EdgeButton(
         contentPadding = PaddingValues(8.dp),
         shape = shape,
         colors = ButtonColors(
-            containerColor = MaterialTheme.colorScheme.onPrimary,
-            contentColor = MaterialTheme.colorScheme.primary,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             disabledContainerColor = MaterialTheme.colorScheme.inverseOnSurface,
             disabledContentColor = MaterialTheme.colorScheme.inversePrimary
         )

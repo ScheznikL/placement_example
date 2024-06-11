@@ -16,7 +16,7 @@ import com.endofjanuary.placement_example.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DefaultTopAppBar(title: String?, navController: NavController) {
+fun DefaultTopAppBar(title: String? = null, navController: NavController) {
     TopAppBar(
         title = { Text(text = title ?: "") },
         colors = TopAppBarDefaults.mediumTopAppBarColors(

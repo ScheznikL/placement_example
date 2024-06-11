@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
@@ -213,13 +214,21 @@ class MainViewModel(
                             }
                             is Resource.Success -> {
                                 while (image3d.data!!.status == ProgressStatus.PENDING.toString() || image3d.data!!.status == ProgressStatus.IN_PROGRESS.toString()) {
-
+                                    Log.d(
+                                        "loadModel w",
+                                        " ${image3d.data!!.status} ${image3d.data!!.progress}%"
+                                    )
                                     progress.value = image3d.data!!.progress
                                     delay(40000)
                                     image3d = getImageTo3D(result.data.result)
 
                                     if (image3d is Resource.Error) {
-                                        throw Exception(image3d.message)
+                                        Log.d(
+                                            "loadModel w",
+                                            "${image3d.message}"
+                                        )
+                                        loadError.value = image3d.message
+                                        return@launch
                                     }
 
                                 }
@@ -235,10 +244,15 @@ class MainViewModel(
                                     )
                                 }
                                 if (image3d.data!!.status == ProgressStatus.FAILED.toString() || image3d.data!!.status == ProgressStatus.EXPIRED.toString()) {
-                                    loadError.value = context.getString(
-                                        R.string.model_loading_error,
-                                        image3d.data!!.status,
-                                        image3d.data!!.task_error
+
+                                    Log.w(
+                                        "loadModel FAILED || //",
+                                        "BEFORE loadError.value = image3d.data!!.task_error.toString()"
+                                    )
+                                    loadError.value = image3d.data!!.task_error.toString()
+                                    Log.w(
+                                        "loadModel FAILED || //",
+                                        "${image3d.message} ${image3d.data!!.status} ${image3d.data!!.progress}%"
                                     )
 
                                     isLoading.value = false

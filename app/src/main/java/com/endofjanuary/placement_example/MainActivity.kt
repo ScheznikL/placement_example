@@ -2,12 +2,19 @@ package com.endofjanuary.placement_example
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavType
@@ -26,10 +33,10 @@ import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
 import com.endofjanuary.placement_example.upload_image.UploadImageScreen
 import com.endofjanuary.placement_example.user_cabinet.UserProfileScreen
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 
 class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (!hasRequiredPermissions()) {
@@ -39,7 +46,13 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             Placement_exampleTheme {
+                val mainViewModel = getViewModel<MainViewModel>()
                 val navController = rememberNavController()
+
+                val openAreYouSure = remember { mutableStateOf(false) }
+                val confirmDialog = remember { mutableStateOf(false) }
+
+
                 NavHost(
                     navController = navController,
                     startDestination = "reg_screen"
@@ -131,10 +144,26 @@ class MainActivity : ComponentActivity() {
                         ModelViewTypeDialog(navController, modelId = model!!, meshyId!!)
                     }
                 }
+
+                val callback = object : OnBackPressedCallback(
+                    true // default to enabled
+                ) {
+                    override fun handleOnBackPressed() {
+                        if(mainViewModel.isLoading.value) {
+                            openAreYouSure.value = true
+                        }
+                    }
+                }
+
+                onBackPressedDispatcher.addCallback(callback)
+
+                AreYouSureDialog(openDialog = openAreYouSure, confirm = confirmDialog)
             }
         }
     }
 
+    
+    
     companion object {
         private val CAMERAX_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,
@@ -148,6 +177,53 @@ class MainActivity : ComponentActivity() {
                 it
             ) == PackageManager.PERMISSION_GRANTED
         }
+    }
+}
+
+@Composable
+fun AreYouSureDialog(
+    openDialog: MutableState<Boolean>,
+    confirm: MutableState<Boolean>,
+    onConfirm: (() -> Unit)? = null
+) {
+
+    if (openDialog.value) {
+        AlertDialog(onDismissRequest = {
+            openDialog.value = false
+        },
+            title = {
+                Text(
+                    text = "Cancel loading",
+                    textAlign = TextAlign.Justify
+                )
+            },
+            text = {
+                Text(
+                    "Are you sure want to go back and cancel loading ?",
+                    textAlign = TextAlign.Justify
+                )
+                Text(
+                    "The model probably won't be created...",
+                    textAlign = TextAlign.Justify
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onConfirm?.invoke()
+                    confirm.value = true
+                    openDialog.value = false
+                }) {
+                    Text(stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    confirm.value = false
+                    openDialog.value = false
+                }) {
+                    Text(stringResource(R.string.dismiss))
+                }
+            })
     }
 }
     

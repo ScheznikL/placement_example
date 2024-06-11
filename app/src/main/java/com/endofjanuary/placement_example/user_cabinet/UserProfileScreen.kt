@@ -97,7 +97,7 @@ fun UserProfileScreen(
 
 
     val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet = remember { mutableStateOf(false) }
+    val showBottomSheet = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewState.displayName) {

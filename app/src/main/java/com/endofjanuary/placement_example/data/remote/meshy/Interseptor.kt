@@ -5,7 +5,7 @@ import okhttp3.Interceptor
 import okhttp3.Response
 
 const val HEADER_NAME = "Authorization"
-const val TOKEN_TYPE = "Bearer "
+const val TOKEN_TYPE = "Bearer"
 
 
 class AuthTokenInterceptor : Interceptor {
