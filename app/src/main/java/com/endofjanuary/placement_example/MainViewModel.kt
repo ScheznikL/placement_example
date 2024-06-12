@@ -14,8 +14,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.endofjanuary.placement_example.data.converters.ResponseToModelEntryConverter
-import com.endofjanuary.placement_example.data.models.ModelEntry
 import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromImage
 import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromText
 import com.endofjanuary.placement_example.data.remote.meshy.request.PostRefine
@@ -25,10 +23,12 @@ import com.endofjanuary.placement_example.data.remote.meshy.responses.ProgressSt
 import com.endofjanuary.placement_example.data.remote.meshy.responses.Refine3dModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
 import com.endofjanuary.placement_example.data.room.ModelEntity
-import com.endofjanuary.placement_example.repo.AuthenticationRepo
-import com.endofjanuary.placement_example.repo.DataStoreRepo
-import com.endofjanuary.placement_example.repo.MeshyRepo
-import com.endofjanuary.placement_example.repo.ModelsRepo
+import com.endofjanuary.placement_example.domain.converters.ResponseToModelEntryConverter
+import com.endofjanuary.placement_example.domain.models.ModelEntry
+import com.endofjanuary.placement_example.domain.repo.AuthenticationRepo
+import com.endofjanuary.placement_example.domain.repo.DataStoreRepo
+import com.endofjanuary.placement_example.domain.repo.MeshyRepo
+import com.endofjanuary.placement_example.domain.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

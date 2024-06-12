@@ -6,8 +6,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.endofjanuary.placement_example.data.room.ARAppDatabase
 import com.endofjanuary.placement_example.di.appModule
-import com.endofjanuary.placement_example.repo.ModelsRepo
-import com.endofjanuary.placement_example.repo.ModelsRepoImpl
+import com.endofjanuary.placement_example.domain.repo.ModelsRepo
+import com.endofjanuary.placement_example.data.repoimpl.ModelsRepoImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin

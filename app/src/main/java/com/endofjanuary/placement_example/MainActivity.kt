@@ -23,16 +23,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.endofjanuary.placement_example.ar_screen.ARScreen
-import com.endofjanuary.placement_example.chat.ChatScreenNew
-import com.endofjanuary.placement_example.home.HomeScreen
-import com.endofjanuary.placement_example.models_list_screen.ModelsListScreen
-import com.endofjanuary.placement_example.register_screen.RegistrationScreen
-import com.endofjanuary.placement_example.three_d_screen.ThreeDScreen
-import com.endofjanuary.placement_example.transit_dialog.ModelViewTypeDialog
+import com.endofjanuary.placement_example.ui.dialogs.ModelViewTypeDialog
+import com.endofjanuary.placement_example.ui.screens.chat.ChatScreenNew
+import com.endofjanuary.placement_example.ui.screens.home_screen.HomeScreen
+import com.endofjanuary.placement_example.ui.screens.models_list_screen.ModelsListScreen
+import com.endofjanuary.placement_example.ui.screens.register_screen.RegistrationScreen
+import com.endofjanuary.placement_example.ui.screens.upload_image.UploadImageScreen
+import com.endofjanuary.placement_example.ui.screens.user_cabinet.UserProfileScreen
+import com.endofjanuary.placement_example.ui.screens.visualize_screens.ar_screen.ARScreen
+import com.endofjanuary.placement_example.ui.screens.visualize_screens.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
-import com.endofjanuary.placement_example.upload_image.UploadImageScreen
-import com.endofjanuary.placement_example.user_cabinet.UserProfileScreen
 import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 
@@ -51,7 +51,6 @@ class MainActivity : ComponentActivity() {
 
                 val openAreYouSure = remember { mutableStateOf(false) }
                 val confirmDialog = remember { mutableStateOf(false) }
-
 
                 NavHost(
                     navController = navController,
