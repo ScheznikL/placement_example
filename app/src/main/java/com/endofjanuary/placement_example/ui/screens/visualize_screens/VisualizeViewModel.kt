@@ -66,8 +66,9 @@ class VisualizeViewModel(
                             currentNodes = mutableStateListOf(
                                 ModelNode(
                                     modelInstance = result, scaleToUnits = 1.0f
-                                )
+                                ),
                             )
+
                             _loadedInstancesState.value = Resource.Success(result)
                         } else {
                             throw IllegalArgumentException("Empty")
@@ -112,29 +113,111 @@ class VisualizeViewModel(
     fun loadModelFromPath(
         modelLoader: ModelLoader, modelPath: String, modelImageUrl: String, overwrite: Boolean
     ) {
+        try {
+            viewModelScope.launch(Dispatchers.IO) {
 
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
                 val result = modelLoader.loadModelInstance(
                     modelPath
                 )
                 if (result != null) {
                     if (overwrite) {
-                        currentNodes.removeLast()
+                        currentNodes.removeLast() // TODO is it fine
                         currentNodes += mutableStateListOf(
                             ModelNode(
                                 modelInstance = result, scaleToUnits = 1.0f
                             )
                         )
                     } else {
-                        currentNodes += ModelNode(
+
+                        val newNodePosition = Position(1f, 0f, 0f)
+                        val newNode = ModelNode(
                             modelInstance = result,
-                            centerOrigin = Position(1f, 0f, 0f),
+                            centerOrigin = newNodePosition,
                             scaleToUnits = 1.0f
+                        )
+                        val newNodeCenter = newNode.center
+
+                        val existingNode = currentNodes.first()
+                        val existingNodeCenter = existingNode.center
+
+                        val positionOffset = newNodeCenter - existingNodeCenter
+
+                        currentNodes += ModelNode(
+                            modelInstance = result, centerOrigin = Position(
+                                newNodePosition.x,
+                                newNodePosition.y + positionOffset.y,
+                                newNodePosition.z + positionOffset.z
+                            ), scaleToUnits = 1.0f
                         )
                     }
 
                     modelImgUrl.value = modelImageUrl
+                } else {
+                    throw IllegalArgumentException("Empty")
+                }
+            }
+
+        } catch (e: Exception) {
+            _loadedInstancesState.value = Resource.Error(e.message.toString())
+        }
+    }
+
+    /*
+        fun loadModelFromPath(
+            modelLoader: ModelLoader, modelPath: String, modelImageUrl: String, overwrite: Boolean
+        ) {
+
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val result = modelLoader.loadModelInstance(
+                        modelPath
+                    )
+                    if (result != null) {
+                        if (overwrite) {
+                            currentNodes.removeLast()
+                            currentNodes += mutableStateListOf(
+                                ModelNode(
+                                    modelInstance = result, scaleToUnits = 1.0f
+                                )
+                            )
+                        } else {
+                            currentNodes += ModelNode(
+                                modelInstance = result,
+
+                                centerOrigin = Position(1f, 0f, 0f), scaleToUnits = 1.0f
+                            )
+                        Log.d("AFTER LOAD", "F")
+
+                       *//*        currentNodes += ModelNode(
+                                   modelInstance = result,
+                                   centerOrigin = Position(1f, 1f, 0f),
+                                   scaleToUnits = 1.0f
+                               )*//*
+
+                        *//*              currentNodes.also { it.add( ModelNode(
+                                              modelInstance = result,
+                                              centerOrigin = Position(1f, 0f, 0f),
+                                              scaleToUnits = 1.0f
+                                          )) }*//*
+
+                        //   currentNodes.removeLast() currentNodes.
+                      *//*  currentNodes +=
+                                mutableStateListOf(
+                                    ModelNode(
+                                        modelInstance = result, scaleToUnits = 1.0f
+                                    )
+                                )*//*
+
+
+                        *//*  currentNodes.apply { add( ModelNode(
+                                  modelInstance = result,
+                                  centerOrigin = Position(2f, 0f, 0f),
+                                  scaleToUnits = 2.0f
+                              )) }*//*
+
+                    }
+
+                 //   modelImgUrl.value = modelImageUrl
 
                 } else {
                     throw IllegalArgumentException("Empty")
@@ -144,6 +227,7 @@ class VisualizeViewModel(
             }
         }
     }
+*/
 
     fun createAnchorNode(
         engine: Engine,
@@ -186,8 +270,7 @@ class VisualizeViewModel(
             )
         } else {
             downloader.downloadFile(
-                modelPath,
-                modelName = modelName ?: modelDescriptionShorten.value.toString()
+                modelPath, modelName = modelName ?: modelDescriptionShorten.value.toString()
             )
         }
 
@@ -196,7 +279,4 @@ class VisualizeViewModel(
         }
     }
 
-    private fun getModelDescription(){
-
-    }
 }

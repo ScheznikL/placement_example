@@ -109,18 +109,26 @@ class MainViewModel(
     fun autoRefine(textureRichness: TextureRichness) {
         if (autoRefine.value) {
             loadRefineModel(
-                model.value.meshyId, textureRichness, false
+                meshyId = model.value.meshyId,
+                textureRichness = textureRichness,
+                overwrite = false,
+                id = 0
             )
         }
     }
 
-    fun loadRefineModel(id: String, textureRichness: TextureRichness, overwrite: Boolean) {
+    fun loadRefineModel(
+        meshyId: String,
+        id: Int,
+        textureRichness: TextureRichness,
+        overwrite: Boolean
+    ) {
         isLoading.value = true
 
         viewModelScope.launch(Dispatchers.IO) {
             val result = meshyRepository.postRefine(
                 PostRefine(
-                    preview_task_id = id, textureRichness.name.lowercase()
+                    preview_task_id = meshyId, textureRichness.name.lowercase()
                 )
             )
             when (result) {
@@ -162,7 +170,8 @@ class MainViewModel(
                                         )
                                     } else {
                                         updateByteInstancedModel(
-                                            oldMeshyId = id
+                                            oldMeshyId = meshyId,
+                                            id = id
                                         )
                                     }
                                 }
@@ -178,6 +187,7 @@ class MainViewModel(
                                     )
                                 }
                             }
+
                             else -> {}
                         }
                     }
@@ -212,6 +222,7 @@ class MainViewModel(
                                 isLoading.value = false
                                 showNotification(NotificationType.ERROR, image3d.message!!)
                             }
+
                             is Resource.Success -> {
                                 while (image3d.data!!.status == ProgressStatus.PENDING.toString() || image3d.data!!.status == ProgressStatus.IN_PROGRESS.toString()) {
                                     Log.d(
@@ -263,17 +274,21 @@ class MainViewModel(
                                     )
                                 }
                             }
+
                             else -> {}
                         }
                     }
                 }
+
                 is Resource.Error -> {
                     loadError.value = result.message.toString()
                     isLoading.value = false
                 }
+
                 is Resource.Loading -> {
                     isLoading.value = true
                 }
+
                 else -> {
                     isLoading.value = true
                 }
@@ -304,7 +319,8 @@ class MainViewModel(
                                     if (eventualApiRes is Resource.Error) {
                                         showNotification(
                                             NotificationType.ERROR,
-                                            result.message ?: context.getString(R.string.error_header)
+                                            result.message
+                                                ?: context.getString(R.string.error_header)
                                         )
                                         break
                                     }
@@ -447,7 +463,7 @@ class MainViewModel(
     }
 
     private fun updateByteInstancedModel(
-        oldMeshyId: String,
+        oldMeshyId: String, id: Int
     ) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
@@ -463,7 +479,7 @@ class MainViewModel(
                         saveLastModel(
                             modelId = oldMeshyId,
                             modelImageUrl = model.value.modelImageUrl,
-                            id = isUpdateSuccess.value.data ?: 0
+                            id = id
                         )
                         if (_dataStoreState.value.isEmpty()) {
                             modelPath.value = model.value.modelPath

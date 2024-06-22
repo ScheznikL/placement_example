@@ -25,7 +25,6 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -39,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -73,8 +71,8 @@ fun ChatScreenNew(
 
 
     val messagesListState by remember { viewModel.messagesListState }
-    val isLoading by remember { viewModel.isLoading }
-    val isError by remember { viewModel.loadError }
+/*    val isLoading by remember { viewModel.isLoading }
+    val isError by remember { viewModel.loadError }*/
     val loadError by remember { mainViewModel.loadError }
 
 
@@ -189,18 +187,18 @@ fun ChatScreenNew(
                     navController.navigate("transit_dialog/${modelIds?.second}/${modelIds?.first}")
                 }
             }
-            if (isLoading) LinearProgressIndicator(
+/*            if (isLoading) LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.Green
-            )
-            val openErrorDialog = mutableStateOf((isError != null) || (loadError != null))
+            )*/
+            val openErrorDialog = mutableStateOf(/*(isError != null) ||*/ (loadError != null))
 
-            LaunchedEffect(isError, loadError) {
-                openErrorDialog.value = (isError != null) || (loadError != null)
+            LaunchedEffect(/*isError,*/ loadError) {
+                openErrorDialog.value =/* (isError != null) ||*/ (loadError != null)
             }
             ErrorDialog(
                 openDialog = openErrorDialog,
-                errorMessage = isError ?: loadError.toString()
+                errorMessage = /*isError ?:*/ loadError.toString()
             )
             Row(
                 modifier = Modifier

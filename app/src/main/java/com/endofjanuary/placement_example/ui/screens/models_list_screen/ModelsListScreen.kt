@@ -2,7 +2,6 @@ package com.endofjanuary.placement_example.ui.screens.models_list_screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -313,16 +312,6 @@ fun ModelInRowEntry(
     val selectedIds by remember { viewModel.selectedIds }
     val selectedMode by remember { viewModel.selectionMode }
 
-    val border = if (selectedIds.contains(entry.meshyId) && selectedMode) {
-        BorderStroke(
-            3.dp, Color.Black
-        )
-    } else {
-        BorderStroke(
-            0.dp,
-            Color.White,
-        )
-    }
 
     Box(
         contentAlignment = Center,
@@ -370,22 +359,30 @@ fun ModelInRowEntry(
                     .align(Center)
                     .fillMaxSize()
             )
-            Text(
-                text = entry.modelDescription,
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall,
+     /*       Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color.Transparent, MaterialTheme.colorScheme.surface
-                            ),
-                        )
-                    )
-            )
+                    .fillMaxHeight(0.5f)
+            ) {*/
+                Text(
+                    text = entry.modelDescription,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.Transparent, MaterialTheme.colorScheme.surface
+                                ),
+                            )
+                        ),
+                    softWrap = true,
+                    maxLines = 4
+                )
+//            }
         } else {
             ImageWithExpiredLabel(picture = {
                 Column {// SubcomposeAsyncImage

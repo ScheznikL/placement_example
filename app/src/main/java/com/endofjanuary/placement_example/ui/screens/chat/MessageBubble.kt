@@ -1,5 +1,6 @@
 package com.endofjanuary.placement_example.ui.screens.chat
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.endofjanuary.placement_example.MainViewModel
@@ -33,14 +34,21 @@ fun MessageBubble(
             onEdit, onDone
         )
 
-        MessageType.Loading -> ModelLoadingBubble()
+        MessageType.Loading -> {
+            ModelLoadingBubble()
+        }
 
         MessageType.AutoRefine ->
             AutoRefineProgressBubble(
-            modifier = modifier,
-            message = message.content,
-            onDone = onGetRefineOptions,
-            onCancel = onRefineCancel
-        )
+                modifier = modifier,
+                message = message.content,
+                onDone = onGetRefineOptions,
+                onCancel = onRefineCancel
+            )
+
+        MessageType.Error -> {
+            Log.d("MessageType.Error","MessageType.Error")
+            ErrorMessageBubble(message = message.content)
+        }
     }
 }

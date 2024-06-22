@@ -24,6 +24,7 @@ interface AuthenticationRepo {
     suspend fun reAuthenticateUser(email: String, password: String)
     suspend fun sendPasswordResetEmail(email: String)
     suspend fun forChangePassword(email: String, oldPassword: String)
+    val wrongPasswordError: MutableStateFlow<Boolean?>
 }
 
 enum class SignInState {

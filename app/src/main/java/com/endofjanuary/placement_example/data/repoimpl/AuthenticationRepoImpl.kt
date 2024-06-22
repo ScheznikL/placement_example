@@ -40,7 +40,7 @@ class AuthenticationRepoImpl(
 
     override val signInError = MutableStateFlow<String?>(null)
     override val signInState = MutableStateFlow(SignInState.NOT_SIGNED_IN)
-
+    override val wrongPasswordError = MutableStateFlow<Boolean?>(null)
     override fun currentUser(scope: CoroutineScope): Flow<User?> = callbackFlow {
         val authStateListener = FirebaseAuth.AuthStateListener { auth ->
             val currentUser = auth.currentUser
@@ -115,16 +115,22 @@ class AuthenticationRepoImpl(
             signInError.value = e.message
 
             when (e) {
+
                 is FirebaseAuthInvalidUserException -> signInState.value =
                     SignInState.USER_NOT_FOUND
 
-                is FirebaseAuthInvalidCredentialsException -> signInState.value =
-                    SignInState.CREDENTIAL_ERROR
+                is FirebaseAuthInvalidCredentialsException -> {
+                    signInState.value =
+                        SignInState.CREDENTIAL_ERROR
+                    wrongPasswordError.value = true
+                }
 
                 is FirebaseAuthUserCollisionException -> signInState.value =
                     SignInState.USER_COLLISION
 
-                else -> signInState.value = SignInState.CREDENTIAL_ERROR
+                else -> {
+                    signInState.value = SignInState.CREDENTIAL_ERROR
+                }
             }
         }
     }
@@ -156,10 +162,13 @@ class AuthenticationRepoImpl(
             when (e) {
                 is FirebaseAuthInvalidUserException -> signInState.value =
                     SignInState.USER_NOT_FOUND
+
                 is FirebaseAuthUserCollisionException -> signInState.value =
                     SignInState.USER_COLLISION
+
                 is FirebaseAuthInvalidCredentialsException -> signInState.value =
                     SignInState.CREDENTIAL_ERROR
+
                 else -> signInState.value = SignInState.CREDENTIAL_ERROR
             }
         }

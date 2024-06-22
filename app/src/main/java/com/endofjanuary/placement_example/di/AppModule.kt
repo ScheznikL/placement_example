@@ -12,6 +12,7 @@ import com.endofjanuary.placement_example.data.remote.gpt.ChatCompletionApi
 import com.endofjanuary.placement_example.data.remote.meshy.AuthTokenInterceptor
 import com.endofjanuary.placement_example.data.remote.meshy.MeshyApi
 import com.endofjanuary.placement_example.data.repoimpl.AWStorageRepoImpl
+import com.endofjanuary.placement_example.data.repoimpl.ApiService
 import com.endofjanuary.placement_example.data.repoimpl.AuthenticationRepoImpl
 import com.endofjanuary.placement_example.data.repoimpl.ChatRepoImpl
 import com.endofjanuary.placement_example.data.repoimpl.DataStoreRepoImpl
@@ -24,6 +25,7 @@ import com.endofjanuary.placement_example.domain.repo.DataStoreRepo
 import com.endofjanuary.placement_example.domain.repo.DownloaderRepo
 import com.endofjanuary.placement_example.domain.repo.MeshyRepo
 import com.endofjanuary.placement_example.domain.usecase.GetPreassignedUrlUseCase
+import com.endofjanuary.placement_example.domain.usecase.SendMessageUseCase
 import com.endofjanuary.placement_example.ui.screens.chat.ChatScreenViewModel
 import com.endofjanuary.placement_example.ui.screens.home_screen.HomeViewModel
 import com.endofjanuary.placement_example.ui.screens.models_list_screen.ModelsListViewModel
@@ -94,9 +96,18 @@ val appModule = module {
     single<MeshyRepo> {
         MeshyRepoImpl(get())
     }
-    single<ChatRepo> {
-        ChatRepoImpl(get())
+    /**
+     * TODO later
+     */
+    ////////////////////////////
+    single {
+        ApiService()
     }
+    single<ChatRepo> {
+        ChatRepoImpl(get(),get())
+    }
+    //////////////////////////////////
+
     single<AWStorageRepo> {
         AWStorageRepoImpl(get())
     }
@@ -111,6 +122,9 @@ val appModule = module {
     }
     single{
         GetPreassignedUrlUseCase(get())
+    }
+    single{
+        SendMessageUseCase(get())
     }
     viewModel {
         HomeViewModel(get(), get())

@@ -6,4 +6,5 @@ import com.endofjanuary.placement_example.utils.Resource
 
 interface ChatRepo {
     suspend fun postToGpt(body : Post) : Resource<CompletionGptObj>
+    suspend fun testPostToGpt(body: Post): Resource<CompletionGptObj>
 }

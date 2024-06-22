@@ -124,7 +124,7 @@ fun UploadImageScreen(
                     modelName = textInput,
                     onNameChange = { viewModel.inputValueState.value = it },
                     onProceedClick = {
-                        viewModel.getPresignedUrlR(context)
+                        viewModel.getPresignedUrl(context)
                     },
                     scrollState = scrollState,
                 )

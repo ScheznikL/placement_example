@@ -16,7 +16,7 @@ import com.endofjanuary.placement_example.domain.models.ModelEntry
 import com.endofjanuary.placement_example.domain.repo.DataStoreRepo
 import com.endofjanuary.placement_example.domain.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
-import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
+import com.endofjanuary.placement_example.utils.hasFiveDaysPassed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -142,7 +142,7 @@ class ModelsListViewModel(
                             modelDescription = model.modelDescription,
                             meshyId = model.meshyId,
                             isFromText = model.isFromText,
-                            isExpired = hasThreeDaysPassed(model.creationTime)
+                            isExpired = hasFiveDaysPassed(model.creationTime)
                         )
                     }
                 }

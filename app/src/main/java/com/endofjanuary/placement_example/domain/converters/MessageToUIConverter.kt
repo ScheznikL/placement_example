@@ -1,7 +1,7 @@
 package com.endofjanuary.placement_example.domain.converters
 
-import com.endofjanuary.placement_example.domain.models.MessageEntry
 import com.endofjanuary.placement_example.data.remote.gpt.response.Message
+import com.endofjanuary.placement_example.domain.models.MessageEntry
 
 class MessageToUIConverter {
     fun toMessageEntry(message: Message): MessageEntry {
@@ -21,6 +21,10 @@ class MessageToUIConverter {
                         MessageType.AutoRefine
                     }
 
+                    "error" -> {
+                        MessageType.Error
+                    }
+
                     else -> {
                         MessageType.Loading
                     }
@@ -38,5 +42,6 @@ enum class MessageType {
     Assistant,
     Final,
     Loading,
-    AutoRefine
+    AutoRefine,
+    Error
 }

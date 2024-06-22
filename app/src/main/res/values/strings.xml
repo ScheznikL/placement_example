@@ -130,5 +130,6 @@
     <string name="delete_selected">Are you sure want to delete %d model%s ?</string>
     <string name="choose_your_image_or_go_back">Choose your image or go back</string>
     <string name="try_choosing_once_more">Try choosing once more</string>
+    <string name="wrong_password_error">Password or email is wrong!\nOr user does not exist</string>
 
 </resources>

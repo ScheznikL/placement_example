@@ -95,6 +95,7 @@ fun SpecifyRefineOptions(
     mainViewModel: MainViewModel,
     openBasicDialog: MutableState<Boolean>,
     modelId: String,
+    id:Int,
     overwrite: MutableState<Boolean>
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -196,7 +197,8 @@ fun SpecifyRefineOptions(
                         onClick = {
                             overwrite.value = selectedOption == R.string.yes
                             mainViewModel.loadRefineModel(
-                                id = modelId,
+                                meshyId = modelId,
+                                id = id,
                                 textureRichness = selectedRichness.value,
                                 overwrite = selectedOption == R.string.yes
                             )

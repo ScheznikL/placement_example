@@ -79,8 +79,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("io.github.sceneview:sceneview:2.0.4")
-    implementation("io.github.sceneview:arsceneview:2.0.4")
+    implementation("io.github.sceneview:sceneview:2.0.3")
+    implementation("io.github.sceneview:arsceneview:2.0.3")
     implementation("com.google.ar:core:1.41.0")
     implementation("androidx.palette:palette-ktx:1.0.0")
 

@@ -20,13 +20,25 @@ class RegistrationViewModel(
 
     val isEmailError = mutableStateOf(false)
     val isPasswordError = mutableStateOf(false)
+
     val isConfirmPasswordError = mutableStateOf(false)
+
+    val isRegister = mutableStateOf(false)
 
     val currentUser = authenticationRepo.currentUser(viewModelScope)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
 
     val signInError = authenticationRepo.signInError
     val signInState = authenticationRepo.signInState
+    val wrongPasswordError = authenticationRepo.wrongPasswordError
+
+init {
+    viewModelScope.launch(){
+        wrongPasswordError.collect {
+           isPasswordError.value = it == true
+        }
+    }
+}
     fun onSignIn() {
         viewModelScope.launch(Dispatchers.IO) {
             val result = authenticationRepo.signIn(emailValueState.value, passwordValueState.value)

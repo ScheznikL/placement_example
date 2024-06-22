@@ -16,7 +16,7 @@ import com.endofjanuary.placement_example.domain.repo.DataStoreRepo
 import com.endofjanuary.placement_example.domain.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import com.endofjanuary.placement_example.utils.convertToReadableFormat
-import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
+import com.endofjanuary.placement_example.utils.hasFiveDaysPassed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -66,7 +66,7 @@ class HomeViewModel(
                 id = it.id,
                 timeStep = convertToReadableFormat(it.unixTimestamp),
                 imageUrl = it.modelImage,
-                isExpired = hasThreeDaysPassed(it.unixTimestamp)
+                isExpired = hasFiveDaysPassed(it.unixTimestamp)
             )
         }
     }

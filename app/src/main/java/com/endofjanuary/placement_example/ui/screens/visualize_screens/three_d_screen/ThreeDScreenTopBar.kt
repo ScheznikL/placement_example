@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,10 +19,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
-import com.endofjanuary.placement_example.ui.screens.visualize_screens.VisualizeViewModel
 import com.endofjanuary.placement_example.ui.dialogs.DoDownload
 import com.endofjanuary.placement_example.ui.dialogs.DoRefineDialog
 import com.endofjanuary.placement_example.ui.dialogs.SpecifyRefineOptions
+import com.endofjanuary.placement_example.ui.screens.visualize_screens.VisualizeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,14 +36,16 @@ fun ThreeDScreenTopBar(
     overwrite: MutableState<Boolean>,
     isFromText: Boolean,
     isRefined: Boolean,
+    openRefineDialog: MutableState<Boolean>,
+    confirmRefine: MutableState<Boolean>
 ) {
 
 
-    val openRefineDialog = remember { mutableStateOf(false) }
     val openDownloadDialog = remember { mutableStateOf(false) }
     val confirmDownload = remember { mutableStateOf(false) }
 
-    val confirmRefine = remember { mutableStateOf(false) }
+    val position = mutableStateOf(4.0f)
+
     val openDetailedDialog = remember { mutableStateOf(false) }
 
     TopAppBar(
@@ -84,13 +87,19 @@ fun ThreeDScreenTopBar(
             }
         },
     )
-    if (confirmRefine.value) {
-        openDetailedDialog.value = true
+    LaunchedEffect(confirmRefine.value) {
+        if (confirmRefine.value) {
+            openDetailedDialog.value = true
+        }
     }
 
     DoRefineDialog(openRefineDialog, confirmRefine)
     SpecifyRefineOptions(
-        mainViewModel, openDetailedDialog, meshyId, overwrite
+        mainViewModel = mainViewModel,
+        openBasicDialog = openDetailedDialog,
+        modelId = meshyId,
+        overwrite = overwrite,
+        id = modelId
     )
     DoDownload(
         openDialog = openDownloadDialog,

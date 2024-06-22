@@ -30,7 +30,7 @@ class UploadImageViewModel(
     fun onPhotoPickerSelect(uri: Uri?) {
         if (uri != null) image.value = uri
     }
-    fun getPresignedUrlR(context: Context) {
+    fun getPresignedUrl(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val result = getPreassignedUrlUseCase.getPresignedUrl(
                 context = context,

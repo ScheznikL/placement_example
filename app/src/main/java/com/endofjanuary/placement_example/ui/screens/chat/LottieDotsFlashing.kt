@@ -24,7 +24,6 @@ fun LottieDotsFlashing(modifier: Modifier = Modifier) {
         modifier = modifier,
         progress = preloaderProgress,
     )
-
 }
 
 @Preview(showBackground = true)

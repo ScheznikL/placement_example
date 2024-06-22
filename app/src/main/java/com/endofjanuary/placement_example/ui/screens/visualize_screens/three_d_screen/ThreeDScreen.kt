@@ -95,6 +95,9 @@ fun ThreeDMain(
     val isFromText = mutableStateOf(viewModel.modelFromRoom.value.data?.isFromText)
     val isRefined = mutableStateOf(viewModel.modelFromRoom.value.data?.isRefine)
 
+    val openRefineDialog = remember { mutableStateOf(false) }
+    val confirmRefine = remember { mutableStateOf(false) }
+
     val isAutoSaveEnabled by remember { mainViewModel.autoSave }
     val openDownloadDialog = remember { mutableStateOf(false) }
     val confirmDownload = remember { mutableStateOf(false) }
@@ -111,12 +114,13 @@ fun ThreeDMain(
     LaunchedEffect(downloadError) {
         if (downloadError != null) {
             snackbarHostState.showSnackbar(
-                message = downloadError.toString(), actionLabel = context.getString(R.string.error_OK)
+                message = downloadError.toString(),
+                actionLabel = context.getString(R.string.error_OK)
             )
         }
     }
 
-    LaunchedEffect(true) {
+    LaunchedEffect(Unit) {
         viewModel.loadModelRemote(modelLoader, modelId)
     }
 
@@ -137,9 +141,21 @@ fun ThreeDMain(
             overwrite = overwriteRefine,
             viewModel = viewModel,
             isFromText = isFromText.value ?: false,
-            isRefined = isRefined.value ?: false
+            isRefined = isRefined.value ?: false,
+            openRefineDialog = openRefineDialog,
+            confirmRefine = confirmRefine
         )
-    }) { padding ->
+    },/* floatingActionButton = {
+        FloatingActionButton(onClick = {
+            viewModel.loadModelFromPath(
+                modelLoader = modelLoader,
+                modelPath = "https://assets.meshy.ai/google-oauth2%7C107069207183755263308/tasks/01900ffa-e0cb-7e53-b561-be26a3c4093b/output/model.glb?Expires=4871836800&Signature=C0sR~q4JK3qOol0lJXk40vZsBgK6j0Dg2TNYKXNr2hawfrP9Up1KLwAdLJWUumP8YsWI5z4xpaxdjpiMICXcCakSoqW9HehMAChkoMDHC8iVnWO15FmzQyhc15hN-5Baa4lflYegmPu~1tmKC1fYNz2dQp1TmK3plTYxuExkhI--B7ZmZy6x27lDoT6Zm--kJMmkCy4k1fDQzVQz3km3LmgnfsJlLCt7TuN-bONCW24V9AWYBHvv6PbgODHb51xbJp9mVHfDkGMgckIrlMaWmBAUtZmT5y7G3QwCnz7RYNDQig8~SeBbj2nXixNpQx0e2mAbI1JW7RPxEbJN0dBReQ__&Key-Pair-Id=KL5I0C8H7HX83",
+                modelImageUrl = "",
+                overwrite = false
+            )
+        }) {}
+    }*/
+    ) { padding ->
         Box(
             modifier = modifier
                 .fillMaxSize()
@@ -172,7 +188,8 @@ fun ThreeDMain(
 
                     is Resource.Success -> {
                         if (snackbarHostState.showSnackbar(
-                                message = context.getString(R.string.model_deleted_successfully), actionLabel = "OK"
+                                message = context.getString(R.string.model_deleted_successfully),
+                                actionLabel = "OK"
                             ) == SnackbarResult.ActionPerformed
                         ) {
                             navController.popBackStack()
@@ -194,21 +211,30 @@ fun ThreeDMain(
                         viewModel.currentNodes
                     }
 
-                    Scene(modifier = Modifier
-                        .fillMaxSize()
-                        .blur(200.dp),
+                    Scene(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .blur(200.dp),
                         engine = engine,
                         modelLoader = modelLoader,
                         cameraNode = cameraNode,
                         childNodes = currentNodes.toList(),
+                        /*      childNodes = rememberNodes {
+                                  add(currentNodes.value.first() ).apply {
+                                      // Move the node 4 units in Camera front direction
+                                      position = Position(z = -4.0f)
+                                  }
+                              },*/
+
                         environment = environmentLoader.createHDREnvironment(
                             assetFileLocation = "environments/neutral.hdr"
                         )!!,
-                        onViewUpdated = {
-                            if (currentNodes.toList().size >= 2) {
-                                cameraNode.setShift(xShift = 2.0, 0.0)
-                            }
-                        })
+                        /* onViewUpdated = {
+                             if (currentNodes.toList().size >= 2) {
+                                 cameraNode.setShift(xShift = 2.0, 0.0)
+                             }
+                         }*/
+                    )
                     if (refineIsLoading.value) {
                         Box {
                             Text(text = stringResource(R.string.refining_in_process))
@@ -242,7 +268,7 @@ fun ThreeDMain(
                     if (refineIsError.value != null) {
                         LaunchedEffect(snackbarHostState) {
                             snackbarHostState.showSnackbar(
-                                message = context.getString(R.string.error)+refineIsError.value,
+                                message = context.getString(R.string.error) + refineIsError.value,
                             )
                         }
                     }

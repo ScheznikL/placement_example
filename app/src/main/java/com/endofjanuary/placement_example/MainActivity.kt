@@ -3,6 +3,7 @@ package com.endofjanuary.placement_example
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -148,21 +149,23 @@ class MainActivity : ComponentActivity() {
                     true // default to enabled
                 ) {
                     override fun handleOnBackPressed() {
-                        if(mainViewModel.isLoading.value) {
-                            openAreYouSure.value = true
-                        }
-                    }
-                }
+                        openAreYouSure.value = true
+                        Log.d("BACK","<-----")
+                        /*   if(mainViewModel.isLoading.value) {
 
-                onBackPressedDispatcher.addCallback(callback)
+                           }*/
+                    }
+
+                }
+               onBackPressedDispatcher.addCallback(this, callback,)
+
 
                 AreYouSureDialog(openDialog = openAreYouSure, confirm = confirmDialog)
             }
         }
     }
 
-    
-    
+
     companion object {
         private val CAMERAX_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,

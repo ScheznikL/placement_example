@@ -2,7 +2,7 @@ package com.endofjanuary.placement_example.domain.usecase
 
 import com.endofjanuary.placement_example.domain.models.ModelEntry
 import com.endofjanuary.placement_example.domain.repo.ModelsRepo
-import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
+import com.endofjanuary.placement_example.utils.hasFiveDaysPassed
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.mapNotNull
@@ -21,7 +21,7 @@ class GetModelsUseCase(
                         modelDescription = model.modelDescription,
                         meshyId = model.meshyId,
                         isFromText = model.isFromText,
-                        isExpired = hasThreeDaysPassed(model.creationTime)
+                        isExpired = hasFiveDaysPassed(model.creationTime)
                     )
                 }
             }
