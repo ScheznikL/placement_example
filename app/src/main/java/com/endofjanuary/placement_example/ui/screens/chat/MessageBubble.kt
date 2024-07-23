@@ -1,6 +1,5 @@
 package com.endofjanuary.placement_example.ui.screens.chat
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.endofjanuary.placement_example.MainViewModel
@@ -47,7 +46,6 @@ fun MessageBubble(
             )
 
         MessageType.Error -> {
-            Log.d("MessageType.Error","MessageType.Error")
             ErrorMessageBubble(message = message.content)
         }
     }

@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.domain.usecase
+package com.endofjanuary.placement_example.domain.usecase.auth_reg
 
 import com.endofjanuary.placement_example.domain.repo.AuthenticationRepo
 import com.endofjanuary.placement_example.domain.repo.DataStoreRepo

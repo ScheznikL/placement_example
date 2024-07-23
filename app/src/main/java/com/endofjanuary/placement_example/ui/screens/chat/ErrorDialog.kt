@@ -17,11 +17,15 @@ import com.endofjanuary.placement_example.R
 
 @Composable
 fun ErrorDialog(
-    errorMessage: String, openDialog: MutableState<Boolean>, modifier: Modifier = Modifier
+    errorMessage: String,
+    openDialog: MutableState<Boolean>,
+    modifier: Modifier = Modifier,
+    onDone: () -> Unit = {}
 ) {
     if (openDialog.value) {
         AlertDialog(
             onDismissRequest = {
+                onDone()
                 openDialog.value = false
             },
             title = {
@@ -41,6 +45,7 @@ fun ErrorDialog(
             },
             confirmButton = {
                 TextButton(onClick = {
+                    onDone()
                     openDialog.value = false
                 }) {
                     Text(stringResource(R.string.error_OK))

@@ -72,4 +72,14 @@ class ChatScreenViewModel(
             )
         )
     }
+
+    fun cancelLoading(){
+        Log.d("Loading M ", "cancel Loading fun")
+
+        _messagesListState.value = _messagesListState.value.minus(
+            MessageEntry(
+                MessageType.Loading, ""
+            )
+        )
+    }
 }

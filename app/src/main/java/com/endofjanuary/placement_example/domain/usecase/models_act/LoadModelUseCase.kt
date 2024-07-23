@@ -1,4 +1,4 @@
-package com.endofjanuary.placement_example.domain.usecase
+package com.endofjanuary.placement_example.domain.usecase.models_act
 
 import com.endofjanuary.placement_example.domain.repo.ModelsRepo
 

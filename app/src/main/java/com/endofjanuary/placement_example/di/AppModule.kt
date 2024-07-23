@@ -26,6 +26,7 @@ import com.endofjanuary.placement_example.domain.repo.DownloaderRepo
 import com.endofjanuary.placement_example.domain.repo.MeshyRepo
 import com.endofjanuary.placement_example.domain.usecase.GetPreassignedUrlUseCase
 import com.endofjanuary.placement_example.domain.usecase.SendMessageUseCase
+import com.endofjanuary.placement_example.domain.usecase.models_act.GenerateModelFromTextUseCase
 import com.endofjanuary.placement_example.ui.screens.chat.ChatScreenViewModel
 import com.endofjanuary.placement_example.ui.screens.home_screen.HomeViewModel
 import com.endofjanuary.placement_example.ui.screens.models_list_screen.ModelsListViewModel
@@ -126,6 +127,9 @@ val appModule = module {
     single{
         SendMessageUseCase(get())
     }
+    single {
+        GenerateModelFromTextUseCase(get(),get())
+    }
     viewModel {
         HomeViewModel(get(), get())
     }
@@ -153,7 +157,8 @@ val appModule = module {
             meshyRepository = get(),
             modelRoom = get(),
             authenticationRepo = get(),
-            dataStoreRepo = get()
+            dataStoreRepo = get(),
+            generateModelFromText = get()
         )
     }
 }

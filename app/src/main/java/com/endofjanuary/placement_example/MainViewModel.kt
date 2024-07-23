@@ -15,10 +15,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromImage
-import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromText
 import com.endofjanuary.placement_example.data.remote.meshy.request.PostRefine
 import com.endofjanuary.placement_example.data.remote.meshy.responses.ImageTo3DModel
-import com.endofjanuary.placement_example.data.remote.meshy.responses.PostId
 import com.endofjanuary.placement_example.data.remote.meshy.responses.ProgressStatus
 import com.endofjanuary.placement_example.data.remote.meshy.responses.Refine3dModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
@@ -29,6 +27,7 @@ import com.endofjanuary.placement_example.domain.repo.AuthenticationRepo
 import com.endofjanuary.placement_example.domain.repo.DataStoreRepo
 import com.endofjanuary.placement_example.domain.repo.MeshyRepo
 import com.endofjanuary.placement_example.domain.repo.ModelsRepo
+import com.endofjanuary.placement_example.domain.usecase.models_act.GenerateModelFromTextUseCase
 import com.endofjanuary.placement_example.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -44,7 +43,8 @@ class MainViewModel(
     private val modelRoom: ModelsRepo,
     private val authenticationRepo: AuthenticationRepo,
     private val dataStoreRepo: DataStoreRepo,
-    private val context: Context
+    private val context: Context,
+    private val generateModelFromText: GenerateModelFromTextUseCase
 ) : ViewModel() {
 
     private val _currentUser = authenticationRepo.currentUser(viewModelScope)
@@ -74,7 +74,7 @@ class MainViewModel(
 
 
     var model = mutableStateOf(ModelEntry())
-    private var postId: MutableState<PostId?> = mutableStateOf(PostId(""))
+    // private var postId: MutableState<PostId?> = mutableStateOf(PostId(""))
 
     val isLoading = mutableStateOf(false)
     val isSuccess = mutableStateOf<Pair<String, Long>?>(null)
@@ -296,70 +296,30 @@ class MainViewModel(
         }
     }
 
-    fun loadModelEntryFromText(prompt: String) {
-
+    fun generateModelEntryFromText(prompt: String) {
         viewModelScope.launch {
-            val result = meshyRepository.postTextTo3D(PostFromText(prompt, "preview"))
+            val result = generateModelFromText.loadModelEntryFromText(
+                prompt = prompt,
+                autoRefine = autoRefine.value
+            )
             when (result) {
                 is Resource.Success -> {
-                    postId.value = result.data ?: PostId("")
+                    isLoading.value = false
                     if (result.data != null) {
-                        var eventualApiRes = getTextTo3D(result.data.result)
-                        when (eventualApiRes) {
-                            is Resource.Error -> {
-                                showNotification(NotificationType.ERROR, eventualApiRes.message!!)
-                            }
-
-                            is Resource.Success -> {
-
-                                while (eventualApiRes.data!!.status == ProgressStatus.PENDING.toString() || eventualApiRes.data!!.status == ProgressStatus.IN_PROGRESS.toString()) {
-
-                                    delay(20000)
-                                    eventualApiRes = getTextTo3D(result.data.result)
-                                    if (eventualApiRes is Resource.Error) {
-                                        showNotification(
-                                            NotificationType.ERROR,
-                                            result.message
-                                                ?: context.getString(R.string.error_header)
-                                        )
-                                        break
-                                    }
-                                }
-                                if (eventualApiRes.data!!.status == ProgressStatus.SUCCEEDED.toString()) {
-                                    isLoading.value = false
-                                    model.value =
-                                        ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
-                                    if (!autoRefine.value) {
-                                        saveByteInstancedModel(
-                                            isFromText = true,
-                                            isRefine = false,
-                                        )
-                                    }
-                                }
-                                if (eventualApiRes.data!!.status == ProgressStatus.FAILED.toString() || eventualApiRes.data!!.status == ProgressStatus.EXPIRED.toString()) {
-                                    loadError.value = context.getString(
-                                        R.string.model_loading_error,
-                                        eventualApiRes.data!!.status,
-                                        eventualApiRes.data!!.progress.toString()
-                                    )
-                                    isLoading.value = false
-                                    model.value =
-                                        ResponseToModelEntryConverter().toModelEntry(eventualApiRes.data)
-                                    showNotification(
-                                        NotificationType.ERROR, eventualApiRes.data!!.status
-                                    )
-                                }
-                            }
-
-                            else -> {
-                                showNotification(NotificationType.LOADING)
-                            }
+                        model.value = result.data
+                        if (!autoRefine.value) {
+                            saveByteInstancedModel(
+                                isFromText = true,
+                                isRefine = false,
+                            )
                         }
                     }
                 }
 
                 is Resource.Error -> {
-                    showNotification(NotificationType.ERROR, result.message!!)
+                    isLoading.value = false
+                    loadError.value = result.message!!
+                    showNotification(NotificationType.ERROR, result.message)
                 }
 
                 is Resource.Loading -> {
@@ -373,7 +333,6 @@ class MainViewModel(
                 }
             }
         }
-        showNotification(NotificationType.LOADING)
     }
 
     private suspend fun getTextTo3D(id: String): Resource<TextTo3DModel> {

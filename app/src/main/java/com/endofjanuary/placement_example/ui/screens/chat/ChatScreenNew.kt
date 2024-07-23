@@ -70,9 +70,8 @@ fun ChatScreenNew(
     val focusManager = LocalFocusManager.current
 
 
-    val messagesListState by remember { viewModel.messagesListState }
-/*    val isLoading by remember { viewModel.isLoading }
-    val isError by remember { viewModel.loadError }*/
+    val messagesListState by remember { viewModel.messagesListState }/*    val isLoading by remember { viewModel.isLoading }
+        val isError by remember { viewModel.loadError }*/
     val loadError by remember { mainViewModel.loadError }
 
 
@@ -84,6 +83,7 @@ fun ChatScreenNew(
     var isTextFieldEnabled = remember { true }
     val openCancelRefineDialog = remember { mutableStateOf(false) }
     val cancelRefineDialogConfirm = remember { mutableStateOf(false) }
+    val openErrorDialog = mutableStateOf(false)
 
     val context = LocalContext.current
 
@@ -97,23 +97,18 @@ fun ChatScreenNew(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Scaffold(
-        topBar = {
-            ChatTopBar(navController = navController, autoRefineEnabled = autoRefine)
-        },
-        modifier = Modifier.fillMaxSize(),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        }
-    ) { innerPadding ->
+    Scaffold(topBar = {
+        ChatTopBar(navController = navController, autoRefineEnabled = autoRefine)
+    }, modifier = Modifier.fillMaxSize(), snackbarHost = {
+        SnackbarHost(hostState = snackbarHostState)
+    }) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             if (messagesListState.isEmpty()) {
                 ElevatedCard(
                     modifier = Modifier
                         .wrapContentSize()
                         .padding(horizontal = 16.dp)
-                        .weight(weight = 1.0f, fill = true),
-                    elevation = CardDefaults.cardElevation(
+                        .weight(weight = 1.0f, fill = true), elevation = CardDefaults.cardElevation(
                         defaultElevation = 6.dp
                     )
                 ) {
@@ -125,8 +120,7 @@ fun ChatScreenNew(
                         text = stringResource(R.string.chat_card_text),
                         textAlign = TextAlign.Center,
                         style = TextStyle(
-                            fontSize = 18.sp,
-                            fontWeight = Bold
+                            fontSize = 18.sp, fontWeight = Bold
                         ),
                     )
                 }
@@ -141,31 +135,27 @@ fun ChatScreenNew(
                     state = scrollState,
 
                     content = {
-                        items(
-                            count = messagesListState.size,
-                            itemContent = { index ->
-                                MessageBubble(
-                                    modifier = Modifier.animateItemPlacement(),
-                                    message = messagesListState[index],
-                                    onEdit = {
-                                        viewModel.send("NEXT")
-                                    },
-                                    onDone = {
-                                        isTextFieldEnabled = false
-                                        viewModel.loadingModel()
-                                        mainViewModel.loadModelEntryFromText(
-                                            viewModel.description!!
-                                        )
-                                    },
-                                    onGetRefineOptions = {
-                                        viewModel.loadingModel()
-                                        mainViewModel.autoRefine(it)
-                                    },
-                                    onRefineCancel = {
-                                        openCancelRefineDialog.value = true
-                                    }
-                                )
-                            })
+                        items(count = messagesListState.size, itemContent = { index ->
+                            MessageBubble(modifier = Modifier.animateItemPlacement(),
+                                message = messagesListState[index],
+                                onEdit = {
+                                    viewModel.send("NEXT")
+                                },
+                                onDone = {
+                                    isTextFieldEnabled = false
+                                    viewModel.loadingModel()
+                                    mainViewModel.generateModelEntryFromText(
+                                        viewModel.description!!
+                                    )
+                                },
+                                onGetRefineOptions = {
+                                    viewModel.loadingModel()
+                                    mainViewModel.autoRefine(it)
+                                },
+                                onRefineCancel = {
+                                    openCancelRefineDialog.value = true
+                                })
+                        })
                     })
             }
             LaunchedEffect(openCancelRefineDialog.value) {
@@ -182,29 +172,28 @@ fun ChatScreenNew(
             }
 
             LaunchedEffect(modelIds) {
-
                 if (modelIds != null) { // means model was uploaded to room
+                    viewModel.cancelLoading()
                     navController.navigate("transit_dialog/${modelIds?.second}/${modelIds?.first}")
                 }
             }
-/*            if (isLoading) LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color.Green
-            )*/
-            val openErrorDialog = mutableStateOf(/*(isError != null) ||*/ (loadError != null))
-
-            LaunchedEffect(/*isError,*/ loadError) {
-                openErrorDialog.value =/* (isError != null) ||*/ (loadError != null)
+            LaunchedEffect(loadError) {
+                openErrorDialog.value =/* (isError != null) ||*/ (loadError != null)/*     if (loadError != null) {
+                          viewModel.cancelLoading()
+                      }*/
             }
             ErrorDialog(
                 openDialog = openErrorDialog,
-                errorMessage = /*isError ?:*/ loadError.toString()
+                errorMessage = /*isError ?:*/ loadError.toString(),
+                onDone = {
+                    viewModel.cancelLoading()
+                    navController.popBackStack()
+                }
             )
             Row(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_photo_camera),
@@ -229,8 +218,7 @@ fun ChatScreenNew(
                         focusManager.clearFocus()
                     }),
                     textStyle = TextStyle(
-                        lineHeight = 1.5.em,
-                        fontSize = 16.sp
+                        lineHeight = 1.5.em, fontSize = 16.sp
                     ),
                     value = textInput,
                     onValueChange = { viewModel.inputValueState.value = it },

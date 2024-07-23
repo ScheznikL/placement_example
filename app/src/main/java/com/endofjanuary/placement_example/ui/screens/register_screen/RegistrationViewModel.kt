@@ -32,13 +32,14 @@ class RegistrationViewModel(
     val signInState = authenticationRepo.signInState
     val wrongPasswordError = authenticationRepo.wrongPasswordError
 
-init {
-    viewModelScope.launch(){
-        wrongPasswordError.collect {
-           isPasswordError.value = it == true
+    init {
+        viewModelScope.launch() {
+            wrongPasswordError.collect {
+                isPasswordError.value = it == true
+            }
         }
     }
-}
+
     fun onSignIn() {
         viewModelScope.launch(Dispatchers.IO) {
             val result = authenticationRepo.signIn(emailValueState.value, passwordValueState.value)
@@ -76,4 +77,5 @@ init {
 data class UserUIState(
     val email: String = "",
     val password: String = "",
+    val error: String? = null
 )
