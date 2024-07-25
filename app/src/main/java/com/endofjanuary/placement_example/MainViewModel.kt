@@ -56,6 +56,11 @@ class MainViewModel(
         const val NOTIFICATION_PROGRESS_MAX = 100
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        Log.d("cleared","MainVM")
+    }
+
     val autoRefine = mutableStateOf(false)
     val autoSave = mutableStateOf(false)
 
@@ -300,7 +305,6 @@ class MainViewModel(
         viewModelScope.launch {
             val result = generateModelFromText.loadModelEntryFromText(
                 prompt = prompt,
-                autoRefine = autoRefine.value
             )
             when (result) {
                 is Resource.Success -> {

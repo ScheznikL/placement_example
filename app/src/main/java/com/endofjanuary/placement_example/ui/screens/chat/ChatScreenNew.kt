@@ -1,5 +1,6 @@
 package com.endofjanuary.placement_example.ui.screens.chat
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -51,6 +53,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
@@ -86,6 +90,17 @@ fun ChatScreenNew(
     val openErrorDialog = mutableStateOf(false)
 
     val context = LocalContext.current
+
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        Log.d("cleared stop","Screen Chat")
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner)
+    {
+        Log.d("cleared stop","${lifecycleOwner.lifecycle.currentState} - $lifecycleOwner")
+    }
 
     LaunchedEffect(messagesListState) {
         if (messagesListState.isNotEmpty()) scrollState.animateScrollToItem(messagesListState.size - 1)

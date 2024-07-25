@@ -7,13 +7,16 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.app.ActivityCompat
@@ -34,10 +37,20 @@ import com.endofjanuary.placement_example.ui.screens.user_cabinet.UserProfileScr
 import com.endofjanuary.placement_example.ui.screens.visualize_screens.ar_screen.ARScreen
 import com.endofjanuary.placement_example.ui.screens.visualize_screens.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
-import org.koin.androidx.viewmodel.ext.android.getViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class MainActivity : ComponentActivity() {
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("cleared", "MainActivity destroyed")
+    }
+
+    override fun onStop() {
+        Log.d("cleared", "MainActivity stop")
+        super.onStop()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (!hasRequiredPermissions()) {
@@ -47,11 +60,30 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             Placement_exampleTheme {
-                val mainViewModel = getViewModel<MainViewModel>()
+
+                val lifecycleOwner = LocalLifecycleOwner.current
+                LaunchedEffect(lifecycleOwner)
+                {
+                    Log.d(
+                        "cleared stop",
+                        "MAIN ${lifecycleOwner.lifecycle.currentState} - $lifecycleOwner"
+                    )
+                }
+
+                //val mainViewModel = getViewModel<MainViewModel>()
+                val mainViewModel: MainViewModel by viewModel()
+
                 val navController = rememberNavController()
 
                 val openAreYouSure = remember { mutableStateOf(false) }
                 val confirmDialog = remember { mutableStateOf(false) }
+
+                /*   LaunchedEffect(mainViewModel.isLoading, mainViewModel.model) {
+                       Log.d(
+                           "Main load",
+                           "isLoading-${mainViewModel.isLoading.value} loadError-${mainViewModel.loadError} descr:${mainViewModel.model.value.modelDescription}"
+                       )
+                   }*/
 
                 NavHost(
                     navController = navController,
@@ -148,16 +180,16 @@ class MainActivity : ComponentActivity() {
                 val callback = object : OnBackPressedCallback(
                     true // default to enabled
                 ) {
-                    override fun handleOnBackPressed() {
+                    override fun handleOnBackPressed() { //out of APP
                         openAreYouSure.value = true
-                        Log.d("BACK","<-----")
+                        Log.d("BACK", "<-----")
                         /*   if(mainViewModel.isLoading.value) {
 
                            }*/
                     }
 
                 }
-               onBackPressedDispatcher.addCallback(this, callback,)
+                onBackPressedDispatcher.addCallback(this, callback)
 
 
                 AreYouSureDialog(openDialog = openAreYouSure, confirm = confirmDialog)
@@ -200,14 +232,16 @@ fun AreYouSureDialog(
                 )
             },
             text = {
-                Text(
-                    "Are you sure want to go back and cancel loading ?",
-                    textAlign = TextAlign.Justify
-                )
-                Text(
-                    "The model probably won't be created...",
-                    textAlign = TextAlign.Justify
-                )
+                Column {
+                    Text(
+                        "Are you sure want to go back and cancel loading ?",
+                        textAlign = TextAlign.Justify
+                    )
+                    Text(
+                        "The model probably won't be created...",
+                        textAlign = TextAlign.Justify
+                    )
+                }
             },
             confirmButton = {
                 TextButton(onClick = {

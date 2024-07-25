@@ -1,5 +1,6 @@
 package com.endofjanuary.placement_example.domain.usecase.models_act
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.endofjanuary.placement_example.data.remote.meshy.request.PostFromText
 import com.endofjanuary.placement_example.data.remote.meshy.responses.ProgressStatus
@@ -7,13 +8,11 @@ import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DMo
 import com.endofjanuary.placement_example.domain.converters.ResponseToModelEntryConverter
 import com.endofjanuary.placement_example.domain.models.ModelEntry
 import com.endofjanuary.placement_example.domain.repo.MeshyRepo
-import com.endofjanuary.placement_example.domain.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
 import kotlinx.coroutines.delay
 
 class GenerateModelFromTextUseCase(
     private val meshyRepository: MeshyRepo,
-    private val modelRoomRepo: ModelsRepo,
 ) {
     val model = mutableStateOf(ModelEntry())
     private suspend fun getTextTo3D(id: String): Resource<TextTo3DModel> {
@@ -21,7 +20,7 @@ class GenerateModelFromTextUseCase(
     }
 
     suspend fun loadModelEntryFromText(
-        prompt: String, delayTime: Long = 20000, autoRefine: Boolean
+        prompt: String, delayTime: Long = 20000,
     ): Resource<ModelEntry?> {
         val result = meshyRepository.postTextTo3D(PostFromText(prompt, "preview"))
        when (result) {
@@ -36,6 +35,7 @@ class GenerateModelFromTextUseCase(
                             while (modelStatus.data!!.status == ProgressStatus.PENDING.toString()
                                 || modelStatus.data!!.status == ProgressStatus.IN_PROGRESS.toString()
                             ) {
+                                Log.d("loadingModel UC","${modelStatus.data!!.progress}")
                                 delay(delayTime)
                                 modelStatus = getTextTo3D(result.data.result)
                                 if (modelStatus is Resource.Error) {

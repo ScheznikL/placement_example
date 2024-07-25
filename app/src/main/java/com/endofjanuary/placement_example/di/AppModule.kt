@@ -128,7 +128,7 @@ val appModule = module {
         SendMessageUseCase(get())
     }
     single {
-        GenerateModelFromTextUseCase(get(),get())
+        GenerateModelFromTextUseCase(get())
     }
     viewModel {
         HomeViewModel(get(), get())

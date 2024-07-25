@@ -80,10 +80,10 @@ class ApiService {
                     finish_reason = "complete",
                     index = 0,
                     logprobs = mapOf("token1" to -2.345, "token2" to -3.456), // Example logprobs, could be any structure
-                    message =  Message(
+                    message =  chair[index]/*Message(
                         content = column[index],
                         role = "assistant"
-                    )
+                    )*/
                 ),
             ),
             created = 1623589200, // Example timestamp

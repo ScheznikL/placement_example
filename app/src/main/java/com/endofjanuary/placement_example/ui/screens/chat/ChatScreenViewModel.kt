@@ -32,6 +32,10 @@ class ChatScreenViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
 ) : ViewModel() {
 
+    override fun onCleared() {
+        super.onCleared()
+        Log.d("cleared","ChatVM")
+    }
     val isAutoRefineEnabled = mutableStateOf(false)
 
     var inputValueState = mutableStateOf("")
