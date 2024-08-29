@@ -13,6 +13,7 @@ interface MeshyRepo {
     suspend fun getTextTo3D(id: String): Resource<TextTo3DModel>
     suspend fun getRefine(id: String): Resource<Refine3dModel>
     suspend fun postTextTo3D(body: PostFromText): Resource<PostId>
+    suspend fun postTextTo3DWorker(body: PostFromText): String
     suspend fun getImageTo3D(id: String): Resource<ImageTo3DModel>
     suspend fun postImageTo3D(body: PostFromImage): Resource<PostId>
     suspend fun postRefine(body: PostRefine): Resource<PostId>

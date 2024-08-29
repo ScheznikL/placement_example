@@ -1,11 +1,11 @@
 package com.endofjanuary.placement_example.domain.converters
 
-import com.endofjanuary.placement_example.domain.models.ModelEntry
-import com.endofjanuary.placement_example.domain.models.ModelMode
 import com.endofjanuary.placement_example.data.remote.meshy.responses.ImageTo3DModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.Refine3dModel
 import com.endofjanuary.placement_example.data.remote.meshy.responses.TextTo3DModel
-import com.endofjanuary.placement_example.utils.hasFiveDaysPassed
+import com.endofjanuary.placement_example.domain.models.ModelEntry
+import com.endofjanuary.placement_example.domain.models.ModelMode
+import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
 
 class ResponseToModelEntryConverter {
     fun toModelEntry(modelfromtext: TextTo3DModel?): ModelEntry {
@@ -18,7 +18,7 @@ class ResponseToModelEntryConverter {
                 modelImageUrl = modelfromtext.thumbnail_url,
                 modelMode =  ModelMode.Preview,
                 meshyId = modelfromtext.id,
-                isExpired = hasFiveDaysPassed(modelfromtext.created_at)
+                isExpired = hasThreeDaysPassed(modelfromtext.created_at)
             )
         else
             ModelEntry()
@@ -33,7 +33,7 @@ class ResponseToModelEntryConverter {
                 modelImageUrl = refineModel.thumbnail_url,
                 modelMode =  ModelMode.Refine,
                 meshyId = refineModel.id,
-                isExpired = hasFiveDaysPassed(refineModel.created_at)
+                isExpired = hasThreeDaysPassed(refineModel.created_at)
             )
         else
             ModelEntry()
@@ -49,7 +49,8 @@ class ResponseToModelEntryConverter {
                 modelImageUrl = modelfromimage.thumbnail_url,
                 isFromText = false,
                 meshyId = modelfromimage.id,
-                isExpired = hasFiveDaysPassed(modelfromimage.created_at)
+                isExpired = hasThreeDaysPassed(modelfromimage.created_at),
+                progress = modelfromimage.progress
             )
         else
             ModelEntry()

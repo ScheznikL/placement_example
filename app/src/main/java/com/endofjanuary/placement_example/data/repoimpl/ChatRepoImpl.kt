@@ -14,7 +14,7 @@ import kotlinx.coroutines.delay
 class ChatRepoImpl(
     private val api: ChatCompletionApi,
     private val serv: ApiService,
-    ) : ChatRepo {
+) : ChatRepo {
     override suspend fun postToGpt(body: Post): Resource<CompletionGptObj> {
         val response = try {
             api.postToChat(body)
@@ -68,22 +68,30 @@ class ApiService {
             "FINAL chair is an antique and elegant chair made of wood.",
             role = "assistant"
         ),
-        )
+    )
+
+    val otter = listOf(
+        "What color should the otter be?",
+        "FINAL object is a sleek, small baby otter with brown fur, designed in a realistic style. It is highly detailed and high resolution."
+    )
 
     suspend fun postToChat(body: Post): CompletionGptObj {
         // Simulated delay to mimic real API request
         delay(100) // 1 second delay
 
-        val test =  CompletionGptObj(
+        val test = CompletionGptObj(
             choices = listOf(
                 Choice(
                     finish_reason = "complete",
                     index = 0,
-                    logprobs = mapOf("token1" to -2.345, "token2" to -3.456), // Example logprobs, could be any structure
-                    message =  chair[index]/*Message(
-                        content = column[index],
+                    logprobs = mapOf(
+                        "token1" to -2.345,
+                        "token2" to -3.456
+                    ), // Example logprobs, could be any structure
+                    message = /* chair[index]*/Message(
+                        content = otter[index],
                         role = "assistant"
-                    )*/
+                    )
                 ),
             ),
             created = 1623589200, // Example timestamp

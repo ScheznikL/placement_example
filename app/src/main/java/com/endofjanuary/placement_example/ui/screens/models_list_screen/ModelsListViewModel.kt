@@ -3,8 +3,6 @@ package com.endofjanuary.placement_example.ui.screens.models_list_screen
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
@@ -16,7 +14,7 @@ import com.endofjanuary.placement_example.domain.models.ModelEntry
 import com.endofjanuary.placement_example.domain.repo.DataStoreRepo
 import com.endofjanuary.placement_example.domain.repo.ModelsRepo
 import com.endofjanuary.placement_example.utils.Resource
-import com.endofjanuary.placement_example.utils.hasFiveDaysPassed
+import com.endofjanuary.placement_example.utils.hasThreeDaysPassed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -142,7 +140,7 @@ class ModelsListViewModel(
                             modelDescription = model.modelDescription,
                             meshyId = model.meshyId,
                             isFromText = model.isFromText,
-                            isExpired = hasFiveDaysPassed(model.creationTime)
+                            isExpired = hasThreeDaysPassed(model.creationTime)
                         )
                     }
                 }
@@ -161,7 +159,6 @@ class ModelsListViewModel(
 
     private var integer = 1
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     fun insetModel() { // todo TEMP
 
         viewModelScope.launch(context = Dispatchers.IO) {
@@ -178,7 +175,6 @@ class ModelsListViewModel(
                 )
             )
         }
-
     }
 
     fun deleteModels() {

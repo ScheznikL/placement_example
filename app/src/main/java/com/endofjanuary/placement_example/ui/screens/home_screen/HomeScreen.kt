@@ -61,7 +61,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.endofjanuary.placement_example.R
 import com.endofjanuary.placement_example.ui.components.BottomBar
-import com.endofjanuary.placement_example.ui.components.ImageWithExpiredLabel
+import com.endofjanuary.placement_example.ui.components.ImageWithLabel
 import com.endofjanuary.placement_example.ui.dialogs.ModelExpiredDialog
 import com.endofjanuary.placement_example.ui.screens.upload_image.UploadImageBottomSheet
 import com.endofjanuary.placement_example.ui.theme.MeshyBlack
@@ -311,7 +311,7 @@ fun ModelItem(
                 modifier = Modifier.size(190.dp)
             )
         } else {
-            ImageWithExpiredLabel(
+            ImageWithLabel(
                 picture = {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current).data(modelItem.imageUrl)

@@ -1,69 +1,58 @@
 package com.endofjanuary.placement_example.ui.screens.chat
 
+import ERROR_KEY
+import TAG_MODEL
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.NavController
 import com.endofjanuary.placement_example.MainViewModel
 import com.endofjanuary.placement_example.R
+import com.endofjanuary.placement_example.domain.converters.MessageType
 import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatScreenNew(
     navController: NavController,
+    //mainViewModel: MainViewModel
+//    mainScope: LifecycleCoroutineScope
 ) {
 
     val viewModel = getViewModel<ChatScreenViewModel>()
@@ -90,17 +79,6 @@ fun ChatScreenNew(
     val openErrorDialog = mutableStateOf(false)
 
     val context = LocalContext.current
-
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        Log.d("cleared stop","Screen Chat")
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    LaunchedEffect(lifecycleOwner)
-    {
-        Log.d("cleared stop","${lifecycleOwner.lifecycle.currentState} - $lifecycleOwner")
-    }
 
     LaunchedEffect(messagesListState) {
         if (messagesListState.isNotEmpty()) scrollState.animateScrollToItem(messagesListState.size - 1)
@@ -158,8 +136,10 @@ fun ChatScreenNew(
                                 },
                                 onDone = {
                                     isTextFieldEnabled = false
-                                    viewModel.loadingModel()
-                                    mainViewModel.generateModelEntryFromText(
+                                    viewModel.loadingModel()/*mainViewModel.generateModelEntryFromText( // TODO BACK
+                                        viewModel.description!!
+                                    )*/
+                                    mainViewModel.generateModelEntryFromTextOnBackGround(
                                         viewModel.description!!
                                     )
                                 },
@@ -173,6 +153,18 @@ fun ChatScreenNew(
                         })
                     })
             }
+            val modelInfo = mainViewModel.modelWorkInfo.collectAsState()
+
+            LaunchedEffect(modelInfo.value) { // TODO
+                if (modelInfo.value.isNotEmpty()) {
+                    val data = modelInfo.value.first().outputData
+
+                    Log.d("$TAG_MODEL LOG", "Entered Launche eff $data")
+
+                    Log.d("$TAG_MODEL LOG", "${data.getString(ERROR_KEY)}")
+                }
+            }
+
             LaunchedEffect(openCancelRefineDialog.value) {
                 if (cancelRefineDialogConfirm.value) {
                     mainViewModel.saveByteInstancedModel(isFromText = true, isRefine = false)
@@ -180,88 +172,41 @@ fun ChatScreenNew(
             }
 
             LaunchedEffect(modelToRefine) {
-                if (modelToRefine.meshyId != "1111" && autoRefine) {
+                if (modelToRefine.meshyId != "1111" && autoRefine) { //todo 1111
                     viewModel.isAutoRefineEnabled.value = autoRefine
                     viewModel.addAutoRefineMessage(context = context)
                 }
             }
 
-            LaunchedEffect(modelIds) {
+            LaunchedEffect(modelIds) {//todo back to koin VM at ChatScreen
                 if (modelIds != null) { // means model was uploaded to room
                     viewModel.cancelLoading()
                     navController.navigate("transit_dialog/${modelIds?.second}/${modelIds?.first}")
                 }
             }
             LaunchedEffect(loadError) {
-                openErrorDialog.value =/* (isError != null) ||*/ (loadError != null)/*     if (loadError != null) {
-                          viewModel.cancelLoading()
-                      }*/
+                openErrorDialog.value = (loadError != null)
             }
             ErrorDialog(
                 openDialog = openErrorDialog,
-                errorMessage = /*isError ?:*/ loadError.toString(),
+                errorMessage = loadError.toString(),
                 onDone = {
                     viewModel.cancelLoading()
                     navController.popBackStack()
-                }
-            )
-            Row(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_photo_camera),
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable {
-                            navController.navigate("upload_image/${false}")
-                        },
-                    contentDescription = stringResource(R.string.camera),
-                )
-                BasicTextField(
-                    enabled = isTextFieldEnabled,
-                    modifier = Modifier
-                        .padding(end = 3.dp, start = 15.dp)
-                        .weight(1f),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Default,
-                        capitalization = KeyboardCapitalization.Sentences
-                    ),
-                    keyboardActions = KeyboardActions(onDone = {
-                        focusManager.clearFocus()
-                    }),
-                    textStyle = TextStyle(
-                        lineHeight = 1.5.em, fontSize = 16.sp
-                    ),
-                    value = textInput,
+                })
+            if (messagesListState.lastOrNull()?.messageType == MessageType.User || messagesListState.lastOrNull()?.messageType == MessageType.Assistant || messagesListState.lastOrNull()?.messageType == null) {
+                UserInput(navController = navController,
+                    isTextFieldEnabled = isTextFieldEnabled,
+                    focusManager = focusManager,
                     onValueChange = { viewModel.inputValueState.value = it },
-                    maxLines = 7
-                )
-
-                Icon(
-                    painter = painterResource(R.drawable.ic_attachment),
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable {
-                            navController.navigate("upload_image/${true}")
-                        },
-                    contentDescription = stringResource(R.string.gallery),
-                )
-                Icon(
-                    Icons.AutoMirrored.Filled.Send,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable {
-                            if (textInput.isNotBlank() && isTextFieldEnabled) {
-                                viewModel.send(textInput)
-                                viewModel.inputValueState.value = ""
-                            }
+                    onSend = {
+                        if (textInput.isNotBlank() && isTextFieldEnabled) {
+                            viewModel.send(textInput)
+                            viewModel.inputValueState.value = ""
                         }
-                        .alpha(if (textInput.isNotBlank()) 1.0f else 0.5f),
-                    contentDescription = stringResource(R.string.send),
-                )
+                    })
+            } else {
+                Spacer(modifier = Modifier.height(10.dp))
             }
         }
     }

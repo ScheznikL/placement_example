@@ -55,7 +55,7 @@ class AWStorageRepoImpl(
             return Resource.Success(presignedRequest.url.toString())
         } catch (e: Exception) {
             Log.w(
-                "loadModel AWS FAILED || //",
+                "loadModel AWS FAILED",
                 e.message.toString()
             )
             return Resource.Error(e.message.toString())

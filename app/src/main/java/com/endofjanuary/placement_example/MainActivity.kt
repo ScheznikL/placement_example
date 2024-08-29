@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
@@ -21,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -37,18 +39,18 @@ import com.endofjanuary.placement_example.ui.screens.user_cabinet.UserProfileScr
 import com.endofjanuary.placement_example.ui.screens.visualize_screens.ar_screen.ARScreen
 import com.endofjanuary.placement_example.ui.screens.visualize_screens.three_d_screen.ThreeDScreen
 import com.endofjanuary.placement_example.ui.theme.Placement_exampleTheme
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class MainActivity : ComponentActivity() {
+    private val scope = MainScope()
+
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("cleared", "MainActivity destroyed")
-    }
-
-    override fun onStop() {
-        Log.d("cleared", "MainActivity stop")
-        super.onStop()
+        scope.cancel()//todo scope
+        Log.d("cleared", "MainActivity destroyed & scope.cancel")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +74,7 @@ class MainActivity : ComponentActivity() {
 
                 //val mainViewModel = getViewModel<MainViewModel>()
                 val mainViewModel: MainViewModel by viewModel()
+                val mainOwnerScope = lifecycleOwner.lifecycleScope
 
                 val navController = rememberNavController()
 
@@ -93,7 +96,7 @@ class MainActivity : ComponentActivity() {
                         RegistrationScreen(navController = navController)
                     }
                     composable("chat_screen") {
-                        ChatScreenNew(navController)
+                        ChatScreenNew(navController, /*mainViewModel,mainOwnerScope*/)
                     }
                     composable("home_screen") {
                         HomeScreen(navController)
@@ -177,6 +180,13 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                /*BackHandler(enabled = (currentRoute(navController) == Screen.Home.route)) {
+                    openDialog.value = true
+                }*/
+                BackHandler(false) { //todo BackHandler
+                    openAreYouSure.value = true
+                }
+
                 val callback = object : OnBackPressedCallback(
                     true // default to enabled
                 ) {
@@ -192,7 +202,9 @@ class MainActivity : ComponentActivity() {
                 onBackPressedDispatcher.addCallback(this, callback)
 
 
-                AreYouSureDialog(openDialog = openAreYouSure, confirm = confirmDialog)
+                AreYouSureDialog(openDialog = openAreYouSure, confirm = confirmDialog){
+                    finish()
+                }
             }
         }
     }

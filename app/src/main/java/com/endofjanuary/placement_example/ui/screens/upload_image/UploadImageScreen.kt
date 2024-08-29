@@ -29,6 +29,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -71,7 +72,7 @@ fun UploadImageScreen(
     val loadingError by remember { mainViewModel.loadError }
 
     val isSuccess by remember { mainViewModel.isSuccess }
-    val progress by remember { mainViewModel.progress }
+    val progress = mainViewModel.progress.collectAsState()
 
     val pickImage = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(), viewModel::onPhotoPickerSelect
@@ -84,7 +85,7 @@ fun UploadImageScreen(
         if (!presignedUrl.isNullOrBlank()) {
             Log.d("loadModel", presignedUrl.toString())
             if (!isLoading || isSuccess == null) { // isSuccess == null - to avoid double loading
-                mainViewModel.loadModelEntryFromImage(
+                mainViewModel.generateModelEntryFromImage(
                     url = presignedUrl!!, name = textInput
                 )
                 viewModel.presignedUrl.value = ""
@@ -132,7 +133,7 @@ fun UploadImageScreen(
                     isLoading = isLoading,
                     isUploadingError = isUploadingError,
                     isUploading = isUploading,
-                    progress = progress,
+                    progress = progress.value,
                     modifier = Modifier.align(Alignment.Center),
                     loadError = loadingError
                 )

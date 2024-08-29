@@ -83,6 +83,7 @@ dependencies {
     implementation("io.github.sceneview:arsceneview:2.0.3")
     implementation("com.google.ar:core:1.41.0")
     implementation("androidx.palette:palette-ktx:1.0.0")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

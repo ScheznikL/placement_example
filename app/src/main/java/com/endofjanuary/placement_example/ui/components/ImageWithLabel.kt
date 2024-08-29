@@ -19,12 +19,12 @@ import androidx.compose.ui.unit.em
 import com.endofjanuary.placement_example.data.remote.meshy.responses.ProgressStatus
 
 @Composable
-fun ImageWithExpiredLabel(
+fun ImageWithLabel(
     modifier: Modifier = Modifier,
     picture: @Composable (() -> Unit),
     label: String = ProgressStatus.EXPIRED.toString(),
 ) {
-    Box(contentAlignment = Alignment.Center, modifier = modifier.size(190.dp)) {
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
         picture()
         Box(
             Modifier
@@ -46,11 +46,11 @@ fun ImageWithExpiredLabel(
 @Preview
 @Composable
 fun Tempor() {
-    ImageWithExpiredLabel(
+    ImageWithLabel(
         picture = {
             Box(
                 Modifier
-                    .size(100.dp)
+                    .size(120.dp)
                     .background(Color.White)
             )
         }, label = ProgressStatus.EXPIRED.toString()
