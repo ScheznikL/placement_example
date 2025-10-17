@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "533148804072",
+    "project_id": "d-reference",
+    "storage_bucket": "d-reference.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:533148804072:android:737bf858d9f5190e5a7a5d",
+        "android_client_info": {
+          "package_name": "com.endofjanuary.placement_example"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTEjkVN568s1XlsOtS8C2umIb80Vt_f-c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
