@@ -36,22 +36,22 @@ This Android application lets users create accurate 3D models through a guided A
 ## Screenshots
 
 ### Sign In
-![Sign In screen](screenshots\sign_IN.gif)
+![Sign In screen](./screenshots/sign_IN.gif)
 
 ### User Cabinet
-![Sign In screen](screenshots\cabinet.png)
+![Sign In screen](./screenshots/cabinet.png)
 
 ### Text-to-3D Generation via AI Chat
-![Generation in progress ](screenshots\chat_CREATE.gif)
+![Generation in progress ](./screenshots/chat_CREATE.gif)
 
 ### Image-to-3D — Photo Input
-![Photo Input](screenshots\create_from_image.gif)
+![Photo Input](./screenshots/create_from_image.gif)
 
 ### Model Library
-![Photo Input](screenshots\control_list.gif)
+![Photo Input](./screenshots/control_list.gif)
 
 ### 3D Viewer
-![Photo Input](screenshots\visualise.gif)
+![Photo Input](./screenshots/visualise.gif)
 
 ### AR Mode
 ![Photo Input](./screenshots/AR_view.gif)
