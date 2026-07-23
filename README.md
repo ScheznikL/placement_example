@@ -1,94 +1,196 @@
-# AI-Powered 3D Model Generation Mobile App
+# AI-Powered 3D Model Generation — Android App
 
-A mobile application for generating and visualizing three-dimensional models from text descriptions and photographs using artificial intelligence.
+> Generate, refine, and visualize three-dimensional models from text descriptions and photos using AI — directly on your Android device.
 
----
-
-## Requirements
-
-The application must:
-
-- Generate accurate 3D model descriptions from user input using AI
-- Support model creation from both **text descriptions** and **images** (including photographs)
-- Allow users to manage and browse their created models (view, delete, categorize)
-- Display models in a **3D scene** and via **Augmented Reality (AR)**
-- Follow modern mobile application development principles
+[PASTE IMAGE] <!-- App banner or logo (recommended: 1280×640 px PNG) -->
 
 ---
 
-## Tech Stack & Tools
+## Table of Contents
+
+- [Overview](#overview)
+- [Screenshots](#screenshots)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [AI Description Flow](#ai-model-description-flow)
+- [Core Features](#core-features)
+- [Setup & Configuration](#setup--configuration)
+- [Supported Formats](#supported-formats)
+- [Testing](#testing)
+
+---
+
+## Overview
+
+This Android application lets users create accurate 3D models through a guided AI conversation or by uploading a photo. Models can then be explored in an interactive 3D scene or placed into the real world via Augmented Reality.
+
+**Key capabilities:**
+- AI-assisted prompt refinement via GPT before generation
+- Text-to-3D and image/photo-to-3D via Meshy AI
+- Interactive 3D viewer (Filament) and AR placement (ARCore)
+- Model library with category filtering, history, and deletion
+- Cloud-synced user data via Firebase + Firestore
+
+---
+
+## Screenshots
+
+### Sign In
+![Sign In screen](screenshots\sign_IN.gif)
+
+### User Cabinet
+![Sign In screen](screenshots\cabinet.png)
+
+### Text-to-3D Generation via AI Chat
+![Generation in progress ](screenshots\chat_CREATE.gif)
+
+### Image-to-3D — Photo Input
+![Photo Input](screenshots\create_from_image.gif)
+
+### Model Library
+![Photo Input](screenshots\control_list.gif)
+
+### 3D Viewer
+![Photo Input](screenshots\visualise.gif)
+
+### AR Mode
+![Photo Input](./screenshots/AR_view.gif)
+
+---
+
+## Tech Stack
 
 | Tool / Service | Purpose |
 |---|---|
-| **Meshy AI** | AI-powered 3D model generation API (text-to-3D and image-to-3D) |
-| **OpenAI GPT API** | Conversational AI assistant for refining model descriptions |
-| **Firebase Authentication** | User authentication and session management |
-| **Firestore** | Flexible, scalable NoSQL database for mobile/web (Google Cloud) |
-| **Amazon S3** | Object storage for 3D model assets |
-| **Retrofit** | HTTP client library — maps REST API endpoints to Java interfaces |
-| **Hilt** | Dependency injection framework |
-| **Filament + ARCore** | 3D rendering and Augmented Reality display |
+| **Meshy AI** | 3D model generation API — text-to-3D and image-to-3D |
+| **OpenAI GPT API** | Conversational assistant for refining model prompts |
+| **Firebase Authentication** | User sign-in and session management |
+| **Firestore** | NoSQL cloud database for user data and model metadata |
+| **Amazon S3** | Object storage for generated 3D model assets |
+| **Retrofit** | HTTP client — maps REST endpoints to Kotlin interfaces |
+| **Hilt** | Dependency injection |
+| **WorkManager** | Background task scheduling for long-running generation jobs |
+| **Filament** | Real-time 3D rendering engine |
+| **ARCore** | Augmented Reality placement and tracking |
 
 ---
 
 ## Architecture
 
-The app follows a clean architecture pattern with the following layers:
+The app follows **Clean Architecture** with three layers: UI → Domain → Data.
 
 ```
-ChatScreen → ChatScreen ViewModel → SendUseCase → GPT API RepositoryImpl → GPT API
+UI Layer        ViewModel  ←→  UseCase
+                                  ↕
+Domain Layer             Repository (interface)
+                                  ↕
+Data Layer       RepositoryImpl  →  Remote API / Firestore / S3
 ```
 
-Key components:
-- **ViewModel** — manages UI state and lifecycle
-- **UseCase** — encapsulates business logic (e.g., sending messages, generating models)
-- **Repository** — abstracts data sources (remote APIs, Firestore, S3)
+**Example flow — text-to-3D:**
+```
+ChatScreen → ChatViewModel → SendMessageUseCase → GPT RepositoryImpl → OpenAI API
+                                    ↓
+                          GenerateModelFromTextUseCase
+                                    ↓
+                     WorkManagerMeshyRepo → GetTextModelIdWorker
+                                              → GetTextModelWorker
+                                              → SaveModelWorker
+```
+
+Key component roles:
+- **ViewModel** — holds and exposes UI state; survives configuration changes
+- **UseCase** — single-responsibility business logic unit
+- **Repository** — abstracts data sources behind a stable interface
+- **Workers** — run generation polling in the background via WorkManager
 
 ---
 
 ## AI Model Description Flow
 
-The GPT assistant guides the user through a structured conversation to produce an accurate 3D model prompt.
+Before submitting a prompt to Meshy, the user refines it through a structured GPT conversation.
 
-### System Prompt Behavior
+### Conversation Rules
 
-The assistant is configured with the following logic:
+| Trigger | Behavior |
+|---|---|
+| Regular user message | GPT asks targeted follow-up questions (color, size, shape, material, style, quality) |
+| Message contains `NEXT` | GPT continues asking refinement questions |
+| Message contains `END` | GPT immediately outputs the final description |
 
-- Asks targeted questions about the object (color, size, shape, material, style, quality)
-- On user input containing `END` → immediately outputs the **final description**
-- On user input containing `NEXT` → continues asking refinement questions
-- Final response always begins with: `FINAL object is ...`
+Final response always begins with: **`FINAL object is …`**
 
-### Style & Quality Options Suggested to Users
+### Style Options
 
-**Style:** fantasy, cartoon, sci-fi, futurist, realistic, ancient, elegant, ultra realistic, trending on artstation, masterpiece, cinema 4d, unreal engine, octane render
+`fantasy` · `cartoon` · `sci-fi` · `futurist` · `realistic` · `ancient` · `elegant` · `ultra realistic` · `trending on artstation` · `masterpiece` · `cinema 4d` · `unreal engine` · `octane render`
 
-**Quality:** highly detailed, high resolution, highest quality, best quality, 4K, 8K, HDR, studio quality
+### Quality Options
 
----
-
-Supported output formats: **GLB**, **FBX**, **USDZ**
+`highly detailed` · `high resolution` · `highest quality` · `best quality` · `4K` · `8K` · `HDR` · `studio quality`
 
 ---
 
 ## Core Features
 
 ### 3D Model Creation
-- Text-to-3D via Meshy AI (prompted through GPT assistant)
-- Image/photo-to-3D via Meshy AI
+- **Text-to-3D** — describe an object through the GPT assistant; the refined prompt is sent to Meshy AI for generation
+- **Image/Photo-to-3D** — upload a photo from the gallery or capture with camera; Meshy AI reconstructs a 3D model
 
 ### Model Management
-- View models in a list with category filtering
-- Delete models
-- Browse model history
+- Browse all generated models in a list with category filter chips
+- View model metadata and generation history
+- Delete unwanted models
 
-### Model Display
-- **3D Scene** — interactive 3D viewer powered by Filament
-- **AR Mode** — place models in real-world environments via ARCore
+### 3D Viewer
+- Real-time interactive rendering powered by **Filament**
+- Rotate, zoom, and pan the model in a full 3D scene
+
+### AR Mode
+- Place any generated model into the real world via **ARCore**
+- Walk around and inspect the model at true scale
 
 ### Model Refinement
-- Post-generation model improvement workflow
+- Post-generation improvement workflow to re-submit or adjust prompts
 
 ### User Authentication & Sync
-- Sign in via Firebase Authentication
-- User data and model metadata synced with Firestore
+- Sign in with **Firebase Authentication**
+- All model metadata and user preferences synced with **Firestore**
+- Model assets stored in **Amazon S3**
+
+---
+
+## Setup & Configuration
+
+> **Note:** API keys and service credentials are required before building.
+
+1. **Meshy AI** — add your API key to `local.properties`:
+   ```
+   MESHY_API_KEY=your_key_here
+   ```
+2. **OpenAI** — add your API key:
+   ```
+   OPENAI_API_KEY=your_key_here
+   ```
+3. **Firebase** — place your `google-services.json` in `app/`
+4. **Amazon S3** — configure bucket name and credentials in `local.properties` or environment variables
+5. Sync Gradle and build the project
+
+---
+
+## Supported Formats
+
+Models can be exported and loaded in the following formats:
+
+| Format | Use case |
+|---|---|
+| **GLB** | Filament 3D viewer, general-purpose |
+| **FBX** | DCC tools (Blender, Maya, etc.) |
+| **USDZ** | iOS AR Quick Look (cross-platform sharing) |
+
+---
+
+## Testing
+
+Manual testing was conducted using structured use-case scenarios covering all core user flows. See the full test documentation:
+
+**[TESTING.md](TESTING.md)** — Use Cases 3.1 – 3.8 (авторизація, реєстрація, створення моделі, перегляд, видалення, налаштування, зміна паролю)
